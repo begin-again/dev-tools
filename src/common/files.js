@@ -1,0 +1,106 @@
+const { statSync, lstatSync, writeFile } = require('fs');
+const { join, resolve, parse } = require('path');
+
+/**
+ * Checks that folder exists and is in fact a folder
+ *
+ * @param {String} folder
+ * @returns {Boolean}
+ */
+const folderExists = (folder) => {
+    try {
+        return statSync(folder).isDirectory();
+    }
+    // eslint-disable-next-line no-unused-vars
+    catch (e) {
+        return false;
+    }
+};
+
+/**
+ * Checks that file exists and is in fact a file
+ *
+ * @param {String} file
+ * @param {Boolean} [isLink] true if symbolicLink
+ * @returns {Boolean}
+ */
+const fileExists = (file, isLink = false) => {
+    try {
+        return isLink ? lstatSync(file).isSymbolicLink() : statSync(file).isFile();
+    }
+    // eslint-disable-next-line no-unused-vars
+    catch (_e) {
+        return false;
+    }
+};
+
+/**
+ * Convert base64 to utf8
+ *
+ * @param {String} encoded
+ * @returns {String}
+ */
+const decodeBase64 = (encoded) => Buffer.from(encoded, 'base64').toString('utf-8');
+
+/**
+ * Write non-streaming content to file
+ * - path must exist
+ * - file will be created if does not exist
+ *
+ * @param {String|Buffer} content
+ * @param {String} dest
+ * @param {String} [encoding]
+ * @param {Boolean} [append]
+ * @returns {Promise}
+ */
+const writeToFile = (content, dest, encoding = 'utf8', append = false) => {
+    const flags = append ? 'a' : 'w';
+    return new Promise((res, reject) => {
+        writeFile(dest, content, { flags, encoding }, (err) => {
+            if(err) {
+                reject(`problem writing to ${dest}`);
+            }
+            res();
+        });
+    });
+};
+
+/**
+ * Searches from specified path upwards for a file
+ *  stops at root
+ *
+ * @param {String} fileName - name of file
+ * @param {String} [startPath] - path to start from
+ * @returns {String|null} null if not found
+ */
+const findFirstFile = (fileName, startPath = __dirname) => {
+
+    if(!folderExists(startPath)) {
+        return null;
+    }
+
+    const file = join(startPath, fileName);
+    if(fileExists(file)) {
+        return resolve(file);
+    }
+    try {
+        // stop at root
+        const { root, dir } = parse(file);
+        if(root === dir) {
+            return null;
+        }
+        return findFirstFile(fileName, join(startPath, '..'));
+    }
+    // eslint-disable-next-line no-unused-vars
+    catch (e) {
+        return null;
+    }
+};
+
+module.exports = {
+    decodeBase64
+    , fileExists
+    , folderExists
+    , writeToFile
+    , findFirstFile
+};

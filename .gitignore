@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+logs/
+.nyc_output/
+*.log
+.vscode
+.env
+playtime2.js
