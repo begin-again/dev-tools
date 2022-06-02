@@ -1,6 +1,6 @@
 
 const { spawn } = require('child_process');
-const { engines } = require('../package.json');
+const { engines } = require('../../package.json');
 const { node } = engines;
 require('../common/engine').properNodeVersions();
 const {
