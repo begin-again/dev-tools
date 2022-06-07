@@ -20,6 +20,7 @@
         "moment": "^2.29.2",
         "semver": "^7.3.6",
         "shelljs": "^0.8.5",
+        "simple-git": "^3.7.1",
         "uuid": "8.3.2",
         "winston": "^3.7.2",
         "winston-daily-rotate-file": "^4.6.1",

@@ -142,11 +142,11 @@ describe('git module - makes FS writes so is slow', function() {
         });
         describe('headLog()', () => {
             it('should be \'hello, world\'', async () => {
-                const hello = '\nhello, world\n\n';
+                const hello = 'hello, world\n\n';
                 logger.error = sinon.spy();
                 const result = await headLog(local2, logger);
 
-                expect(result).equals(hello);
+                expect(result).equals(hello.trim());
             });
         });
         describe('getFetch()', () => {

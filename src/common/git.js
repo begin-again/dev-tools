@@ -1,5 +1,7 @@
 const util = require('util');
+const os = require('os');
 const exec = util.promisify(require('child_process').exec);
+const git = require('simple-git');
 
 /**
  * Determines if repo has any commits on current branch
@@ -9,15 +11,15 @@ const exec = util.promisify(require('child_process').exec);
  * @returns o.repo - same as repo
  * @returns o.error - truthy if no commits
   */
-const hasCommits = (repo) => {
-    const cmd = `git -C ${repo} log --oneline -1`;
-    const result = { repo };
-    return exec(cmd)
-        .then(() => result)
-        .catch(() => {
-            result.error = 1;
-            return result;
-        });
+const hasCommits = async (repo) => {
+    try {
+        await git(repo).log();
+        return { repo };
+    }
+    // eslint-disable-next-line no-unused-vars
+    catch (err) {
+        return { repo, error: 1 };
+    }
 };
 
 /**
@@ -26,12 +28,15 @@ const hasCommits = (repo) => {
  * @param  {String} pathToProject
  * @returns {Promise} branch name
  */
-const currentBranch = (pathToProject) => {
-    const cmd = `git -C ${pathToProject} rev-parse --abbrev-ref HEAD`;
-    return exec(cmd)
-        .then(out => {
-            return out.stdout.trim();
-        });
+const currentBranch = async (pathToProject) => {
+    try {
+        const { current } = await git(pathToProject).branch();
+        return current || 'HEAD';
+    }
+    catch (err) {
+        return Promise.reject(err);
+    }
+
 };
 
 /**
@@ -41,11 +46,7 @@ const currentBranch = (pathToProject) => {
  * @returns {String}
  */
 const currentHash = (pathToProject) => {
-    const cmd = `git -C ${pathToProject} rev-parse HEAD`;
-    return exec(cmd)
-        .then(out => {
-            return out.stdout.trim();
-        });
+    return git(pathToProject).revparse({ 'HEAD': true });
 };
 
 /**
@@ -55,8 +56,7 @@ const currentHash = (pathToProject) => {
  * @return {Promise}
  */
 const gitFetch = (repoPath) => {
-    const cmd = `git -C ${repoPath} fetch -q`;
-    return exec(cmd);
+    return git(repoPath).fetch();
 };
 
 /**
@@ -67,12 +67,23 @@ const gitFetch = (repoPath) => {
  * @param {Boolean} isTotal
  * @returns {Promise} number of commits
  */
-const commitsDiff = (repoPath, branch = 'master', isTotal = false) => {
-    const cmd = isTotal ?
-        `git -C ${repoPath} rev-list origin/${branch}...HEAD | wc -l` :
-        `git -C ${repoPath} rev-list origin/${branch}..HEAD | wc -l`
-    ;
-    return exec(cmd).then(out => Number(out.stdout.trim()));
+const commitsDiff = async (repoPath, branch = 'master', isTotal = false) => {
+
+
+
+    const options = {};
+    const dots = isTotal ? '...' : '..';
+    const option = `origin/${branch}${dots}HEAD`;
+    options[option] = true;
+
+    const stdout = await git(repoPath).raw('rev-list', options);
+    const out = `${stdout}`.trim();
+    if(out.length) {
+        return out.split('\n').length;
+    }
+    return 0;
+
+
 };
 
 /**
@@ -95,6 +106,7 @@ const diffResult = (results) => {
  * @returns {Promise} { ahead: Integer, behind: Integer }
  */
 const commitDiffCounts = (repoPath) => {
+
     return gitFetch(repoPath)
         .then(() => currentBranch(repoPath))
         .then(branch => {
@@ -111,26 +123,16 @@ const commitDiffCounts = (repoPath) => {
 };
 
 /**
- * Check status for un-committed changes
+ * Check status for un-committed changes including untracked files
  *
  * @param  {String} repoPath - resolved path to repository
- * @param  {String} limitTo - file or folder in repo
  * @return {Promise<Boolean>} true is dirty
  */
-const isDirty = (repoPath, limitTo = '') => {
-    let cmd = `git -C ${repoPath} status --porcelain`;
-    if(limitTo) {
-        cmd = `git -C ${repoPath} status --porcelain ${limitTo}`;
-    }
-    return exec(cmd, { encoding: 'utf8', cwd: repoPath })
-        .then(({ stdout }) => stdout.length > 0)
-        .catch(err => {
-            // caused by lots of uncommitted files
-            if(err.message === 'stdout maxBuffer exceeded') {
-                return true;
-            }
-            throw err;
-        });
+const isDirty = async (repoPath) => {
+    const status = await git(repoPath).status();
+    const clean = status.isClean();
+    const untracked = status.not_added.length > 0;
+    return !clean || untracked;
 };
 
 /**
@@ -140,18 +142,17 @@ const isDirty = (repoPath, limitTo = '') => {
  * @param {Object} logger
  * @returns {Promise} standard out
  */
-const headLog = (repoPath, logger) => {
-    const cmd = `git -C ${repoPath} log -1 --format="%n%s%n%b"`;
-    return exec(cmd, { encoding: 'utf8', cwd: repoPath })
-        .then(
-            ({ stdout }) => stdout
-            , err => {
-                if(logger) {
-                    logger.error(`${err.message.replace(/\n/, ', ')}`);
-                }
-                throw new Error('Unable to obtain previous commit log');
-            }
-        );
+const headLog = async (repoPath, logger) => {
+    try {
+        const { latest } = await git(repoPath).log();
+        return latest.message;
+    }
+    catch (err) {
+        if(logger) {
+            logger.error(`${err.message.replace(/\n/g, ', ')}`);
+        }
+        throw new Error('Unable to obtain previous commit log');
+    }
 };
 
 module.exports = {
