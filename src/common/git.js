@@ -1,6 +1,3 @@
-const util = require('util');
-const os = require('os');
-const exec = util.promisify(require('child_process').exec);
 const git = require('simple-git');
 
 /**
