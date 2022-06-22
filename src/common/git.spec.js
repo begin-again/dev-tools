@@ -10,8 +10,11 @@ const chai = require('chai');
 chai.use(require('sinon-chai'));
 const { expect } = chai;
 
-const gtools = require('./git-tools');
-const { initBase, destroy } = require('./temp');
+const GitTool = require('./git-repo');
+const fs = require(fs);
+
+
+const { initBase, destroy, createTempFolder } = require('./temp');
 const {
     currentBranch
     , currentHash
@@ -103,18 +106,30 @@ describe('git module - makes FS writes so is slow', function() {
         this.timeout(14000);
         // must run in sequence due to shared repositories
         let origin; let local1; let local2;
-        before(() => {
-            origin = gtools.createBareRepo();
-            local1 = gtools.createRepo('afile');
-            gtools.addRemote(local1, origin);
-            gtools.push(local1);
-            local2 = gtools.duplicateRepo(local1);
-            gtools.addCommit(local2);
-            gtools.addCommitWithMessage(local2, 'hello, world');
-            gtools.push(local2);
-            gtools.fetchRemotes(local1);
+        before(async () => {
+            origin = await new GitTool(createTempFolder());
+            await origin.init();
+            local1 = await new GitTool(createTempFolder());
+            await local1.init();
+            await local1.addCommit('afile');
+            await local1.addRemote(origin.repoPath);
+            await local1.push();
+
+            if(fs.cp) {
+                const tmp = createTempFolder();
+                fs.cp(local1.repoPath, tmp, { recursive: true });
+                local2 = await new GitTool(tmp);
+            }
+            else {
+                // recursive copy not supported
+            }
+
+            await local2.addCommit();
+            await local2.addCommit('', '', 'hell, world');
+            await local2.push();
+            await local1.fetch();
         });
-        describe('commitsDiff()', () => {
+        describe.only('commitsDiff()', () => {
             it('should be zero ahead', async () => {
                 const ahead = await commitsDiff(local1);
 

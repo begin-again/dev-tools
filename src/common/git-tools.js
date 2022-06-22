@@ -15,16 +15,17 @@ const commitLength = 20;
  * into a temp folder within the base temp folder
  *
  * @param {String} nameOfFileToCommit - name
+ * @returns {String} path to new repo
  */
-const createRepo = (nameOfFileToCommit = '') => {
+const createRepo = async (nameOfFileToCommit = '') => {
     const path = createTempFolder();
+    const bare = true;
     if(nameOfFileToCommit) {
         await git(path).init();
-        execSync(`git -C ${path} init`);
         addFileToRepo(path, nameOfFileToCommit, { stage: true, commit: true });
     }
     else {
-        execSync(`git -C ${path} init --bare`);
+        await git(path).init(bare)
     }
     return path;
 };
@@ -222,11 +223,11 @@ const deleteFile = (repoPath, name) => {
  *
  * @param {String} repoPath
  * @param {String} branch
- * @returns {Array}
+ * @returns {Promise<String[]>} logs
  */
-const log = (repoPath, branch = 'master') => {
-    git(repoPath).log()
-    return execSync(`git -C ${repoPath} log --format="%s" ${branch}`, { encoding: 'utf8' }).split('\n');
+const log = async (repoPath, branch = 'master') => {
+    const {all} = await git(repoPath).log([branch]);
+    return all.map(row => row.message)
 };
 
 module.exports = {
