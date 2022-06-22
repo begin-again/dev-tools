@@ -16,7 +16,7 @@ const commitLength = 20;
  *
  * @param {String} nameOfFileToCommit - name
  */
-const createRepo = (nameOfFileToCommit = '') => {
+const createRepo = async (nameOfFileToCommit = '') => {
     const path = createTempFolder();
     if(nameOfFileToCommit) {
         await git(path).init();
@@ -73,7 +73,7 @@ const duplicateRepo = (repoPath) => {
  * @return {Promise}
  */
 const addRemote = (srcRepoPath, targetRepoPath, remoteName = 'origin') => {
-    return git(targetRepoPath).remote(remoteName, targetRepoPath);
+    return git(srcRepoPath).remote(remoteName, targetRepoPath);
 };
 
 /**
@@ -87,7 +87,7 @@ const addRemote = (srcRepoPath, targetRepoPath, remoteName = 'origin') => {
 const addFileToRepo = async (repoPath, name, options = { stage: false, commit: false }) => {
     const repo = git(repoPath);
     if(options.branch) {
-        await repo.checkout(options.branch, {'-q': true, 'b': true})
+        await repo.checkout(options.branch, { '-q': true, 'b': true });
     }
     writeFileSync(join(repoPath, name), '');
     if(options.stage) {
@@ -119,7 +119,7 @@ const isDirty = async (repoPath) => {
  */
 const currentBranch = async (repoPath) => {
     try {
-        const { current } = await git(pathToProject).branch();
+        const { current } = await git(repoPath).branch();
         return current || 'HEAD';
     }
     catch (err) {
@@ -137,10 +137,10 @@ const currentBranch = async (repoPath) => {
  */
 const push = (repoPath, remote = 'origin', branch = 'all') => {
     if(branch === 'all') {
-        return git(repoPath).push(remote, {'--all':true, '-q': true});
+        return git(repoPath).push(remote, { '--all':true, '-q': true });
     }
 
-    return git(repoPath).push(remote, branch, {'-u':true, '-q': true});
+    return git(repoPath).push(remote, branch, { '-u':true, '-q': true });
 };
 
 /**
@@ -152,7 +152,7 @@ const push = (repoPath, remote = 'origin', branch = 'all') => {
  * @returns {Promise<String>}
  */
 const pull = (repoPath, remote = 'origin', branch = 'master') => {
-    return git(repoPath).pull(remote, branch, {'-q': true});
+    return git(repoPath).pull(remote, branch, { '-q': true });
 };
 
 /**
@@ -161,7 +161,7 @@ const pull = (repoPath, remote = 'origin', branch = 'master') => {
  * @param {String} repoPath
  */
 const fetchRemotes = (repoPath) => {
-    return git(repoPath).fetch({'--quiet': true, '--all': true});
+    return git(repoPath).fetch({ '--quiet': true, '--all': true });
 };
 
 /**
@@ -173,15 +173,16 @@ const fetchRemotes = (repoPath) => {
  * @returns {Promise<String>} log subject
  */
 const addCommit = async (repoPath, fileName, branch) => {
-    const repo = git(repoPath)
+    const repo = git(repoPath);
     const _name = fileName || randomize('Aa0', commitLength);
     writeFileSync(join(repoPath, _name), '');
     if(branch) {
-        await repo.checkout(branch, {'-q': true, 'b': true})
+        await repo.checkout(branch, { '-q': true, 'b': true });
         // execSync(`git -C ${repoPath} branch ${branch} master && git -C ${repoPath} checkout -q ${branch}`);
     }
 
-    return repo.add(_name).commit(`${_name}`).log().latest.message
+    return repo.add(_name).commit(`${_name}`)
+        .log().latest.message;
     // execSync(`git -C ${repoPath} add "${_name}" && git -C ${repoPath} commit -m "${_name}"`);
     // return execSync(`git -C ${repoPath} log -1 -q --format="%h %s %cd"`, { encoding: 'utf-8' }).trim();
 };
@@ -194,15 +195,16 @@ const addCommit = async (repoPath, fileName, branch) => {
  * @param {String} branch - optional
  * @returns {Promise<String>} log subject
  */
-const addCommitWithMessage = (repoPath, message, branch) => {
-    const repo = git(repoPath)
-    const _name = fileName || randomize('Aa0', commitLength);
+const addCommitWithMessage = async (repoPath, message, branch) => {
+    const repo = git(repoPath);
+    const _name = randomize('Aa0', commitLength);
     writeFileSync(join(repoPath, _name), '');
     if(branch) {
-        await repo.checkout(branch, {'-q': true, 'b': true})
+        await repo.checkout(branch, { '-q': true, 'b': true });
     }
 
-    return repo.add(_name).commit(`${message}`).log().latest.message
+    return repo.add(_name).commit(`${message}`)
+        .log().latest.message;
 };
 
 /**
@@ -213,7 +215,9 @@ const addCommitWithMessage = (repoPath, message, branch) => {
  * @returns {Promise<String>} name
  */
 const deleteFile = (repoPath, name) => {
-    return git(repoPath).rm(name).add(name).commit(`delete ${name}`);
+    return git(repoPath).rm(name)
+        .add(name)
+        .commit(`delete ${name}`);
     // execSync(`git -C ${repoPath} rm ${name} && git -C ${repoPath} commit -am "delete ${name}"`);
 };
 
@@ -225,7 +229,7 @@ const deleteFile = (repoPath, name) => {
  * @returns {Array}
  */
 const log = (repoPath, branch = 'master') => {
-    git(repoPath).log()
+    git(repoPath).log();
     return execSync(`git -C ${repoPath} log --format="%s" ${branch}`, { encoding: 'utf8' }).split('\n');
 };
 
