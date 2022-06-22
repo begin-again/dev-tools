@@ -65,9 +65,6 @@ const gitFetch = (repoPath) => {
  * @returns {Promise} number of commits
  */
 const commitsDiff = async (repoPath, branch = 'master', isTotal = false) => {
-
-
-
     const options = {};
     const dots = isTotal ? '...' : '..';
     const option = `origin/${branch}${dots}HEAD`;
@@ -79,8 +76,6 @@ const commitsDiff = async (repoPath, branch = 'master', isTotal = false) => {
         return out.split('\n').length;
     }
     return 0;
-
-
 };
 
 /**
