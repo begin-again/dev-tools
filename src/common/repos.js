@@ -101,7 +101,9 @@ const getBinaryPaths = (builderName, repoPath, devRoot = DEVROOT) => {
     }
     // eslint-disable-next-line no-unused-vars
     catch (e) {
-        return {};
+        if(e) {
+            return {};
+        }
     }
 };
 

@@ -13,7 +13,9 @@ const folderExists = (folder) => {
     }
     // eslint-disable-next-line no-unused-vars
     catch (e) {
-        return false;
+        if(e) {
+            return false;
+        }
     }
 };
 
@@ -29,8 +31,10 @@ const fileExists = (file, isLink = false) => {
         return isLink ? lstatSync(file).isSymbolicLink() : statSync(file).isFile();
     }
     // eslint-disable-next-line no-unused-vars
-    catch (_e) {
-        return false;
+    catch (e) {
+        if(e) {
+            return false;
+        }
     }
 };
 
@@ -91,9 +95,10 @@ const findFirstFile = (fileName, startPath = __dirname) => {
         }
         return findFirstFile(fileName, join(startPath, '..'));
     }
-    // eslint-disable-next-line no-unused-vars
     catch (e) {
-        return null;
+        if(e) {
+            return null;
+        }
     }
 };
 

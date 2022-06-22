@@ -3,10 +3,6 @@ const { join } = require('path');
 const osType = require('os').type();
 const targetName = osType === 'Windows_NT' ? 'node.exe' : 'node';
 
-// eslint-disable-next-line no-unused-vars
-const { Version } = require('../common/engine');
-
-
 /**
  * Obtains the executable file found in path
  *

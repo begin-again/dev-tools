@@ -8,9 +8,6 @@ const { rmSync } = require('fs');
 const del = require('del');
 const semver = require('semver');
 
-// eslint-disable-next-line no-unused-vars
-const { Version, versionKeys } = require('../common/engine');
-
 /**
  * Removes node versions matching specified range
  *

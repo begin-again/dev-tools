@@ -178,13 +178,10 @@ const addCommit = async (repoPath, fileName, branch) => {
     writeFileSync(join(repoPath, _name), '');
     if(branch) {
         await repo.checkout(branch, { '-q': true, 'b': true });
-        // execSync(`git -C ${repoPath} branch ${branch} master && git -C ${repoPath} checkout -q ${branch}`);
     }
 
     return repo.add(_name).commit(`${_name}`)
         .log().latest.message;
-    // execSync(`git -C ${repoPath} add "${_name}" && git -C ${repoPath} commit -m "${_name}"`);
-    // return execSync(`git -C ${repoPath} log -1 -q --format="%h %s %cd"`, { encoding: 'utf-8' }).trim();
 };
 
 /**
@@ -218,7 +215,6 @@ const deleteFile = (repoPath, name) => {
     return git(repoPath).rm(name)
         .add(name)
         .commit(`delete ${name}`);
-    // execSync(`git -C ${repoPath} rm ${name} && git -C ${repoPath} commit -am "delete ${name}"`);
 };
 
 /**
