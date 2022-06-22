@@ -1,6 +1,6 @@
 module.exports = {
     parserOptions: {
-        sourceType: 'module'
+        sourceType: 'script'
         , ecmaFeatures: {
             impliedStrict: true
         }
