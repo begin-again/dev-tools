@@ -9,9 +9,6 @@ const binName = osType === 'Windows_NT' ? 'node.exe' : 'node';
 // eslint-disable-next-line no-process-env
 const { NVM_HOME } = process.env;
 
-// eslint-disable-next-line no-unused-vars
-const { Version } = require('../common/engine');
-
 /**
  * Scans versions and reports status
  *

@@ -13,9 +13,10 @@ const hasCommits = async (repo) => {
         await git(repo).log();
         return { repo };
     }
-    // eslint-disable-next-line no-unused-vars
     catch (err) {
-        return { repo, error: 1 };
+        if(err) {
+            return { repo, error: 1 };
+        }
     }
 };
 

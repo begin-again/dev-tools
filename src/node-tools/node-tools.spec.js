@@ -77,6 +77,7 @@ describe('node-tools', () => {
     });
     describe('report', () => {
         it('should report findings', (done) => {
+            const ExpectedCallCount = 4;
             const installed = [
                 version10
                 , version12
@@ -89,7 +90,7 @@ describe('node-tools', () => {
             expect(logger.debug.firstCall.firstArg).equals(' - v10.0.0   - OK (link)');
             expect(logger.debug.secondCall.firstArg).equals(' - v12.0.0   - OK ');
             expect(logger.debug.thirdCall.firstArg).equals(' - v14.0.0   - Problem: \'node.exe\' not found or executable');
-            expect(logger.debug.callCount).equals(4);
+            expect(logger.debug.callCount).equals(ExpectedCallCount);
         });
     });
     describe('fix', () => {

@@ -7,8 +7,6 @@
 const { basename } = require('path');
 const { unlinkSync } = require('fs');
 
-// eslint-disable-next-line no-unused-vars
-const { Version } = require('../common/engine');
 const maxWidth = 9;
 
 /**
@@ -39,7 +37,7 @@ const clean = ({ installed, dryRun }, log = console) => {
                 }
                 // eslint-disable-next-line no-unused-vars
                 catch (e) {
-                    msg += `Unable to delete ${bin}`;
+                    msg += `Unable to delete ${bin}, due to ${e.message}`;
                     log.error(msg);
                     exitCode = 1;
                 }

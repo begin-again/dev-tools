@@ -6,6 +6,7 @@ const { promisify } = require('util');
 const _exec = promisify(require('child_process').exec);
 const moment = require('moment');
 const { options } = require('./cmdLine');
+const DateLength = 6;
 
 /**
  * Creates command string
@@ -65,8 +66,7 @@ const processRepo = (repo, errors) => {
                         return item.trim();
                     })
                     .map(item => {
-                        // eslint-disable-next-line no-magic-numbers
-                        const date = moment(item.substring(6, item.search(/[=]{2}/)), options.dateOptions);
+                        const date = moment(item.substring(DateLength, item.search(/[=]{2}/)), options.dateOptions);
                         const body = item.substring(item.search(/[=]{2}/) + options.offset);
                         return { date: date, body: body, repo: basename(repo) };
                     })

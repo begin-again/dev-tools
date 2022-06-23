@@ -19,6 +19,8 @@ const {
 } = require('fs');
 const { getPackage } = require('./repos.js');
 
+const NumbersPadding = 2;
+
 class Version {
     /**
    * @param {String} version - version name
@@ -132,7 +134,7 @@ const versionStringToNumber = (version) => {
     let _expanded = '';
     _version.split('.').forEach((s, i) => {
     // eslint-disable-next-line no-magic-numbers
-        _expanded += i === 0 ? s : s.padStart(2, '0');
+        _expanded += i === 0 ? s : s.padStart(NumbersPadding, '0');
     });
     return parseInt(_expanded, 10);
 };

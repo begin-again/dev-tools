@@ -1,3 +1,4 @@
+const IndentSpaces = 4;
 module.exports = {
     parserOptions: {
         sourceType: 'script'
@@ -27,7 +28,7 @@ module.exports = {
         , 'eqeqeq': [ 'error', 'smart' ]
         , 'func-call-spacing': [ 'error', 'never' ]
         , 'handle-callback-err': 'error'
-        , 'indent': [ 'error', 4, { 'MemberExpression': 1, 'ArrayExpression': 1, 'ObjectExpression': 1 } ]
+        , 'indent': [ 'error', IndentSpaces, { 'MemberExpression': 1, 'ArrayExpression': 1, 'ObjectExpression': 1 } ]
         , 'keyword-spacing': [ 'error', { 'overrides': { 'if': { 'after': false }, 'for': { 'after': false }, 'while': { 'after': false } } } ]
         , 'line-comment-position': [ 'error', { 'position': 'above' } ]
         , 'newline-per-chained-call': [ 'error', { 'ignoreChainWithDepth': 2 } ]

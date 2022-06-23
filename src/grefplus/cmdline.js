@@ -55,20 +55,22 @@ const validateDate = (checkDate, msg) => {
     try {
         const parsed = moment(checkDate, options.allowedFormats, true);
         if(!parsed.isValid()) {
-            throw new Error('unkown format');
+            throw new Error('unknown format');
         }
         return true;
     }
-    // eslint-disable-next-line no-unused-vars
     catch (e) {
-        throw new Error(`${msg} not recognized as a date [${checkDate}]`);
+        const error = new Error();
+        error.message = `${msg} not recognized as a date [${checkDate}]. Valid formats are: ${options.allowedFormats.join(', ')}`;
+        error.cause = e.message;
+        throw error;
     }
 };
 
 /**
  * Aborts build if dev root path does not exist
  *
- * @param {String} devRoott
+ * @param {String} devRoot
  * @throws if path not accessible
  * @private
  */
@@ -79,7 +81,7 @@ const validatePath = ({ devRoot }) => {
     }
     // eslint-disable-next-line no-unused-vars
     catch (e) {
-        throw new Error(`Unable to access specified dev root folder of '${devRoot}`);
+        throw new Error(`Unable to access specified dev root folder of '${devRoot}'. Due to ${e.message}`);
     }
 };
 
