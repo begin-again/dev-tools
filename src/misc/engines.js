@@ -5,7 +5,8 @@ const { findFirstFile } = require('../common/files');
 const yargs = require('yargs');
 
 const main = () => {
-
+    let file = '';
+    // eslint-disable-next-line no-unused-vars
     const { argv } = yargs
         .option('path', {
             alias: 'p'
@@ -16,14 +17,14 @@ const main = () => {
         .version(false)
         .help(true)
         .check(({ path }) => {
-            const file = findFirstFile('package.json', path);
+            file = findFirstFile('package.json', path);
             if(!file) {
                 throw new Error(`unable to find package.json file in '${path}'`);
             }
             return true;
         });
 
-    console.log(repositoryEngines(argv.path));
+    console.log(repositoryEngines(file));
 
 };
 

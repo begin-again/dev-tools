@@ -11,12 +11,11 @@ alias resource='source $HOME/.bashrc'
 alias clean='node $DEVROOT/dev-tools/src/clean'
 alias grefp='node $DEVROOT/dev-tools/src/grefplus'
 alias branches='node $DEVROOT/dev-tools/src/branches'
-alias yaudit='node $DEVROOT/dev-tools/src/audit'
 alias nt='node $DEVROOT/dev-tools/src/node-tools'
 alias yn='node $DEVROOT/dev-tools/src/yarn'
 alias sp='node $DEVROOT/dev-tools/src/spawner'
 alias scripts='node $DEVROOT/dev-tools/src/misc/scripts'
-alias engines='node $DEVROOT/dev-tools/src/misc/engines'
+alias engines='node $DEVROOT/dev-tools/src/misc/engines -p "."'
 
 # git
 alias check-merge='checkmerge'
