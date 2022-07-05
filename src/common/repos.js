@@ -15,7 +15,6 @@ const { DEVROOT } = process.env;
  * @returns {Object} JSON object
  */
 const getPackage = (pkgFile) => {
-    console.log(`Reading package.json from ${pkgFile}`);
     if(fileExists(pkgFile)) {
         const data = readFileSync(pkgFile, { encoding: 'utf8' });
         return JSON.parse(data);

@@ -24,8 +24,7 @@ const main = () => {
             return true;
         });
 
-    console.log(repositoryEngines(file));
-
+    process.stdout.write(`${repositoryEngines(file)}\n`);
 };
 
 main();
