@@ -3,7 +3,7 @@
     "version": "3.0.0",
     "main": "",
     "repository": "https://github.com/begin-again/dev-tools.git",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "private": true,
     "scripts": {
         "test": "mocha -i --fgrep slow --ignore ./node_modules/**/* ./src/**/*.spec.js",

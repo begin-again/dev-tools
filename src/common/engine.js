@@ -258,7 +258,7 @@ const minInstalledSatisfyingVersion = (requiredRange) => {
  * @throws RangeError
  */
 const repositoryEngines = (repoPath) => {
-    const file = join(repoPath, 'package.json');
+    const file = repoPath.endsWith('package.json') ? repoPath : join(repoPath, 'package.json');
     const { error, engines } = getPackage(file);
     if(error) {
         throw new RangeError(`package file not found in ${repoPath}`);
