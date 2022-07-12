@@ -4,7 +4,7 @@ const { basename } = require('path');
 const { allRepoPaths } = require('../common/repos');
 const { promisify } = require('util');
 const _exec = promisify(require('child_process').exec);
-const moment = require('moment');
+const { DateTime } = require('luxon');
 const { options } = require('./cmdLine');
 const DateLength = 6;
 
@@ -35,13 +35,16 @@ const filterPeriod = (item) => {
         result = true;
     }
     else if(options.fromDate && !options.toDate) {
-        result = item.date.isSameOrAfter(options.fromDate);
+        // result = item.date.isSameOrAfter(options.fromDate);
+        result = item.date >= options.fromDate;
     }
     else if(!options.fromDate && options.toDate) {
-        result = item.date.isSameOrBefore(options.toDate);
+        // result = item.date.isSameOrBefore(options.toDate);
+        result = item.date <= options.toDate;
     }
     else {
-        result = item.date.isBetween(options.fromDate, options.toDate);
+        // result = item.date.isBetween(options.fromDate, options.toDate);
+        result = item.date >= options.fromDate && item.date <= options.toDate;
     }
     return result;
 };
@@ -66,9 +69,9 @@ const processRepo = (repo, errors) => {
                         return item.trim();
                     })
                     .map(item => {
-                        const date = moment(item.substring(DateLength, item.search(/[=]{2}/)), options.dateOptions);
+                        const date = DateTime.fromFormat(item.substring(DateLength, item.search(/[=]{2}/)), options.dateOptions);
                         const body = item.substring(item.search(/[=]{2}/) + options.offset);
-                        return { date: date, body: body, repo: basename(repo) };
+                        return { date, body, repo: basename(repo) };
                     })
                     .filter(filterPeriod);
                 return resolve(results);
@@ -124,7 +127,7 @@ const main = () => {
                     .map(item => {
                         let name = item.repo;
                         name = name.padEnd(maxRepoLength);
-                        console.log(`${item.date.format(options.dateOptions)}  ${name}  ${item.body}`);
+                        console.log(`${item.date.toFormat(options.dateOptions)}  ${name}  ${item.body}`);
                     });
             })
             .catch(err => {

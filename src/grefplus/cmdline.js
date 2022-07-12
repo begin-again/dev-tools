@@ -1,11 +1,10 @@
 const { accessSync, constants, lstatSync } = require('fs');
 const yargs = require('yargs');
-const moment = require('moment');
-moment.suppressDeprecationWarnings = true;
+const { DateTime } = require('luxon');
 
 const options = {
-    dateOptions: 'YYYY-MM-DD hh:mm A'
-    , allowedFormats: [ 'YYYY-MM-DD', 'M/D/YY', 'M/D/YY', 'L' ]
+    dateOptions: 'yyyy-MM-dd tt'
+    , allowedFormat: 'M/d/yy'
     , offset: 3
     , timePad: 11
 };
@@ -53,15 +52,15 @@ const cmdKeys = {
  */
 const validateDate = (checkDate, msg) => {
     try {
-        const parsed = moment(checkDate, options.allowedFormats, true);
-        if(!parsed.isValid()) {
+        const parsed = DateTime.fromFormat(checkDate, options.allowedFormat);
+        if(!parsed.isValid) {
             throw new Error('unknown format');
         }
         return true;
     }
     catch (e) {
         const error = new Error();
-        error.message = `${msg} not recognized as a date [${checkDate}]. Valid formats are: ${options.allowedFormats.join(', ')}`;
+        error.message = `${msg} not recognized as a date [${checkDate}]. Valid formats are: ${options.allowedFormat}`;
         error.cause = e.message;
         throw error;
     }
@@ -93,8 +92,8 @@ const validatePath = ({ devRoot }) => {
  * @private
  */
 const isFuture = (checkDate) => {
-    const _date = moment(checkDate, options.allowedFormats, true);
-    const endOfToday = moment().endOf('day');
+    const _date = DateTime.fromFormat(checkDate, options.allowedFormat);
+    const endOfToday = DateTime.now().endOf('day');
     return _date > endOfToday;
 };
 
@@ -108,17 +107,19 @@ const setOptions = (test) => {
         .options(cmdKeys)
         .version(false)
         .help(true)
+        .strict(true)
         .check((_argv) => {
             // super secret shortcut
             if(!_argv.date && !_argv.fromDate && !_argv.toDate && Number.isInteger(_argv._[0])) {
-                const _date = moment()
-                    .add(_argv._[0], 'day')
+                const _date = DateTime
+                    .fromFormat(_argv._[0], options.allowedFormat)
+                    .plus({ days: _argv._[0] })
                     .format('MM/DD/YY');
                 _argv.date = _date;
             }
             else {
                 if(Object.keys(_argv).includes('date') && !_argv.date) {
-                    _argv.date = moment().format('MM/DD/YY');
+                    _argv.date = DateTime.now().toFormat('MM/DD/YY');
                 }
                 if(_argv.date && (_argv.fromDate || _argv.toDate)) {
                     throw new Error('--date cannot be used with "--from-date" or "--to_date"');
@@ -160,13 +161,13 @@ const setOptions = (test) => {
         .argv;
 
     if(argv.date) {
-        const date = moment(argv.date);
-        module.exports.options.fromDate = date.clone().startOf('day');
-        module.exports.options.toDate = date.clone().endOf('day');
+        const date = DateTime.fromFormat(argv.date, options.allowedFormat);
+        module.exports.options.fromDate = date.startOf('day');
+        module.exports.options.toDate = date.endOf('day');
     }
     else {
-        module.exports.options.fromDate = argv.fromDate ? moment(argv.fromDate).startOf('day') : null;
-        module.exports.options.toDate = argv.toDate ? moment(argv.toDate).endOf('day') : null;
+        module.exports.options.fromDate = argv.fromDate ? DateTime.fromFormat(argv.fromDate, options.allowedFormat).startOf('day') : null;
+        module.exports.options.toDate = argv.toDate ? DateTime.fromFormat(argv.toDate, options.allowedFormat).endOf('day') : null;
     }
     module.exports.options.devRoot = argv.devRoot;
     module.exports.options.devRoot = argv.devRoot;
