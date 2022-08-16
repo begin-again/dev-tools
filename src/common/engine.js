@@ -275,7 +275,7 @@ const repositoryEngines = (repoPath) => {
  * @param {String} param0.path - to repository
  * @param {String=} param0.version - version number x.y.z
  * @param {Boolean=} param0.oldest - choose oldest acceptable version
- * @param {Boolean=} noPackage - choose oldest acceptable version
+ * @param {Boolean=} noPackage - path does not have package.json
  * @returns {Version}
  * @throws RangeError
  */
