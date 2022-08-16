@@ -1,6 +1,8 @@
 
 const { spawn } = require('child_process');
 const { engines } = require('../../package.json');
+const { fileExists } = require('../common/files');
+const { join } = require('path');
 const { node } = engines;
 require('../common/engine').properNodeVersions();
 const {
@@ -94,7 +96,8 @@ yargs
                     return true;
                 })
                 .check(({ version, path, oldest }) => {
-                    versionToUse = versionToUseValidator({ path, version, oldest });
+                    const hasPackage = path.endsWith('package.json') || fileExists(join(path, 'package.json'));
+                    versionToUse = versionToUseValidator({ path, version, oldest }, !hasPackage);
                     return Boolean(versionToUse);
                 });
         },

@@ -3,10 +3,10 @@ const yargs = require('yargs');
 const { DateTime } = require('luxon');
 
 const options = {
-    dateOptions: 'yyyy-MM-dd tt'
+    dateOptions: 'yyyy-MM-dd hh:mm:ss a'
     , allowedFormat: 'M/d/yy'
     , offset: 3
-    , timePad: 11
+    , timePad: 12
 };
 
 const cmdKeys = {
@@ -169,7 +169,6 @@ const setOptions = (test) => {
         module.exports.options.fromDate = argv.fromDate ? DateTime.fromFormat(argv.fromDate, options.allowedFormat).startOf('day') : null;
         module.exports.options.toDate = argv.toDate ? DateTime.fromFormat(argv.toDate, options.allowedFormat).endOf('day') : null;
     }
-    module.exports.options.devRoot = argv.devRoot;
     module.exports.options.devRoot = argv.devRoot;
     module.exports.options.folderNames = argv.folderNames || [];
 };
