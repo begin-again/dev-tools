@@ -275,11 +275,12 @@ const repositoryEngines = (repoPath) => {
  * @param {String} param0.path - to repository
  * @param {String=} param0.version - version number x.y.z
  * @param {Boolean=} param0.oldest - choose oldest acceptable version
+ * @param {Boolean=} noPackage - path does not have package.json
  * @returns {Version}
  * @throws RangeError
  */
-const versionToUseValidator = ({ path, version, oldest }) => {
-    const repoEngines = module.exports.repositoryEngines(path);
+const versionToUseValidator = ({ path, version, oldest }, noPackage) => {
+    const repoEngines = noPackage ? version : module.exports.repositoryEngines(path);
     const repoName = basename(path);
 
     if(version) {
@@ -289,7 +290,7 @@ const versionToUseValidator = ({ path, version, oldest }) => {
             satisfies,
             oldest
         );
-        // _version is undefined if version is no in satisfies
+        // _version is undefined if version is not in satisfies
         const found = satisfies.filter(
             (v) => _version && v.version === _version.version
         )[0];
@@ -299,6 +300,7 @@ const versionToUseValidator = ({ path, version, oldest }) => {
             );
         }
         return found;
+
     }
 
     if(oldest) {
