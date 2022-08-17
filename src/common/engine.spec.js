@@ -4,8 +4,8 @@ const sinon = require('sinon');
 chai.use(require('sinon-chai'));
 const mockFS = require('mock-fs');
 const { sep } = require('path');
-
-const isWindows = require('os').platform() === 'win32';
+const { platform } = require('os');
+const isWindows = platform() === 'win32';
 
 const proxyquire = require('proxyquire').noCallThru();
 
@@ -14,6 +14,7 @@ const removeVersions = (engine) => {
         delete engine.versions;
     }
 };
+const engine = require('./engine');
 
 describe('Engine Module', () => {
     let logSpy;
@@ -82,7 +83,6 @@ describe('Engine Module', () => {
         });
     });
     describe('satisfyingVersions()', () => {
-        const engine = require('./engine');
         beforeEach(removeVersions.bind(null, engine));
         it('should be empty array when nothing satisfies', () => {
             const stub = sinon.stub(engine, 'properNodeVersions');
@@ -185,7 +185,6 @@ describe('Engine Module', () => {
         });
     });
     describe('properNodeVersions()', () => {
-        const engine = require('./engine');
         const env = {};
         beforeEach(() => {
             delete env.NVM_HOME;
@@ -351,7 +350,6 @@ describe('Engine Module', () => {
         });
     });
     describe('maxInstalledSatisfyingVersion()', () => {
-        const engine = require('./engine');
         beforeEach(removeVersions.bind(null, engine));
         it('should be undefined when not satisfied', () => {
             engine.versions = [ { version: 'v12.0.0' } ];
@@ -387,7 +385,6 @@ describe('Engine Module', () => {
         });
     });
     describe('minInstalledSatisfyingVersion()', () => {
-        const engine = require('./engine');
         beforeEach(removeVersions.bind(null, engine));
         it('should be undefined when not satisfied', () => {
             engine.versions = [ { version: 'v12.0.0' } ];
@@ -443,9 +440,8 @@ describe('Engine Module', () => {
         });
     });
     describe('repositoryEngines()', () => {
-        const { repositoryEngines } = require('./engine');
         it('should throw RangeError when package not found', () => {
-            const wrapper = () => repositoryEngines('missing');
+            const wrapper = () => engine.repositoryEngines('missing');
 
             expect(wrapper).to.throw(RangeError);
         });
@@ -459,7 +455,7 @@ describe('Engine Module', () => {
 
             let result;
             const wrapper = () => {
-                result = repositoryEngines('myRepo');
+                result = engine.repositoryEngines('myRepo');
             };
 
             expect(wrapper).not.to.throw();
@@ -477,7 +473,7 @@ describe('Engine Module', () => {
             expect(result).to.be.undefined;
 
             const wrapper = () => {
-                result = repositoryEngines('myRepo');
+                result = engine.repositoryEngines('myRepo');
             };
 
             expect(wrapper).not.to.throw();
@@ -487,7 +483,6 @@ describe('Engine Module', () => {
         });
     });
     describe('versionToUseValidator()', () => {
-        const engine = require('./engine');
         let satisfyingVersions; let maxInstalledSatisfyingVersion;let versionStringToObject;
         let minInstalledSatisfyingVersion;
         beforeEach(() => {
@@ -577,26 +572,26 @@ describe('Engine Module', () => {
             it('should find full versions', () => {
                 const versionExpected = 'v2.3.0';
 
-                const { version } = require('./engine.js').versionStringToObject('2.3.0', versions);
+                const { version } = engine.versionStringToObject('2.3.0', versions);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should find major versions', () => {
                 const versionExpected = 'v2.3.0';
 
-                const { version } = require('./engine.js').versionStringToObject('2', versions);
+                const { version } = engine.versionStringToObject('2', versions);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should find major.minor versions', () => {
                 const versionExpected = 'v2.2.1';
 
-                const { version } = require('./engine.js').versionStringToObject('2.2', versions);
+                const { version } = engine.versionStringToObject('2.2', versions);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should be undefined when not found', () => {
-                const result = require('./engine.js').versionStringToObject('1.2.0', versions);
+                const result = engine.versionStringToObject('1.2.0', versions);
 
                 expect(result).to.be.undefined;
             });
@@ -605,26 +600,26 @@ describe('Engine Module', () => {
             it('should find full versions', () => {
                 const versionExpected = 'v2.3.0';
 
-                const { version } = require('./engine.js').versionStringToObject('2.3.0', versions, true);
+                const { version } = engine.versionStringToObject('2.3.0', versions, true);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should find major versions', () => {
                 const versionExpected = 'v2.0.0';
 
-                const { version } = require('./engine.js').versionStringToObject('2', versions, true);
+                const { version } = engine.versionStringToObject('2', versions, true);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should find major.minor versions', () => {
                 const versionExpected = 'v2.2.0';
 
-                const { version } = require('./engine.js').versionStringToObject('2.2', versions, true);
+                const { version } = engine.versionStringToObject('2.2', versions, true);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should be undefined when not found', () => {
-                const result = require('./engine.js').versionStringToObject('1.2.0', versions, true);
+                const result = engine.versionStringToObject('1.2.0', versions, true);
 
                 expect(result).to.be.undefined;
             });

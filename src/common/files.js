@@ -1,4 +1,5 @@
 const { statSync, lstatSync, writeFile } = require('fs');
+const { readFile } = require('fs').promises;
 const { join, resolve, parse } = require('path');
 
 /**
@@ -102,8 +103,21 @@ const findFirstFile = (fileName, startPath = __dirname) => {
     }
 };
 
+/**
+ *
+ * @param {string} file  - file to read
+ * @returns {Promise<object>} - content of file a JSON
+ */
+const fileAsJSON = async (file) => {
+    if(fileExists(file)) {
+        const data = await readFile(file, { encoding: 'utf8' });
+        return JSON.parse(data);
+    }
+};
+
 module.exports = {
     decodeBase64
+    , fileAsJSON
     , fileExists
     , folderExists
     , writeToFile

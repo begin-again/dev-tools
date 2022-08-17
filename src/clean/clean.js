@@ -28,6 +28,7 @@ const folderList = (regex, rootFolder) => {
             try {
                 stat = statSync(fullPath);
             }
+            // eslint-disable-next-line no-unused-vars
             catch (e) {
                 return false;
             }

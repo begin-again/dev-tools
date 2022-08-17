@@ -5,8 +5,9 @@ module.exports = {
         , ecmaFeatures: {
             impliedStrict: true
         }
+        , ecmaVersion: 2020
     }
-    , extends: 'eslint:recommended'
+    , extends: [ 'eslint:recommended', 'plugin:node/recommended' ]
     , env: {
         node: true
         , mocha: true
@@ -17,7 +18,6 @@ module.exports = {
         , 'arrow-spacing': [ 'error', { 'before': true, 'after': true } ]
         , 'block-scoped-var': 'error'
         , 'brace-style': [ 'error', 'stroustrup' ]
-        , 'callback-return': 'error'
         , 'camelcase': 'error'
         , 'comma-spacing': [ 'error', { 'after': true } ]
         , 'comma-style': [ 'error', 'first' ]
@@ -103,6 +103,10 @@ module.exports = {
         , 'spaced-comment': [ 'error', 'always' ]
         , 'use-isnan': [ 'error' ]
         , 'valid-typeof': [ 'error' ]
-        , yoda: 'error',
+        , yoda: 'error'
+        , 'node/callback-return': 'warn'
+        , 'node/global-require': 'warn'
+        , 'node/no-deprecated-api': 'warn'
+        , 'node/no-unpublished-require': 'off'
     }
 };

@@ -41,7 +41,8 @@ const login = {
 
 if(!shell.which('bash')) {
     process.stdout.write('Sorry, this script requires Bash shell\n');
-    process.exit(1);
+    process.exitCode = 1;
+    throw new Error('no bash');
 }
 shell.config.shell = shell.which('bash');
 
