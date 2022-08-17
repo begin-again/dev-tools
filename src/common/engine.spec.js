@@ -1,4 +1,3 @@
-/* eslint-disable no-magic-numbers, no-process-env */
 const chai = require('chai');
 const { expect } = chai;
 const sinon = require('sinon');
@@ -187,9 +186,10 @@ describe('Engine Module', () => {
     });
     describe('properNodeVersions()', () => {
         const engine = require('./engine');
+        const env = {};
         beforeEach(() => {
-            delete process.env.NVM_HOME;
-            delete process.env.NVM_BIN;
+            delete env.NVM_HOME;
+            delete env.NVM_BIN;
             if(engine.versions) {
                 delete engine.versions;
             }
@@ -269,7 +269,7 @@ describe('Engine Module', () => {
 
         it('should be empty when no env vars present', () => {
             expect(engine.versions).to.be.undefined;
-            const result = engine.properNodeVersions();
+            const result = engine.properNodeVersions(null, env);
 
             expect(result).to.be.an('array').lengthOf(0);
             expect(engine.versions).to.be.an('array').lengthOf(0);
@@ -280,10 +280,10 @@ describe('Engine Module', () => {
                     return this.skip();
                 }
 
-                process.env.NVM_HOME = 'nvm';
+                env.NVM_HOME = 'nvm';
                 expect(engine.versions).to.be.undefined;
 
-                const result = engine.properNodeVersions();
+                const result = engine.properNodeVersions(null, env);
 
                 expect(result).to.be.an('array').lengthOf(2);
                 expect(result[0].version).to.equal('v2.10.22');
@@ -294,9 +294,9 @@ describe('Engine Module', () => {
                 if(!isWindows) {
                     return this.skip();
                 }
-                process.env.NVM_HOME = 'nvm';
+                env.NVM_HOME = 'nvm';
 
-                const { bin, path } = engine.properNodeVersions()[0];
+                const { bin, path } = engine.properNodeVersions(null, env)[0];
 
                 expect(bin).to.equal(`${path}${sep}node.exe`);
             });
@@ -304,9 +304,9 @@ describe('Engine Module', () => {
                 if(!isWindows) {
                     return this.skip();
                 }
-                process.env.NVM_HOME = 'nvm';
+                env.NVM_HOME = 'nvm';
 
-                const { bin, path } = engine.properNodeVersions()[1];
+                const { bin, path } = engine.properNodeVersions(null, env)[1];
 
                 expect(bin).to.equal(`${path}${sep}node.exe`);
             });
@@ -316,11 +316,12 @@ describe('Engine Module', () => {
                 if(isWindows) {
                     return this.skip();
                 }
-                process.env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
+                env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
+                const expectedSize = 5;
 
-                const result = engine.properNodeVersions();
+                const result = engine.properNodeVersions(null, env);
 
-                expect(result).to.be.an('array').lengthOf(5);
+                expect(result).to.be.an('array').lengthOf(expectedSize);
                 expect(result[0].version).to.equal('v12.0.0');
                 expect(result[4].version).to.equal('v0.0.1');
                 expect(engine.versions).not.to.be.undefined;
@@ -329,9 +330,9 @@ describe('Engine Module', () => {
                 if(isWindows) {
                     return this.skip();
                 }
-                process.env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
+                env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
 
-                const { bin, path } = engine.properNodeVersions()[0];
+                const { bin, path } = engine.properNodeVersions(null, env)[0];
 
                 expect(bin).to.equal(`${path}${sep}node`);
                 expect(engine.versions).not.to.be.undefined;
@@ -340,9 +341,9 @@ describe('Engine Module', () => {
                 if(isWindows) {
                     return this.skip();
                 }
-                process.env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
+                env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
 
-                const { bin, path } = engine.properNodeVersions()[1];
+                const { bin, path } = engine.properNodeVersions(null, env)[1];
 
                 expect(bin).to.equal(`${path}${sep}node64`);
                 expect(engine.versions).not.to.be.undefined;

@@ -53,7 +53,7 @@ module.exports = {
         , 'no-invalid-regexp': [ 'error' ]
         , 'no-lone-blocks': [ 'error' ]
         , 'no-lonely-if': 'error'
-        , 'no-magic-numbers': [ 'error', { ignore: [ 1, 0, -1 ], ignoreArrayIndexes: true } ]
+        , 'no-magic-numbers': [ 'error', { ignore: [ 2, 1, 0, -1 ], ignoreArrayIndexes: true } ]
         , 'no-multi-spaces': 'error'
         , 'no-param-reassign': [ 'error', { props: false } ]
         , 'no-irregular-whitespace': [ 'error', { skipComments: true } ]
