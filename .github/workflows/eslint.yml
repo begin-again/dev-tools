@@ -11,12 +11,12 @@ name: ESLint
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "master" ]
+    branches: ["master"]
   schedule:
-    - cron: '40 5 * * 0'
+    - cron: "40 5 * * 0"
 
 jobs:
   eslint:
@@ -37,8 +37,9 @@ jobs:
       - name: Run ESLint
         run: npx eslint .
           --config .eslintrc.js
+          --quiet
           --ext .js,.jsx,.ts,.tsx
-          --format @microsoft/eslint-formatter-sarif 
+          --format @microsoft/eslint-formatter-sarif
           --output-file eslint-results.sarif
         continue-on-error: true
 
