@@ -49,7 +49,6 @@ module.exports = {
         , 'no-multi-spaces': 'error'
         , 'no-param-reassign': [ 'error', { props: false } ]
         , 'no-path-concat': 'error'
-        , 'no-process-env': 'warn'
         , 'no-return-await': 'error'
         , 'no-script-url': 'error'
         , 'no-self-compare': [ 'error' ]
