@@ -274,12 +274,13 @@ describe('Engine Module', () => {
             expect(engine.versions).to.be.an('array').lengthOf(0);
         });
         describe('NVM for Windows', () => {
-            it('should have length of 1', function() {
+            console.log('env', env);
+            it('should have length of 2', function() {
                 if(!isWindows) {
                     return this.skip();
                 }
-
                 env.NVM_HOME = 'nvm';
+
                 expect(engine.versions).to.be.undefined;
 
                 const result = engine.properNodeVersions(null, env);
@@ -310,44 +311,7 @@ describe('Engine Module', () => {
                 expect(bin).to.equal(`${path}${sep}node.exe`);
             });
         });
-        describe('NVM For Other', () => {
-            it('should have length of five', function() {
-                if(isWindows) {
-                    return this.skip();
-                }
-                env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
-                const expectedSize = 5;
 
-                const result = engine.properNodeVersions(null, env);
-
-                expect(result).to.be.an('array').lengthOf(expectedSize);
-                expect(result[0].version).to.equal('v12.0.0');
-                expect(result[4].version).to.equal('v0.0.1');
-                expect(engine.versions).not.to.be.undefined;
-            });
-            it('should have path to binary', function() {
-                if(isWindows) {
-                    return this.skip();
-                }
-                env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
-
-                const { bin, path } = engine.properNodeVersions(null, env)[0];
-
-                expect(bin).to.equal(`${path}${sep}node`);
-                expect(engine.versions).not.to.be.undefined;
-            });
-            it('should have path to binary when not named \'node\'', function() {
-                if(isWindows) {
-                    return this.skip();
-                }
-                env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
-
-                const { bin, path } = engine.properNodeVersions(null, env)[1];
-
-                expect(bin).to.equal(`${path}${sep}node64`);
-                expect(engine.versions).not.to.be.undefined;
-            });
-        });
     });
     describe('maxInstalledSatisfyingVersion()', () => {
         beforeEach(removeVersions.bind(null, engine));
