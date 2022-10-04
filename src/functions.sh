@@ -66,15 +66,15 @@ gitlog() {
     if [ -n "$entries" ]; then
         entries="-${entries#-}"
         if [ -n "$branch" ]; then
-            git log  "$branch" --format="%h %cd | %an | %s" --date=format:"%m-%d-%y %H:%M" $entries | column -ts '|' -T 3
+            git log  "$branch" --format="%h %cd | %an | %(describe:tags) | %s" --date=format:"%m-%d-%y %H:%M" $entries | column -ts '|' -T 4
         else
-            git log  --format="%h %cd | %an | %s" --date=format:"%m-%d-%y %H:%M" $entries | column -ts '|' -T 3
+            git log  --format="%h %cd | %an | %(describe:tags) | %s" --date=format:"%m-%d-%y %H:%M" $entries | column -ts '|' -T 4
         fi
     else
         if [ -n "$branch" ]; then
-            git log  "$branch" --format="%h %cd | %an | %s" --date=format:"%m-%d-%y %H:%M" | column -ts '|' -T 3
+            git log  "$branch" --format="%h %cd | %an | %(describe:tags) | %s" --date=format:"%m-%d-%y %H:%M" | column -ts '|' -T 4
         else
-            git log  --format="%h %cd | %an | %s" --date=format:"%m-%d-%y %H:%M" | column -ts '|' -T 3
+            git log  --format="%h %cd | %an | %(describe:tags) | %s" --date=format:"%m-%d-%y %H:%M" | column -ts '|' -T 4
         fi
     fi
 }
