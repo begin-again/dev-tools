@@ -12,12 +12,12 @@ const detectedVersion = semver.clean(process.version);
 const { join, resolve, basename } = require('path');
 const {
     readdirSync,
-    statSync,
     accessSync,
     lstatSync,
     constants: FSC,
 } = require('fs');
 const { getPackage } = require('./repos.js');
+const { folderExists } = require('./files');
 
 const NumbersPadding = 2;
 
@@ -193,25 +193,22 @@ const allInstalledNodeVersions = (log, env = process.env) => {
     const { NVM_BIN, NVM_HOME } = env;
     if(NVM_BIN || NVM_HOME) {
         const nodeHome = resolve(NVM_BIN ? join(NVM_BIN, '..', '..') : NVM_HOME);
-        //  creates an array of Version
-        return readdirSync(nodeHome, {
-            encoding: 'utf-8',
-        })
-            .filter(
-                (name) =>
-                    name[0] === 'v' && statSync(join(nodeHome, name)).isDirectory()
-            )
-            .sort(
-                (a, b) =>
-                    module.exports.versionStringToNumber(b) -
-          module.exports.versionStringToNumber(a)
-            )
-            .map((version) => {
-                let path = join(nodeHome, version);
-                NVM_BIN && (path = join(path, 'bin'));
+        if(folderExists(nodeHome)) {
+            //  creates an array of Version
+            return readdirSync(nodeHome, { withFileTypes:true })
+                .filter(dirent => dirent.isDirectory())
+                .map(dirent => dirent.name)
+                .sort((a, b) => module.exports.versionStringToNumber(b) - module.exports.versionStringToNumber(a))
+                .map(version => {
+                    let path = join(nodeHome, version);
+                    if(NVM_BIN) {
+                        path = join(path, 'bin');
+                    }
 
-                return new Version(version, path, log);
-            });
+                    return new Version(version, path, log);
+                });
+        }
+        return [];
     }
     return [];
 };
@@ -221,10 +218,12 @@ const allInstalledNodeVersions = (log, env = process.env) => {
  *   - sets module versions property
  *
  * @param {Object} [log] - standard logger or console
- * @param {Object=} fakeNvmHome
+ * @param {object=} fakeNvmHome
+ * @param {string=} fakeNvmHome.NVM_HOME
+ * @param {string=} fakeNvmHome.NVM_BIN
  * @returns {Version[]}
  */
-const properNodeVersions = (log, fakeNvmHome) => {
+const properNodeVersions = (log, fakeNvmHome = null) => {
     module.exports.versions = module.exports
         .allInstalledNodeVersions(log, fakeNvmHome)
         .filter(({ error }) => !error);
@@ -348,5 +347,5 @@ module.exports = {
     , versionStringToObject
     , versionStringToNumber
     , versionToUseValidator
-    , Version,
+    , Version
 };

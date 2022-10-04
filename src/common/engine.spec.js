@@ -181,7 +181,7 @@ describe('Engine Module', function() {
 
         });
     });
-    describe('properNodeVersions()', function() {
+    describe('node version managers', function() {
         const env = {};
         beforeEach(function() {
             delete env.NVM_HOME;
@@ -190,7 +190,8 @@ describe('Engine Module', function() {
                 delete engine.versions;
             }
             mockFS({
-                nvm: {
+                afile: 'hello'
+                , nvm: {
                     'v8.11.1':{
                         'node64.exe': ''
                         , node56: {}
@@ -215,39 +216,70 @@ describe('Engine Module', function() {
         });
         afterEach(mockFS.restore);
 
-        it('should be empty when no env vars present', function() {
-            expect(engine.versions).to.be.undefined;
-            const result = engine.properNodeVersions(null, env);
+        describe('allInstalledNodeVersions()', function() {
+            it('should be empty if not env', function() {
+                const result = engine.allInstalledNodeVersions(null, {});
 
-            expect(result).to.be.an('array').lengthOf(0);
-            expect(engine.versions).to.be.an('array').lengthOf(0);
-        });
-        describe('NVM for Windows', function() {
-            it('should have length of 2', function() {
+                expect(result).to.be.an('array').lengthOf(0);
+            });
+            it('should be empty if nvm home is not a folder', function() {
+                env.NVM_HOME = 'afile';
+                const result = engine.allInstalledNodeVersions(null, env);
+
+                expect(result).to.be.an('array').lengthOf(0);
+            });
+            it('should find 4 versions in nvm', function() {
                 env.NVM_HOME = 'nvm';
-                expect(engine.versions).to.be.undefined;
+                const result = engine.allInstalledNodeVersions(null, env);
 
+                expect(result).to.be.an('array');
+                for(const version of result) {
+                    expect(version).to.have.property('version');
+                    expect(version).to.have.property('path');
+                }
+                const [ v1, v2, v3, v4, v5 ] = result;
+                expect(v1.version).to.equal('v10.23.0');
+                expect(v2.version).to.equal('v8.11.1');
+                expect(v3.version).to.equal('v2.10.22');
+                expect(v4.version).to.equal('v0.0.1');
+                expect(v5).to.be.undefined;
+
+            });
+        });
+        describe('properNodeVersions()', function() {
+            it('should be empty when no env vars present', function() {
+                expect(engine.versions).to.be.undefined;
                 const result = engine.properNodeVersions(null, env);
 
-                expect(result).to.be.an('array').lengthOf(2);
-                expect(result[0].version).to.equal('v2.10.22');
-                expect(result[1].version).to.equal('v0.0.1');
-                expect(engine.versions).lengthOf(2);
+                expect(result).to.be.an('array').lengthOf(0);
+                expect(engine.versions).to.be.an('array').lengthOf(0);
             });
-            it('should have path to binary on windows', function() {
-                env.NVM_HOME = 'nvm';
-                const { bin, path } = engine.properNodeVersions(null, env)[0];
+            describe('NVM for Windows', function() {
+                it('should have length of 2', function() {
+                    env.NVM_HOME = 'nvm';
+                    expect(engine.versions).to.be.undefined;
 
-                expect(bin).to.equal(`${path}${sep}node.exe`);
-            });
-            it('should have path to binary when not named \'node\'', function() {
-                env.NVM_HOME = 'nvm';
-                const { bin, path } = engine.properNodeVersions(null, env)[1];
+                    const result = engine.properNodeVersions(null, env);
 
-                expect(bin).to.equal(`${path}${sep}node.exe`);
+                    expect(result).to.be.an('array').lengthOf(2);
+                    expect(result[0].version).to.equal('v2.10.22');
+                    expect(result[1].version).to.equal('v0.0.1');
+                    expect(engine.versions).lengthOf(2);
+                });
+                it('should have path to binary on windows', function() {
+                    env.NVM_HOME = 'nvm';
+                    const { bin, path } = engine.properNodeVersions(null, env)[0];
+
+                    expect(bin).to.equal(`${path}${sep}node.exe`);
+                });
+                it('should have path to binary when not named \'node\'', function() {
+                    env.NVM_HOME = 'nvm';
+                    const { bin, path } = engine.properNodeVersions(null, env)[1];
+
+                    expect(bin).to.equal(`${path}${sep}node.exe`);
+                });
             });
         });
-
     });
     describe('maxInstalledSatisfyingVersion()', function() {
         beforeEach(removeVersions.bind(null, engine));
