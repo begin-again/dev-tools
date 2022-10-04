@@ -6,7 +6,6 @@ chai.use(require('sinon-chai'));
 const mockFS = require('mock-fs');
 const { join } = require('path');
 const { allRepoPaths
-    , deployRoot
     , getBinaryPaths
     , getPackage
 } = require('./repos');
@@ -78,32 +77,6 @@ describe('Repositories Modules', () => {
             const result = allRepoPaths('.');
 
             expect(result).an('array').of.length(0);
-        });
-    });
-    describe('deployRoot', () => {
-        it('should obtain path from build-config', () => {
-            const result = deployRoot(join(__dirname, 'test-fixtures', 'repo1'));
-
-            expect(result).to.be.a('string');
-            expect(result.endsWith('repo1')).to.be.true;
-        });
-        it('should obtain path from builder/config', () => {
-            const result = deployRoot(join(__dirname, 'test-fixtures', 'repo2'));
-
-            expect(result).to.be.a('string');
-            expect(result.endsWith('repo2')).to.be.true;
-        });
-        it('should be empty if property not found', () => {
-            const result = deployRoot(join(__dirname, 'test-fixtures', 'repo3'));
-
-            expect(result).to.be.a('string');
-            expect(result).to.be.empty;
-        });
-        it('should be empty if config not found', () => {
-            const result = deployRoot('./root/missing');
-
-            expect(result).to.be.a('string');
-            expect(result).to.be.empty;
         });
     });
     describe('getPackage()', () => {

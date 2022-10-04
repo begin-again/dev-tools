@@ -63,25 +63,6 @@ const allRepoPaths = (folder = DEVROOT, foldersToInclude = []) => {
         });
 };
 
-/**
- * Obtains deployment root
- *
- * @param {String} folder - repository root folder
- * @returns {String}
- */
-const deployRoot = (folder) => {
-    let root = '';
-    const paths = [
-        `build-config.js`
-        , join('builder', 'config.js')
-    ];
-    const files = paths.filter(file => fileExists(join(folder, file)));
-    if(files.length) {
-        const { path } = require(join(folder, files[0]));
-        root = path && path.deployRoot || '';
-    }
-    return root;
-};
 
 /**
  * Identify the location of the gulp binary
@@ -109,7 +90,6 @@ const getBinaryPaths = (builderName, repoPath, devRoot = DEVROOT) => {
 
 module.exports = {
     allRepoPaths
-    , deployRoot
     , getBinaryPaths
     , getPackage
 };

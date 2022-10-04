@@ -6,8 +6,6 @@ chai.use(require('sinon-chai'));
 const mockFS = require('mock-fs');
 const { sep } = require('path');
 
-const isWindows = require('os').platform() === 'win32';
-
 const proxyquire = require('proxyquire').noCallThru();
 
 const removeVersions = (engine) => {
@@ -276,10 +274,6 @@ describe('Engine Module', () => {
         });
         describe('NVM for Windows', () => {
             it('should have length of 1', function() {
-                if(!isWindows) {
-                    return this.skip();
-                }
-
                 process.env.NVM_HOME = 'nvm';
                 expect(engine.versions).to.be.undefined;
 
@@ -291,9 +285,6 @@ describe('Engine Module', () => {
                 expect(engine.versions).lengthOf(2);
             });
             it('should have path to binary on windows', function() {
-                if(!isWindows) {
-                    return this.skip();
-                }
                 process.env.NVM_HOME = 'nvm';
 
                 const { bin, path } = engine.properNodeVersions()[0];
@@ -301,51 +292,11 @@ describe('Engine Module', () => {
                 expect(bin).to.equal(`${path}${sep}node.exe`);
             });
             it('should have path to binary when not named \'node\'', function() {
-                if(!isWindows) {
-                    return this.skip();
-                }
                 process.env.NVM_HOME = 'nvm';
 
                 const { bin, path } = engine.properNodeVersions()[1];
 
                 expect(bin).to.equal(`${path}${sep}node.exe`);
-            });
-        });
-        describe('NVM For Other', () => {
-            it('should have length of five', function() {
-                if(isWindows) {
-                    return this.skip();
-                }
-                process.env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
-
-                const result = engine.properNodeVersions();
-
-                expect(result).to.be.an('array').lengthOf(5);
-                expect(result[0].version).to.equal('v12.0.0');
-                expect(result[4].version).to.equal('v0.0.1');
-                expect(engine.versions).not.to.be.undefined;
-            });
-            it('should have path to binary', function() {
-                if(isWindows) {
-                    return this.skip();
-                }
-                process.env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
-
-                const { bin, path } = engine.properNodeVersions()[0];
-
-                expect(bin).to.equal(`${path}${sep}node`);
-                expect(engine.versions).not.to.be.undefined;
-            });
-            it('should have path to binary when not named \'node\'', function() {
-                if(isWindows) {
-                    return this.skip();
-                }
-                process.env.NVM_BIN = '.nvm/versions/node/v12.0.0/node';
-
-                const { bin, path } = engine.properNodeVersions()[1];
-
-                expect(bin).to.equal(`${path}${sep}node64`);
-                expect(engine.versions).not.to.be.undefined;
             });
         });
     });

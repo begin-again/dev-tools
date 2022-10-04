@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const yargs = require('yargs');
-const { findFirstFile } = require('../common/files');
+const { findFirstFile, fileAsJSON } = require('../common/files');
 
 /**
  * Writes scripts block to console from first package file found in specified path
@@ -21,7 +21,8 @@ const main = async () => {
         process.exitCode = 1;
     }
 
-    const { scripts } = require(file);
+    const { scripts } = await fileAsJSON(file);
+
     let keyMax = 0;
     Object.keys(scripts).forEach(key => {
         key.length > keyMax && (keyMax = key.length);

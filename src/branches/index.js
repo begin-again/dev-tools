@@ -15,8 +15,8 @@ const main = async () => {
         repos = allRepoPaths(options.root);
     }
 
-    // eslint-disable-next-line no-console
     if(!options.silent) {
+        // eslint-disable-next-line no-console
         console.log(`Processing ${repos.length} repositories in ${options.root}`);
     }
 

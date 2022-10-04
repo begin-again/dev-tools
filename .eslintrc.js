@@ -5,8 +5,9 @@ module.exports = {
         , ecmaFeatures: {
             impliedStrict: true
         }
+        , ecmaVersion: 2020
     }
-    , extends: 'eslint:recommended'
+    , extends: [ 'eslint:recommended', 'plugin:node/recommended' ]
     , env: {
         node: true
         , mocha: true
@@ -17,7 +18,6 @@ module.exports = {
         , 'arrow-spacing': [ 'error', { 'before': true, 'after': true } ]
         , 'block-scoped-var': 'error'
         , 'brace-style': [ 'error', 'stroustrup' ]
-        , 'callback-return': 'error'
         , 'camelcase': 'error'
         , 'comma-spacing': [ 'error', { 'after': true } ]
         , 'comma-style': [ 'error', 'first' ]
@@ -35,40 +35,26 @@ module.exports = {
         , 'no-alert': [ 'error' ]
         , 'no-caller': 'error'
         , 'no-console': 'warn'
-        , 'no-const-assign': 'error'
         , 'no-div-regex': 'error'
-        , 'no-dupe-args': 'error'
-        , 'no-dupe-class-members': 'error'
         , 'no-duplicate-imports': [ 'error', { includeExports: true } ]
         , 'no-else-return': [ 'error', { allowElseIf: false } ]
         , 'no-empty-function': 'error'
         , 'no-eq-null': 'error'
-        , 'no-extra-boolean-cast': [ 'error' ]
-        , 'no-extra-semi': [ 'error' ]
-        , 'no-fallthrough': [ 'warn' ]
         , 'no-floating-decimal': 'error'
-        , 'no-func-assign': [ 'error' ]
         , 'no-implicit-coercion': [ 'error' ]
-        , 'no-inner-declarations': 'error'
-        , 'no-invalid-regexp': [ 'error' ]
+        , 'no-irregular-whitespace': [ 'error', { skipComments: true } ]
         , 'no-lone-blocks': [ 'error' ]
         , 'no-lonely-if': 'error'
-        , 'no-magic-numbers': [ 'error', { ignore: [ 1, 0, -1 ], ignoreArrayIndexes: true } ]
+        , 'no-magic-numbers': [ 'error', { ignore: [ 2, 1, 0, -1 ], ignoreArrayIndexes: true } ]
         , 'no-multi-spaces': 'error'
         , 'no-param-reassign': [ 'error', { props: false } ]
-        , 'no-irregular-whitespace': [ 'error', { skipComments: true } ]
         , 'no-path-concat': 'error'
-        , 'no-process-env': 'warn'
-        , 'no-redeclare': 'error'
-        , 'no-regex-spaces': [ 'error' ]
         , 'no-return-await': 'error'
         , 'no-script-url': 'error'
-        , 'no-self-assign': 'error'
         , 'no-self-compare': [ 'error' ]
         , 'no-tabs': 'error'
         , 'no-trailing-spaces': 'error'
         , 'no-unneeded-ternary': [ 'error' ]
-        , 'no-unreachable': 'error'
         , 'no-unsafe-negation': [ 'error' ]
         , 'no-unused-vars': [ 'error', { args: 'all', caughtErrors: 'all' } ]
         , 'no-useless-return': 'error'
@@ -101,8 +87,10 @@ module.exports = {
         , 'space-infix-ops': [ 'error' ]
         , 'space-unary-ops': [ 'error', { words: true, nonwords: false } ]
         , 'spaced-comment': [ 'error', 'always' ]
-        , 'use-isnan': [ 'error' ]
-        , 'valid-typeof': [ 'error' ]
-        , yoda: 'error',
+        , yoda: 'error'
+        , 'node/callback-return': 'warn'
+        , 'node/global-require': 'warn'
+        , 'node/no-deprecated-api': 'warn'
+        , 'node/no-unpublished-require': 'off'
     }
 };

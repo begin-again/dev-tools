@@ -1,11 +1,11 @@
 /* eslint no-console:off */
-require('./cmdLine').setOptions();
+require('./cmdline').setOptions();
 const { basename } = require('path');
 const { allRepoPaths } = require('../common/repos');
 const { promisify } = require('util');
 const _exec = promisify(require('child_process').exec);
 const { DateTime } = require('luxon');
-const { options } = require('./cmdLine');
+const { options } = require('./cmdline');
 const DateLength = 6;
 
 /**

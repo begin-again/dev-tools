@@ -16,7 +16,6 @@
     "dependencies": {
         "del": "^6.0.0",
         "dotenv": "^16.0.0",
-        "git-remote-origin-url": "^4.0.0",
         "luxon": "^3.0.4",
         "semver": "^7.3.6",
         "shelljs": "^0.8.5",
@@ -29,6 +28,7 @@
     "devDependencies": {
         "chai": "^4.3.6",
         "eslint": "^8.13.0",
+        "eslint-plugin-node": "^11.1.0",
         "mocha": "^9.2.2",
         "mock-fs": "^5.1.2",
         "nyc": "^15.1.0",
