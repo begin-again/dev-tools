@@ -189,8 +189,9 @@ const satisfyingVersions = (requiredVersionRange) => {
  * @returns {Version[]}
  */
 // @ts-ignore
-const allInstalledNodeVersions = (log, env = process.env) => {
-    const { NVM_BIN, NVM_HOME } = env;
+const allInstalledNodeVersions = (log, env) => {
+    const _env = env || process.env;
+    const { NVM_BIN, NVM_HOME } = _env;
     if(NVM_BIN || NVM_HOME) {
         const nodeHome = resolve(NVM_BIN ? join(NVM_BIN, '..', '..') : NVM_HOME);
         if(folderExists(nodeHome)) {
