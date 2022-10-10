@@ -22,7 +22,7 @@
         "simple-git": "^3.7.1",
         "uuid": "9.0.0",
         "winston": "^3.7.2",
-        "winston-daily-rotate-file": "^4.6.1",
+        "winston-daily-rotate-file": "^4.7.1",
         "yargs": "^16.2.0"
     },
     "devDependencies": {
