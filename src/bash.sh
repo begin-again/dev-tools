@@ -11,7 +11,6 @@ shopt -s histverify
 
 # Git completion support
 source "$DEVROOT/dev-tools/.git-completion-support"
-source "$DEVROOT/dev-tools/.git-prompt-support"
 
 # Command Prompt
 source "$DEVROOT/dev-tools/src/prompt.sh"
