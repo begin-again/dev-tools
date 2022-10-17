@@ -27,7 +27,6 @@ Identifies and deletes folders matching known patterns. These include folders pr
 
 Usage:<br/>
  - `clean -y |--yarn`, remove yarn folders.
- - `clean -b | --builder`, remove builder folders. This can be slow if there are number of these folders and not empty.
 
 <details>
     <summary>Examples</summary>
@@ -37,10 +36,6 @@ $ clean -y
 [12:07:35] Yarn cleanup started on C:\Users\SomeUser~1\AppData\Local\Temp
 [12:07:35] attempting to delete 37 folders - please be patient
 [12:07:35] Yarn cleanup completed
-1604 $ clean -b
-[12:08:09] Builder cleanup started on C:\Users\SomeUser~1\AppData\Local\Temp
-[12:08:09] attempting to delete 375 folders - plea se be patient
-[12:08:10] Builder cleanup completed
 </pre>
 </blockquote>
 </details>
