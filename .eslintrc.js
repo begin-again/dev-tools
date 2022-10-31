@@ -1,18 +1,21 @@
 const IndentSpaces = 4;
 module.exports = {
-    parserOptions: {
+    parser: '@typescript-eslint/parser'
+    , root: true
+    , parserOptions: {
         sourceType: 'script'
         , ecmaFeatures: {
             impliedStrict: true
         }
         , ecmaVersion: 2020
     }
-    , extends: [ 'eslint:recommended', 'plugin:node/recommended' ]
+    , extends: [ 'eslint:recommended', 'plugin:@typescript-eslint/recommended' ]
     , env: {
         node: true
         , mocha: true
         , es2020: true
     }
+    , plugins: [ '@typescript-eslint' ]
     , rules: {
         'array-bracket-spacing': [ 'error', 'always' ]
         , 'arrow-spacing': [ 'error', { 'before': true, 'after': true } ]
@@ -88,9 +91,5 @@ module.exports = {
         , 'space-unary-ops': [ 'error', { words: true, nonwords: false } ]
         , 'spaced-comment': [ 'error', 'always' ]
         , yoda: 'error'
-        , 'node/callback-return': 'warn'
-        , 'node/global-require': 'warn'
-        , 'node/no-deprecated-api': 'warn'
-        , 'node/no-unpublished-require': 'off'
     }
 };
