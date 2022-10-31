@@ -23,8 +23,8 @@ const gitCommand = (repo) => {
  * determines if item falls within range
  *
  * @param {Object} item
- * @param {Moment | undefined} item.fromDate
- * @param {Moment | undefined} item.toDate
+ * @param {DateTime | undefined} item.fromDate
+ * @param {DateTime | undefined} item.toDate
  * @returns {Boolean}
  * @private
  *
