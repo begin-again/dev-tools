@@ -19,18 +19,17 @@ const {
 const { getPackage } = require('./repos.js');
 const { folderExists } = require('./files');
 
-const NumbersPadding = 2;
-
 class Version {
     /**
-   * @param {String} version - version name
-   * @param {String} path - path to executables folder
-   * @param {Object} [log] - logger
-   * @param {Object} [env] - environment variables
-   */
+    * @param {String} version - version name
+    * @param {String} path - path to executables folder
+    * @param {Object} [log] - logger
+    * @param {Object} [env] - environment variables
+    */
     constructor(version, path, log, env) {
         const { NVM_HOME } = (env || process.env);
         this._path = path;
+
         this._version = version;
 
         const binName = NVM_HOME ? 'node.exe' : 'node';
@@ -58,49 +57,50 @@ class Version {
     }
 
     /**
-   * @readonly
-   * @memberof Version
-   * @returns {String}
-   */
+    * @readonly
+    * @memberof Version
+    * @returns {String}
+    */
     get error() {
         return this._error;
     }
 
     /**
-   * @readonly
-   * @memberof Version
-   * @returns {String}
-   */
+    * @readonly
+    * @memberof Version
+    * @returns {String}
+    */
     get path() {
         return this._path;
     }
 
     /**
-   * @readonly
-   * @memberof Version
-   * @returns {String}
-   */
+    * @readonly
+    * @memberof Version
+    * @returns {{version:string, major:number, minor:number, path:number}} - version object
+    */
     get version() {
         return this._version;
     }
 
     /**
-   * @readonly
-   * @memberof Version
-   * @returns {String}
-   */
+    * @readonly
+    * @memberof Version
+    * @returns {String}
+    */
     get bin() {
         return this._bin;
     }
 
     /**
-   * @readonly
-   * @memberof Version
-   * @returns {Boolean}
-   */
+    * @readonly
+    * @memberof Version
+    * @returns {Boolean}
+    */
     get isLink() {
         return this._link;
     }
+
 }
 
 /**
@@ -125,25 +125,9 @@ const engineCheck = (requiredVersionRange = null, log = null, addMsg = '') => {
 };
 
 /**
- * converts a version string to number
- *
- * @param {String} version
- * @returns {Number}
- */
-const versionStringToNumber = (version) => {
-    const _version = version[0] === 'v' ? version.substring(1) : version;
-    let _expanded = '';
-    _version.split('.').forEach((s, i) => {
-    // eslint-disable-next-line no-magic-numbers
-        _expanded += i === 0 ? s : s.padStart(NumbersPadding, '0');
-    });
-    return parseInt(_expanded, 10);
-};
-
-/**
  * Locates first or last version string in versions
  *
- * @param {String} v - version number (1.1.1)
+ * @param {String} v - version number (v1.1.1)
  * @param {Version[]} versions - objects
  * @param {Boolean} oldest - select oldest version
  * @returns {Version}
@@ -162,21 +146,19 @@ const versionStringToObject = (v, versions, oldest = false) => {
  * Determines which installed versions are compatible with specified range
  *
  * @param {String} requiredVersionRange
+ * @param {boolean=} descendingOrder - sort descending
  * @returns {Version[]} satisfying versions sorted descending
  */
-const satisfyingVersions = (requiredVersionRange) => {
+const satisfyingVersions = (requiredVersionRange, descendingOrder = true) => {
     const _installed =
     module.exports.versions || module.exports.properNodeVersions();
+    const sortingMethod = descendingOrder ? 'rcompare' : 'compare';
     return _installed
         .filter(
             ({ version, error }) =>
                 !error && semver.satisfies(version, requiredVersionRange)
         )
-        .sort(
-            (a, b) =>
-                module.exports.versionStringToNumber(b.version) -
-        module.exports.versionStringToNumber(a.version)
-        );
+        .sort((a, b) => semver[sortingMethod](a.version, b.version));
 };
 
 /**
@@ -199,7 +181,7 @@ const allInstalledNodeVersions = (log, env) => {
             return readdirSync(nodeHome, { withFileTypes:true })
                 .filter(dirent => dirent.isDirectory())
                 .map(dirent => dirent.name)
-                .sort((a, b) => module.exports.versionStringToNumber(b) - module.exports.versionStringToNumber(a))
+                .sort(semver.rcompare)
                 .map(version => {
                     let path = join(nodeHome, version);
                     if(NVM_BIN) {
@@ -246,10 +228,8 @@ const maxInstalledSatisfyingVersion = (requiredRange) =>
  * @param {String} requiredRange
  * @returns {Version|undefined} version, path, bin
  */
-const minInstalledSatisfyingVersion = (requiredRange) => {
-    const version = module.exports.satisfyingVersions(requiredRange);
-    return version[version.length - 1];
-};
+const minInstalledSatisfyingVersion = (requiredRange) =>
+    module.exports.satisfyingVersions(requiredRange, false)[0];
 
 /**
  * Obtains node engine range
@@ -276,25 +256,34 @@ const repositoryEngines = (repoPath) => {
  * @param {String} param0.path - to repository
  * @param {String=} param0.version - version number x.y.z
  * @param {Boolean=} param0.oldest - choose oldest acceptable version
+ * @param {Boolean=} param0.force - choose specified version even if not in range
  * @param {Boolean=} noPackage - path does not have package.json
  * @returns {Version}
  * @throws RangeError
  */
-const versionToUseValidator = ({ path, version, oldest }, noPackage) => {
-    const repoEngines = noPackage ? version : module.exports.repositoryEngines(path);
+const versionToUseValidator = ({ path, version, oldest, force }, noPackage) => {
+    let repoEngines;
+    if(noPackage) {
+        repoEngines = version;
+    }
+    else {
+        repoEngines = module.exports.repositoryEngines(path);
+    }
     const repoName = basename(path);
 
     if(version) {
-        const satisfies = module.exports.satisfyingVersions(repoEngines);
+        const engineRange = force ? version : repoEngines;
+        const satisfies = module.exports.satisfyingVersions(engineRange);
         const _version = module.exports.versionStringToObject(
             version,
             satisfies,
             oldest
         );
-        // _version is undefined if version is not in satisfies
+            // _version is undefined if version is not in satisfies
         const found = satisfies.filter(
             (v) => _version && v.version === _version.version
         )[0];
+
         if(!found) {
             throw new RangeError(
                 `${repoName} requires NodeJS version(s) '${repoEngines}' but got '${version}'`
@@ -346,7 +335,6 @@ module.exports = {
     , satisfyingVersions
     , versionKeys
     , versionStringToObject
-    , versionStringToNumber
     , versionToUseValidator
     , Version
 };

@@ -360,7 +360,7 @@ describe('Engine Module', function() {
             expect(stub.wrappedMethod).not.to.be.undefined;
             stub.reset();
         });
-        it('should pick 16.12.0 -- issue 116', function() {
+        it('should pick 16.12.0', function() {
             engine.versions = [ { version: 'v16.13.0' }, { version: 'v16.12.0' } ];
             const stub = sinon.stub(engine, 'properNodeVersions');
 
@@ -448,12 +448,6 @@ describe('Engine Module', function() {
                 const result = engine.versionToUseValidator({ path, version });
 
                 expect(result.version).to.equal(expectedVersion);
-            });
-            it('should pick 16.13.0 -- issue 116', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^12.13.0 || ^14.15.0 || ^16.13.0');
-                const satVersions = [ { version: 'v17.0.1' }, { version: 'v16.13.0' }, { version: 'v16.12.0' }, { version: 'v14.18.1' } ];
-                satisfyingVersions.callsFake(() => satVersions);
-                versionStringToObject.callsFake(() => ({ version: 'v12.13.1' }));
             });
         });
         describe('default', function() {
