@@ -129,16 +129,15 @@ const engineCheck = (requiredVersionRange = null, log = null, addMsg = '') => {
  *
  * @param {String} v - version number (v1.1.1)
  * @param {Version[]} versions - objects
- * @param {Boolean} oldest - select oldest version
+ * @param {Boolean=} oldest - select oldest version
  * @returns {Version}
  */
 const versionStringToObject = (v, versions, oldest = false) => {
     const rx = new RegExp(`^v${v}.*?`);
-    const matchingVersions = versions.filter(({ version }) => rx.test(version));
-    // versions array is sorted in version descending order
-    if(oldest) {
-        return matchingVersions[matchingVersions.length - 1];
-    }
+    const sortMethod = oldest ? 'compare' : 'rcompare';
+    const matchingVersions = versions
+        .filter(({ version }) => rx.test(version))
+        .sort((a, b) => semver[sortMethod](a.version, b.version));
     return matchingVersions[0];
 };
 
