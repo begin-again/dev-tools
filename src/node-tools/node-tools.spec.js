@@ -7,6 +7,8 @@ const fs = require('fs');
 const { Version } = require('../common/engine.js');
 const sinon = require('sinon');
 chai.use(require('sinon-chai'));
+const { platform } = require('os');
+const isWindows = platform() === 'win32';
 
 const clean = require('./clean.js');
 const report = require('./report.js');
@@ -15,9 +17,10 @@ const remove = require('./remove.js');
 
 let version10; let version12; let version14;let logger = {};
 
-describe('node-tools', () => {
+
+describe('node-tools', function() {
     afterEach(mockFS.restore);
-    beforeEach(() => {
+    beforeEach(function() {
         mockFS({
             a: {
                 'v10.0.0': {
@@ -41,7 +44,7 @@ describe('node-tools', () => {
             , error: sinon.spy()
         };
     });
-    describe('clean', () => {
+    describe('clean', function() {
         it('should remove only the symbolic links', (done) => {
             const installed = [
                 version10
@@ -75,7 +78,7 @@ describe('node-tools', () => {
             expect(fs.readdirSync('a/v12.0.0')).contains('node.exe');
         });
     });
-    describe('report', () => {
+    describe('report', function() {
         it('should report findings', (done) => {
             const ExpectedCallCount = 4;
             const installed = [
@@ -93,8 +96,11 @@ describe('node-tools', () => {
             expect(logger.debug.callCount).equals(ExpectedCallCount);
         });
     });
-    describe('fix', () => {
-        it('should create a symbolic link', () => {
+    describe('fix', function() {
+        it('should create a symbolic link', function() {
+            if(!isWindows) {
+                return this.skip();
+            }
             const installed = [
                 version10
                 , version12
@@ -113,7 +119,10 @@ describe('node-tools', () => {
             expect(fs.readdirSync('a/v14.0.0')).contains('node.exe');
             expect(fs.lstatSync('a/v14.0.0/node.exe').isSymbolicLink()).is.true;
         });
-        it('should create copy of node64.exe', () => {
+        it('should create copy of node64.exe', function() {
+            if(!isWindows) {
+                return this.skip();
+            }
             const installed = [
                 version10
                 , version12
@@ -136,8 +145,8 @@ describe('node-tools', () => {
             expect(content).equals('content64');
         });
     });
-    describe('remove', () => {
-        it('should not remove when execute is false', () => {
+    describe('remove', function() {
+        it('should not remove when execute is false', function() {
             const installed = [ version10, version12 ];
             const version = '10.0.0';
 
@@ -147,7 +156,7 @@ describe('node-tools', () => {
             expect(fs.readdirSync('a')).contains('v12.0.0');
             expect(logger.debug.callCount).equals(1);
         });
-        it('should report but not remove matched range when execute is false', () => {
+        it('should report but not remove matched range when execute is false', function() {
             const installed = [ version10, version12 ];
             const version = '10.0.0';
 
@@ -158,7 +167,7 @@ describe('node-tools', () => {
             expect(logger.debug.callCount).equals(1);
             expect(logger.debug.firstCall.firstArg).matches(/^Would remove/);
         });
-        it('should remove only matched range when execute is true', () => {
+        it('should remove only matched range when execute is true', function() {
             const installed = [ version10, version12 ];
             const version = '10.0.0';
 
@@ -169,7 +178,7 @@ describe('node-tools', () => {
             expect(logger.debug.callCount).equals(1);
             expect(logger.debug.firstCall.firstArg).matches(/^Removed/);
         });
-        it('should report message when no installed versions match range', () => {
+        it('should report message when no installed versions match range', function() {
             const installed = [ version10, version12 ];
             const version = '5.0.0';
 
