@@ -11,12 +11,12 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build and Test Windows
     runs-on:  windows-2019
 
     strategy:
       matrix:
-        node-version: [12.22.4, 14.x, 16.x, 18.x]
+        node-version: [12.x, 14.x, 16.x, 18.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     env:
@@ -30,22 +30,21 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn test
 
-  build:
-  name: Build and Test
-  runs-on: ubuntu-latest
+    name: Build and Test Nix
+    runs-on: ubuntu-latest
 
-  strategy:
-    matrix:
-      node-version: [12.22.4, 14.x, 16.x, 18.x]
-      # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x, 16.x, 18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
-  env:
-    NVM_HOME: "nvm"
+    env:
+      NVM_HOME: "nvm"
 
-  steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: yarn install --frozen-lockfile
-    - run: yarn test
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn test
