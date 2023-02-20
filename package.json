@@ -6,8 +6,8 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "test": "mocha -i --fgrep slow --ignore ./node_modules/**/* ./src/**/*.spec.js",
-        "test:slow": "mocha --fgrep slow --ignore ./node_modules/**/* ./src/**/*.spec.js"
+        "test": "mocha -i --fgrep slow ./src/**/*.spec.js",
+        "test:slow": "mocha --fgrep slow ./src/**/*.spec.js"
     },
     "engines": {
         "node": "12.13.1 || ^12.22.4 || ^14.17.4 || ^16.6.0 || ^18.12.0",
@@ -19,7 +19,7 @@
         "luxon": "^3.2.1",
         "semver": "^7.3.8",
         "shelljs": "^0.8.5",
-        "simple-git": "^3.16.0",
+        "simple-git": "^3.16.1",
         "uuid": "9.0.0",
         "winston": "^3.8.2",
         "winston-daily-rotate-file": "^4.7.1",
