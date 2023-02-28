@@ -6,3 +6,12 @@ logs/
 .vscode
 .env
 playtime2.js
+
+# yarn stuff
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
