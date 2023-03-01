@@ -1,3 +1,5 @@
+#!/bin/env bash
+
 echo "  loading functions.sh"
 
 # Adds to path only if not already present
@@ -5,7 +7,7 @@ path_add() {
 
     # check if not already present
     if [ -d "$1" ]; then
-        $(tr ":" "\n" <<< $PATH | grep -qv "$1")
+        $(tr ":" "\n" <<< "$PATH" | grep -qv "$1")
         code="$?"
         if [ "$code" = "0" ]; then
             if [ -n "$2" ]; then echo "added to path"; fi
