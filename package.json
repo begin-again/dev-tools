@@ -16,7 +16,7 @@
     "dependencies": {
         "del": "^6.1.1",
         "dotenv": "^16.0.3",
-        "luxon": "^3.2.1",
+        "luxon": "^3.3.0",
         "semver": "^7.3.8",
         "shelljs": "^0.8.5",
         "simple-git": "^3.17.0",
