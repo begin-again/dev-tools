@@ -4,7 +4,7 @@
  * removes temporary folders matching known patterns
  */
 const { join } = require('path');
-const { readdirSync, statSync, realpathSync } = require('fs');
+const { readdirSync, statSync, realpathSync, rmdirSync } = require('fs');
 const { tmpdir } = require('os');
 const del = require('del');
 const logger = console;
@@ -72,7 +72,33 @@ const removeTarget = (name, regex, root = defaultTempPath) => {
         });
 };
 
+const DAY_MS = 86400000;
+
+/**
+ *
+ * @param {object} options
+ * @param {string} options.root
+ * @param {number} options.age
+ * @param {Function} logger
+ */
+const removeSonarTemp = ({ root, age }, logger = console) => {
+    const _root = root || join(process.env.HOME, '.sonarlint', 'work');
+    const now = Date.now();
+    const folders = readdirSync(_root, { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .filter(d => {
+            const daysOld = Math.floor((now - statSync(join(_root, d.name)).ctimeMs) / DAY_MS);
+            return daysOld >= age;
+        });
+    logger.debug(`removing ${folders.length} folders`);
+    folders.forEach(d => {
+        rmdirSync(join(_root, d.name), { recursive: true });
+    });
+    return folders.length;
+};
+
 module.exports = {
     removeTarget
     , folderList
+    , removeSonarTemp
 };
