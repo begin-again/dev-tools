@@ -6,31 +6,31 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "test": "mocha -i --fgrep slow --ignore ./node_modules/**/* ./src/**/*.spec.js",
-        "test:slow": "mocha --fgrep slow --ignore ./node_modules/**/* ./src/**/*.spec.js"
+        "test": "mocha -i --fgrep slow ./src/**/*.spec.js",
+        "test:slow": "mocha --fgrep slow ./src/**/*.spec.js"
     },
     "engines": {
-        "node": "12.13.1 || ^12.22.4 || ^14.17.4 || ^16.6.0",
+        "node": "12.13.1 || ^12.22.4 || ^14.17.4 || ^16.6.0 || ^18.12.0",
         "yarn": "^1.22.4"
     },
     "dependencies": {
-        "del": "^6.0.0",
+        "del": "^6.1.1",
         "dotenv": "^16.0.3",
-        "luxon": "^3.0.4",
+        "luxon": "^3.2.1",
         "semver": "^7.3.8",
         "shelljs": "^0.8.5",
-        "simple-git": "^3.14.1",
+        "simple-git": "^3.16.0",
         "uuid": "9.0.0",
         "winston": "^3.8.2",
         "winston-daily-rotate-file": "^4.7.1",
         "yargs": "^16.2.0"
     },
     "devDependencies": {
-        "chai": "^4.3.6",
+        "chai": "^4.3.7",
         "eslint": "^8.13.0",
         "eslint-plugin-node": "^11.1.0",
         "mocha": "^9.2.2",
-        "mock-fs": "^5.1.4",
+        "mock-fs": "^5.2.0",
         "nyc": "^15.1.0",
         "proxyquire": "^2.1.3",
         "randomatic": "^3.1.1",

@@ -4,6 +4,8 @@ const sinon = require('sinon');
 chai.use(require('sinon-chai'));
 const mockFS = require('mock-fs');
 const { sep } = require('path');
+const { platform } = require('os');
+const isWindows = platform() === 'win32';
 const proxyquire = require('proxyquire').noCallThru();
 
 const removeVersions = (engine) => {
@@ -11,6 +13,7 @@ const removeVersions = (engine) => {
         delete engine.versions;
     }
 };
+
 const engine = require('./engine');
 
 describe('Engine Module', function() {
@@ -212,6 +215,53 @@ describe('Engine Module', function() {
                     }
                     , 'v99.99.99':''
                 }
+                , '.nvm': {
+                    versions: {
+                        node: {
+                            'v10.03.0':{
+                                bin: {
+                                    node64: ''
+                                    , node: ''
+                                    , node56: {}
+                                }
+                            }
+                            , 'v0.0.1':{
+                                bin: {
+                                    node64: ''
+                                    , node: mockFS.file({
+                                        content: ''
+                                        , mode: 0o666
+                                    })
+                                    , node56: {}
+                                }
+                            }
+                            , 'v2.10.11':{
+                                bin: {
+                                    node64: ''
+                                    , node:  mockFS.file({
+                                        content: ''
+                                        , mode: 0o755
+                                    })
+                                    , node56: {}
+                                }
+                            }
+                            , 'v12.0.0':{
+                                bin: {
+                                    node: ''
+                                    , node64: ''
+                                    , node56: {}
+                                }
+                            }
+                            , 'v10.14.0':{
+                                bin: {
+                                    node64: ''
+                                    , node56: {}
+                                }
+                            }
+                            , 'v99.99.99':''
+                        }
+                    }
+                }
             });
         });
         afterEach(mockFS.restore);
@@ -256,6 +306,9 @@ describe('Engine Module', function() {
             });
             describe('NVM for Windows', function() {
                 it('should have length of 2', function() {
+                    if(!isWindows) {
+                        return this.skip();
+                    }
                     env.NVM_HOME = 'nvm';
                     expect(engine.versions).to.be.undefined;
 
@@ -267,12 +320,18 @@ describe('Engine Module', function() {
                     expect(engine.versions).lengthOf(2);
                 });
                 it('should have path to binary on windows', function() {
+                    if(!isWindows) {
+                        return this.skip();
+                    }
                     env.NVM_HOME = 'nvm';
                     const { bin, path } = engine.properNodeVersions(null, env)[0];
 
                     expect(bin).to.equal(`${path}${sep}node.exe`);
                 });
                 it('should have path to binary when not named \'node\'', function() {
+                    if(!isWindows) {
+                        return this.skip();
+                    }
                     env.NVM_HOME = 'nvm';
                     const { bin, path } = engine.properNodeVersions(null, env)[1];
 
