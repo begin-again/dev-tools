@@ -22,7 +22,7 @@ const clean = ({ installed, dryRun }, log = console) => {
 
     installed
         .filter(({ isLink }) => isLink)
-        .map(({ version, bin }) => {
+        .forEach(({ version, bin }) => {
             const linkName = basename(bin);
             let msg = ` - ${version.padEnd(maxWidth, ' ')} - `;
             if(dryRun) {
