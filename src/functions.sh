@@ -7,7 +7,7 @@ path_add() {
 
     # check if not already present
     if [ -d "$1" ]; then
-        $(tr ":" "\n" <<< "$PATH" | grep -qv "$1")
+        tr ":" "\n" <<< "$PATH" | grep -qv "$1"
         code="$?"
         if [ "$code" = "0" ]; then
             if [ -n "$2" ]; then echo "added to path"; fi
@@ -29,7 +29,9 @@ changed() {
     else
         branch="$1"
     fi
-    git diff --name-only HEAD $(git merge-base HEAD "$branch")
+    differ=$(git merge-base HEAD "$branch")
+    git diff --name-only HEAD "$differ"
+
 
 }
 
