@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 echo "  loading functions.sh"
 

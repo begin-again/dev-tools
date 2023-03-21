@@ -7,8 +7,9 @@ chai.use(require('sinon-chai'));
 const fs = require('fs');
 const mockFS = require('mock-fs');
 const logger = console;
+const { DateTime } = require('luxon');
 
-const { removeTarget, folderList } = require('./clean');
+const { removeTarget, folderList, removeSonarTemp } = require('./clean');
 
 
 const fake = {
@@ -66,6 +67,50 @@ describe('Cleaner Module', () => {
 
             expect(logger.warn).to.calledOnceWith(`no suitable folders found`);
             mockFS.restore();
+        });
+    });
+    describe('removeSonarTemp', function() {
+        afterEach(mockFS.restore);
+        const logStub = { debug: sinon.stub() };
+        const rootPath = '.';
+        const now = DateTime.now();
+
+        it('should remove no folders', function() {
+            mockFS({
+                folder1: mockFS.directory({
+                    ctime: now.minus({ day: 1 }).startOf('day')
+                })
+                , folder2: mockFS.directory({
+                    ctime: now.minus({ day: 2 }).startOf('day')
+                })
+            });
+
+            const result = removeSonarTemp({ root: rootPath, age: 3 }, logStub);
+
+            const folders = fs.readdirSync(rootPath, { withFileTypes: true }).filter(d => d.isDirectory());
+
+
+            expect(result).equal(0);
+            expect(folders).to.have.lengthOf(2);
+
+        });
+        it('should remove 1 folders', function() {
+            mockFS({
+                folder1: mockFS.directory({
+                    ctime: now.minus({ day: 1 }).startOf('day')
+                })
+                , folder2: mockFS.directory({
+                    ctime: now.minus({ day: 2 }).startOf('day')
+                })
+            });
+
+            const result = removeSonarTemp({ root: rootPath, age: 2 }, logStub);
+
+            const folders = fs.readdirSync(rootPath, { withFileTypes: true }).filter(d => d.isDirectory());
+
+
+            expect(result).equal(1);
+            expect(folders).to.have.lengthOf(1);
         });
     });
 });

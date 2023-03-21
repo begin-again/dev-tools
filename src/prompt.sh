@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/env bash
+# shellcheck disable=SC2034
 
 echo "  loading prompt.sh"
 # Colors - Regular
