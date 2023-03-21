@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "  loading alias.sh"
 # fixes the stdout is not tty error
 [[ $(type -t node) == "alias" ]] && unalias node

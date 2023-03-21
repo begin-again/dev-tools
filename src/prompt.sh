@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "  loading prompt.sh"
 # Colors - Regular
 Black="\[\033[0;30m\]"        # Black
@@ -27,17 +29,36 @@ Time12h="\T"
 PathShort="\w"
 Date="\d"
 
-export PS1=$Cyan$Time12h$Color_Off$Purple' <$(basename $(readlink "$NVM_SYMLINK"))>'$Color_off'$(git branch &>/dev/null;\
-if [ $? -eq 0 ]; then \
-  echo "$(echo `git status` | grep "nothing to commit" > /dev/null 2>&1; \
-  if [ "$?" -eq "0" ]; then \
-    # Clean repository - nothing to commit
-    echo "'$Green'"$(__git_ps1 " (%s)"); \
-  else \
-    # Changes to working tree
-    echo "'$Red'"$(__git_ps1 " {%s}"); \
-fi) '$Yellow$PathShort$Color_Off'\n$$ \$ "; \
-else \
-  # Prompt when not in GIT repo
-  echo " '$Yellow$PathShort$Color_Off'\n$$ \$ "; \
-fi)'
+# test if NVM_BIN populated
+if [ -z "$NVM_BIN" ]; then
+  # NVM_BIN not populated
+    export PS1=$Cyan$Time12h$Color_Off$Purple' <$(basename $(dirname "$NVM_BIN"))>'$Color_Off'$(git branch &>/dev/null;\
+    if [ $? -eq 0 ]; then \
+    echo "$(echo `git status` | grep "nothing to commit" > /dev/null 2>&1; \
+    if [ "$?" -eq "0" ]; then \
+        # Clean repository - nothing to commit
+        echo "'$Green'"$(__git_ps1 " (%s)"); \
+    else \
+        # Changes to working tree
+        echo "'$Red'"$(__git_ps1 " {%s}"); \
+    fi) '$Yellow$PathShort$Color_Off'\n$$ \$ "; \
+    else \
+    # Prompt when not in GIT repo
+    echo " '$Yellow$PathShort$Color_Off'\n$$ \$ "; \
+    fi)'
+else
+    export PS1=$Cyan$Time12h$Color_Off$Purple' <$(basename $(readlink "$NVM_SYMLINK"))>'$Color_Off'$(git branch &>/dev/null;\
+    if [ $? -eq 0 ]; then \
+    echo "$(echo `git status` | grep "nothing to commit" > /dev/null 2>&1; \
+    if [ "$?" -eq "0" ]; then \
+        # Clean repository - nothing to commit
+        echo "'$Green'"$(__git_ps1 " (%s)"); \
+    else \
+        # Changes to working tree
+        echo "'$Red'"$(__git_ps1 " {%s}"); \
+    fi) '$Yellow$PathShort$Color_Off'\n$$ \$ "; \
+    else \
+    # Prompt when not in GIT repo
+    echo " '$Yellow$PathShort$Color_Off'\n$$ \$ "; \
+    fi)'
+fi
