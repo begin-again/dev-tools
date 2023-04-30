@@ -5,7 +5,7 @@ This is small wrapper for yarn that allows one to launch yarn utilizing a versio
 ## How it works
 
 Launches yarn in a new shell where:
-- the path variable is modified to have the path to then desired BodeJS version occur before active NodeJS version
+- the path variable is modified to have the path to then desired NodeJS version occur before active NodeJS version
 - the current working directory is set to the specified path, defaulting to current working directory.
 - the node version is selected from those installed that work in the repository found in the specified path. [See Engine](common/engine.md#most-recent-satisfying-version)
 
