@@ -46,4 +46,6 @@ const main = async () => {
         });
 };
 
-main();
+
+// eslint-disable-next-line no-console
+main().catch(console.error);

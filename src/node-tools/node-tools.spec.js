@@ -15,7 +15,7 @@ const report = require('./report.js');
 const fix = require('./fix.js');
 const remove = require('./remove.js');
 
-let version10; let version12; let version14;let logger = {};
+let version10; let version12; let version14; let logger = {};
 
 
 describe('node-tools', function() {

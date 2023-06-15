@@ -21,7 +21,7 @@ const createRepo = async (nameOfFileToCommit = '') => {
     if(nameOfFileToCommit) {
         await git(path).init();
         execSync(`git -C ${path} init`);
-        addFileToRepo(path, nameOfFileToCommit, { stage: true, commit: true });
+        await addFileToRepo(path, nameOfFileToCommit, { stage: true, commit: true });
     }
     else {
         execSync(`git -C ${path} init --bare`);

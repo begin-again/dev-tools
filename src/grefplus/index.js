@@ -35,15 +35,12 @@ const filterPeriod = (item) => {
         result = true;
     }
     else if(options.fromDate && !options.toDate) {
-        // result = item.date.isSameOrAfter(options.fromDate);
         result = item.date >= options.fromDate;
     }
     else if(!options.fromDate && options.toDate) {
-        // result = item.date.isSameOrBefore(options.toDate);
         result = item.date <= options.toDate;
     }
     else {
-        // result = item.date.isBetween(options.fromDate, options.toDate);
         result = item.date >= options.fromDate && item.date <= options.toDate;
     }
     return result;
@@ -93,7 +90,7 @@ const processRepo = (repo, errors) => {
 const logErrors = (errors, isDebug, err) => {
     if(isDebug > 0 && errors.length > 0) {
         console.error(`Errors Reported: ${errors.length}`);
-        errors.map((item, i) => {
+        errors.forEach((item, i) => {
             console.error(`${i + 1}. ${item.repo}: ${item.error.trim()}`);
         });
     }
@@ -139,4 +136,4 @@ const main = () => {
     process.exitCode = 1;
 };
 
-main();
+main().catch(console.error);
