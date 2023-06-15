@@ -131,10 +131,10 @@ const engineCheck = (requiredVersionRange = null, log = null, addMsg = '') => {
  * @returns {Number}
  */
 const versionStringToNumber = (version) => {
-    const _version = version[0] === 'v' ? version.substring(1) : version;
+    const _version = version.startsWith('v') ? version.substring(1) : version;
     let _expanded = '';
     _version.split('.').forEach((s, i) => {
-    // eslint-disable-next-line no-magic-numbers
+        // eslint-disable-next-line no-magic-numbers
         _expanded += i === 0 ? s : s.padStart(NumbersPadding, '0');
     });
     return parseInt(_expanded, 10);

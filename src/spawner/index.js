@@ -103,7 +103,8 @@ yargs
         },
         (argv) => {
             if(argv.log) {
-                process.stdout.write(`launching ${argv.name}${argv.command.length ? ` '${argv.command}'` : ``} with version '${versionToUse.version}' in path '${argv.path}' ${argv._.length ? `: ${argv._.join(', ')}` : ``}\n`);
+                const argCommand = argv.command.length ? '"argv.command"' : '';
+                process.stdout.write(`launching ${argv.name}${argCommand} with version '${versionToUse.version}' in path '${argv.path}' ${argv._.join(', ')}\n`);
             }
             return spawner(argv.name, argv.path, versionToUse.path, argv.command, ...argv._);
         });

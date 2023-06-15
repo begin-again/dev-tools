@@ -21,8 +21,8 @@ const sorter = (a, b) => {
  * @returns {String}
  */
 const report = (results) => {
+    results.sort(sorter);
     return results
-        .sort(sorter)
         .map(repo => {
             let out = repo.name;
             let status = '';
