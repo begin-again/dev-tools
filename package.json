@@ -19,7 +19,7 @@
         "luxon": "^3.3.0",
         "semver": "^7.5.2",
         "shelljs": "^0.8.5",
-        "simple-git": "^3.19.0",
+        "simple-git": "^3.19.1",
         "uuid": "9.0.0",
         "winston": "^3.9.0",
         "winston-daily-rotate-file": "^4.7.1",
