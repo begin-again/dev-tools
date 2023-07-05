@@ -30,9 +30,10 @@ Time12h="\T"
 PathShort="\w"
 Date="\d"
 
-# test if NVM_BIN populated
-if [ -z "$NVM_BIN" ]; then
-    # NVM_BIN not populated
+# test if NVM_SYMLINK exists
+if [[ -L "$NVM_SYMLINK" ]]; then
+    # prompt for use in windows
+    echo "   -- windows prompt"
     export PS1=$Cyan$Time12h$Color_Off$Purple' <$(basename $(readlink "$NVM_SYMLINK"))>'$Color_Off'$(git branch &>/dev/null;\
     if [ $? -eq 0 ]; then \
     echo "$(echo `git status` | grep "nothing to commit" > /dev/null 2>&1; \
@@ -47,8 +48,12 @@ if [ -z "$NVM_BIN" ]; then
     # Prompt when not in GIT repo
     echo " '$Yellow$PathShort$Color_Off'\n$$ \$ "; \
     fi)'
+fi
 
-else
+
+if [ -d "$NVM_DIR" ]; then
+    echo "   -- linux prompt"
+    # prompt for use in linux
     export PS1=$Cyan$Time12h$Color_Off$Purple' <$(basename $(dirname "$NVM_BIN"))>'$Color_Off'$(git branch &>/dev/null;\
     if [ $? -eq 0 ]; then \
     echo "$(echo `git status` | grep "nothing to commit" > /dev/null 2>&1; \
