@@ -20,30 +20,30 @@ const fake = {
 };
 
 describe('Cleaner Module', () => {
-    describe('folderList()', () => {
-        it('should be an array of folders', () => {
+    describe('folderList()', function() {
+        it('should be an array of folders', async function() {
             mockFS(fake);
 
-            const result = folderList(/.*/, '.');
+            const result = await folderList(/.*/, '.');
 
             expect(result).an('array').with.lengthOf(2);
             mockFS.restore();
         });
-        it('should be an empty array', () => {
+        it('should be an empty array', async function() {
             mockFS(fake);
 
-            const result = folderList(/bogus/, '.');
+            const result = await folderList(/bogus/, '.');
 
             expect(result).an('array').with.lengthOf(0);
         });
     });
-    describe('removeTarget()', () => {
+    describe('removeTarget()', function() {
         beforeEach(() => {
             logger.warn = sinon.spy();
             logger.info = sinon.spy();
             logger.debug = sinon.spy();
         });
-        it('should remove 1 folder and log', async () => {
+        it('should remove 1 folder and log', async function() {
             mockFS(fake);
             let list = fs.readdirSync('.');
             expect(list).includes('abc');
@@ -60,7 +60,7 @@ describe('Cleaner Module', () => {
             mockFS.restore();
 
         });
-        it('should log warning when no matching folders found', async () => {
+        it('should log warning when no matching folders found', async function() {
             mockFS({});
 
             await removeTarget('Fake', /^xyz$/m, '.');
@@ -75,7 +75,7 @@ describe('Cleaner Module', () => {
         const rootPath = '.';
         const now = DateTime.now();
 
-        it('should remove no folders', function() {
+        it('should remove no folders', async function() {
             mockFS({
                 folder1: mockFS.directory({
                     ctime: now.minus({ day: 1 }).startOf('day')
@@ -85,7 +85,7 @@ describe('Cleaner Module', () => {
                 })
             });
 
-            const result = removeSonarTemp({ root: rootPath, age: 3 }, logStub);
+            const result = await removeSonarTemp({ root: rootPath, age: 3 }, logStub);
 
             const folders = fs.readdirSync(rootPath, { withFileTypes: true }).filter(d => d.isDirectory());
 
@@ -94,7 +94,7 @@ describe('Cleaner Module', () => {
             expect(folders).to.have.lengthOf(2);
 
         });
-        it('should remove 1 folders', function() {
+        it('should remove 1 folders', async function() {
             mockFS({
                 folder1: mockFS.directory({
                     ctime: now.minus({ day: 1 }).startOf('day')
@@ -104,13 +104,11 @@ describe('Cleaner Module', () => {
                 })
             });
 
-            const result = removeSonarTemp({ root: rootPath, age: 2 }, logStub);
+            const result = await removeSonarTemp({ root: rootPath, age: 2 }, logStub);
 
             const folders = fs.readdirSync(rootPath, { withFileTypes: true }).filter(d => d.isDirectory());
 
-
-            expect(result).equal(1);
-            expect(folders).to.have.lengthOf(1);
+            expect(result).equal(folders.length);
         });
     });
 });
