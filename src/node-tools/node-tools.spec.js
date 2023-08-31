@@ -146,43 +146,43 @@ describe('node-tools', function() {
         });
     });
     describe('remove', function() {
-        it('should not remove when execute is false', function() {
+        it('should not remove when execute is false', async function() {
             const installed = [ version10, version12 ];
             const version = '10.0.0';
 
-            remove({ installed, execute: false, version }, logger);
+            await remove({ installed, execute: false, version }, logger);
 
             expect(fs.readdirSync('a')).contains('v10.0.0');
             expect(fs.readdirSync('a')).contains('v12.0.0');
             expect(logger.debug.callCount).equals(1);
         });
-        it('should report but not remove matched range when execute is false', function() {
+        it('should report but not remove matched range when execute is false', async function() {
             const installed = [ version10, version12 ];
             const version = '10.0.0';
 
-            remove({ installed, execute: false, version }, logger);
+            await remove({ installed, execute: false, version }, logger);
 
             expect(fs.readdirSync('a')).contains('v10.0.0');
             expect(fs.readdirSync('a')).contains('v12.0.0');
             expect(logger.debug.callCount).equals(1);
             expect(logger.debug.firstCall.firstArg).matches(/^Would remove/);
         });
-        it('should remove only matched range when execute is true', function() {
+        it('should remove only matched range when execute is true', async function() {
             const installed = [ version10, version12 ];
             const version = '10.0.0';
 
-            remove({ installed, execute: true, version }, logger);
+            await remove({ installed, execute: true, version }, logger);
 
             expect(fs.readdirSync('a')).not.contains('v10.0.0');
             expect(fs.readdirSync('a')).contains('v12.0.0');
             expect(logger.debug.callCount).equals(1);
             expect(logger.debug.firstCall.firstArg).matches(/^Removed/);
         });
-        it('should report message when no installed versions match range', function() {
+        it('should report message when no installed versions match range', async function() {
             const installed = [ version10, version12 ];
             const version = '5.0.0';
 
-            remove({ installed, execute: false, version }, logger);
+            await remove({ installed, execute: false, version }, logger);
 
             expect(fs.readdirSync('a')).contains('v10.0.0');
             expect(fs.readdirSync('a')).contains('v12.0.0');
