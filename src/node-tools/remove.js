@@ -4,8 +4,20 @@
  * Removes node versions
 */
 
-const { rmdir } = require('fs').promises;
+const fsPromises = require('fs').promises;
 const semver = require('semver');
+/**
+ * compatibility check for rm & rmdir
+ * @returns {Function}
+ */
+const rmCompatibility = () => {
+    if(fsPromises.rm) {
+        return fsPromises.rm;
+    }
+    return fsPromises.rmdir;
+};
+const remover = rmCompatibility();
+
 
 /**
  * Removes node versions matching specified range
@@ -27,7 +39,7 @@ const remove = async ({ installed, version, execute }, log = console) => {
         if(execute) {
             await Promise.all(
                 versionsToRemove.map(async v => {
-                    await rmdir(v.path, { recursive: true });
+                    await remover(v.path, { recursive: true });
                     log.debug(`${messagePrefix} ${v.version} at ${v.path}`);
                 })
             );

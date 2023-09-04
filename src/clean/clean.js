@@ -5,12 +5,23 @@
  */
 const { join } = require('path');
 const { realpathSync, statSync } = require('fs');
-const { rmdir, readdir } = require('fs').promises;
+const fsPromises = require('fs').promises;
+const { readdir } = fsPromises;
 const { tmpdir } = require('os');
 const logger = console;
 
 const defaultTempPath = realpathSync(tmpdir());
-
+/**
+ * compatibility check for rm & rmdir
+ * @returns {Function}
+ */
+const rmCompatibility = () => {
+    if(fsPromises.rm) {
+        return fsPromises.rm;
+    }
+    return fsPromises.rmdir;
+};
+const remover = rmCompatibility();
 
 /**
  * obtain matching folders
@@ -44,7 +55,7 @@ const removeTarget = async (name, regex, root = defaultTempPath) => {
     else {
         logger.warn(`attempting to delete ${folders.length} folders - please be patient`);
         const promises = folders.map(folder => {
-            return rmdir(join(root, folder), { recursive: true })
+            return remover(join(root, folder), { recursive: true })
                 .catch((out) => {
                     logger.debug(`ERROR: ${folder} => ${out}`);
                     return 'skipped';
@@ -59,6 +70,8 @@ const removeTarget = async (name, regex, root = defaultTempPath) => {
             });
     }
 };
+
+
 
 const DAY_MS = 86400000;
 
@@ -84,9 +97,10 @@ const removeSonarTemp = async ({ root, age }, logger = console) => {
                 })
         );
     logger.debug(`removing ${folders.length} folders`);
+
     return Promise.allSettled(
         folders.map(async d => {
-            await rmdir(join(_root, d.name), { recursive: true }).then(() => `removed ${d.name}`);
+            await remover(join(_root, d.name), { recursive: true }).then(() => `removed ${d.name}`);
         })
     ).then(r => {
         return r.filter(f => f.status === 'fulfilled').length;
