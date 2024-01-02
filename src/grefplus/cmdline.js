@@ -18,13 +18,13 @@ const cmdKeys = {
     }
     , 'from-date': {
         alias: 'f'
-        , describe: 'Show refs later than and include this date, ISO formats'
+        , describe: `Show refs later than and include this date, '${options.allowedFormat}'`
         , type: 'string'
         , requiresArg: true
     }
     , 'to-date': {
         alias: 't'
-        , describe: 'Show refs earlier than and including this date, ISO formats'
+        , describe: `Show refs earlier than and including this date, , '${options.allowedFormat}'`
         , type: 'string'
         , requiresArg: true
     }
@@ -37,7 +37,7 @@ const cmdKeys = {
     }
     , 'date': {
         alias: 'd'
-        , describe: 'shortcut to specify a single date, ISO formats. Default is today'
+        , describe: `shortcut to specify a single date, , '${options.allowedFormat}'. Default is today`
         , type: 'string'
         , requiresArgs: true
     }
