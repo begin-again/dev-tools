@@ -16,7 +16,7 @@
     "dependencies": {
         "dotenv": "^16.4.1",
         "luxon": "^3.4.4",
-        "semver": "^7.5.4",
+        "semver": "^7.6.0",
         "shelljs": "^0.8.5",
         "simple-git": "^3.22.0",
         "uuid": "9.0.1",
