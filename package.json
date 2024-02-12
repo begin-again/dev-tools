@@ -14,7 +14,7 @@
         "yarn": "^1.22.4"
     },
     "dependencies": {
-        "dotenv": "^16.4.1",
+        "dotenv": "^16.4.2",
         "luxon": "^3.4.4",
         "semver": "^7.6.0",
         "shelljs": "^0.8.5",
