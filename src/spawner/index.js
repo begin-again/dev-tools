@@ -1,17 +1,13 @@
 
 const { spawn } = require('child_process');
-const { engines } = require('../../package.json');
 const { fileExists } = require('../common/files');
 const { join } = require('path');
-const { node } = engines;
 require('../common/engine').properNodeVersions();
 const {
-    engineCheck
-    , versionStringToObject
+    versionStringToObject
     , versionToUseValidator
     , versions
 } = require('../common/engine');
-engineCheck(node);
 const yargs = require('yargs');
 
 /**
@@ -79,10 +75,8 @@ yargs
                     , alias: 'l'
                 })
                 .check(({ name, command }) => {
-                    if(name.toLowerCase() === 'node') {
-                        if(command) {
-                            throw new Error('node cli does not support commands');
-                        }
+                    if(name.toLowerCase() === 'node' && command) {
+                        throw new Error('node cli does not support commands');
                     }
                     return true;
                 })
