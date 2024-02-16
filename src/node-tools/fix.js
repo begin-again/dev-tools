@@ -1,6 +1,6 @@
-const { copyFileSync, readdirSync, symlinkSync } = require('fs');
-const { join } = require('path');
-const osType = require('os').type();
+const { copyFileSync, readdirSync, symlinkSync } = require('node:fs');
+const { resolve, join } = require('node:path');
+const osType = require('node:os').type();
 const targetName = osType === 'Windows_NT' ? 'node.exe' : 'node';
 
 /**
@@ -42,7 +42,9 @@ const fix = ({ installed, execute, mode }, log = console) => {
             }
             else if(mode === 'link') {
                 try {
-                    symlinkSync(join(path, execFile), join(path, targetName));
+                    const src = resolve(path, execFile);
+                    const target = resolve(path, targetName);
+                    symlinkSync(src, target);
                     log.debug(`${version}: created symbolic link from '${targetName}' to '${execFile}'`);
                 }
                 catch (e) {
@@ -57,6 +59,7 @@ const fix = ({ installed, execute, mode }, log = console) => {
                 }
                 catch (e) {
                     log.error(`${version}: was unable to copy '${execFile}' to '${targetName}'. Error code is ${e.code}`);
+                    exitCode = 1;
                 }
             }
         });

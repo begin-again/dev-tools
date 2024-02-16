@@ -2,7 +2,7 @@ const chai = require('chai');
 const { expect } = chai;
 const mockFS = require('mock-fs');
 
-const files = require('./files.js');
+const files = require('../src/common/files.js');
 const testFolder = {
     a: {
         b: {

@@ -14,7 +14,7 @@ const removeVersions = (engine) => {
     }
 };
 
-const engine = require('./engine');
+const engine = require('../src/common/engine');
 
 describe('Engine Module', function() {
     let logSpy;
@@ -26,7 +26,7 @@ describe('Engine Module', function() {
         it('should not throw when compatible', function() {
             const satisfyFake = sinon.fake.returns(true);
             const cleanFake = sinon.fake.returns('6.5.1');
-            const { engineCheck } = proxyquire('./engine', {
+            const { engineCheck } = proxyquire('../src/common/engine', {
                 'semver': { satisfies: satisfyFake, clean: cleanFake }
             });
 
@@ -39,7 +39,7 @@ describe('Engine Module', function() {
             const expected = 'Incompatible NodeJS version: detected version 6.5.0 but required ~6.1.0';
             const satisfyFake = sinon.fake.returns(false);
             const cleanFake = sinon.fake.returns('6.5.0');
-            const { engineCheck } = proxyquire('./engine', {
+            const { engineCheck } = proxyquire('../src/common/engine', {
                 'semver': { satisfies: satisfyFake, clean: cleanFake }
             });
 
@@ -54,7 +54,7 @@ describe('Engine Module', function() {
             const expected = 'Incompatible NodeJS version: detected version 6.5.0 but required ~6.1.0';
             const satisfyFake = sinon.fake.returns(false);
             const cleanFake = sinon.fake.returns('6.5.0');
-            const { engineCheck } = proxyquire('./engine', {
+            const { engineCheck } = proxyquire('../src/common/engine', {
                 'semver': { satisfies: satisfyFake, clean: cleanFake }
             });
 
@@ -70,7 +70,7 @@ describe('Engine Module', function() {
             const expected = `Incompatible NodeJS version: ${expectedMsg}`;
             const satisfyFake = sinon.fake.returns(false);
             const cleanFake = sinon.fake.returns('6.5.0');
-            const { engineCheck } = proxyquire('./engine', {
+            const { engineCheck } = proxyquire('../src/common/engine', {
                 'semver': { satisfies: satisfyFake, clean: cleanFake }
             });
 

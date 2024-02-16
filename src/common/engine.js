@@ -9,13 +9,13 @@
 const semver = require('semver');
 const defaultVersion = '12.13.1';
 const detectedVersion = semver.clean(process.version);
-const { join, resolve, basename } = require('path');
+const { join, resolve, basename } = require('node:path');
 const {
     readdirSync,
     accessSync,
     lstatSync,
     constants: FSC,
-} = require('fs');
+} = require('node:fs');
 const { getPackage } = require('./repos.js');
 const { folderExists } = require('./files');
 
@@ -259,7 +259,7 @@ const minInstalledSatisfyingVersion = (requiredRange) => {
  * @throws RangeError
  */
 const repositoryEngines = (repoPath) => {
-    const file = repoPath.endsWith('package.json') ? repoPath : join(repoPath, 'package.json');
+    const file = repoPath.endsWith('package.json') ? repoPath : resolve(join(repoPath, 'package.json'));
     const { error, engines } = getPackage(file);
     if(error) {
         throw new RangeError(`package file not found in ${repoPath}`);

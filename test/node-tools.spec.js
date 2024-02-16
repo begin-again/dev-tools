@@ -4,16 +4,16 @@ const { expect } = chai;
 
 const mockFS = require('mock-fs');
 const fs = require('fs');
-const { Version } = require('../common/engine.js');
+const { Version } = require('../src/common/engine.js');
 const sinon = require('sinon');
 chai.use(require('sinon-chai'));
 const { platform } = require('os');
 const isWindows = platform() === 'win32';
 
-const clean = require('./clean.js');
-const report = require('./report.js');
-const fix = require('./fix.js');
-const remove = require('./remove.js');
+const clean = require('../src/node-tools/clean.js');
+const report = require('../src/node-tools/report.js');
+const fix = require('../src/node-tools/fix.js');
+const remove = require('../src/node-tools/remove.js');
 
 let version10; let version12; let version14; let logger = {};
 
@@ -136,7 +136,7 @@ describe('node-tools', function() {
 
             fix({ installed, execute, mode: 'copy' }, logger);
 
-            const content = fs.readFileSync('a/v14.0.0/node.exe', { encoding: 'utf-8' });
+            const content = fs.readFileSync('a/v14.0.0/node.exe').toString();
 
             expect(fs.readdirSync('a/v10.0.0')).contains('node.exe');
             expect(fs.readdirSync('a/v12.0.0')).contains('node.exe');

@@ -2,8 +2,8 @@
  * @module Git-Tools
  */
 const { execSync } = require('child_process');
-const { writeFileSync, mkdirSync, readdirSync, lstatSync, copyFileSync, existsSync } = require('fs');
-const { join } = require('path');
+const fs = require('node:fs');
+const { join } = require('node:path');
 const randomize = require('randomatic');
 const { createTempFolder } = require('./temp');
 const git = require('simple-git');
@@ -14,7 +14,7 @@ const commitLength = 20;
  * initializes and empty git repository
  * into a temp folder within the base temp folder
  *
- * @param {String} nameOfFileToCommit - name
+ * @param {string} nameOfFileToCommit - name
  */
 const createRepo = async (nameOfFileToCommit = '') => {
     const path = createTempFolder();
@@ -30,46 +30,47 @@ const createRepo = async (nameOfFileToCommit = '') => {
 };
 const createBareRepo = createRepo;
 
-// mkdirSync, readdirSync, lstatSync, copyFileSync
 /**
  * Copy folder recursively
  *
  * @private
- * @param {String} src
- * @param {String} dest
+ * @param {string} src
+ * @param {string} dest
+ * @returns {Promise}
  */
-const copyFolder = (src, dest) => {
-    if(!existsSync(dest)) {
-        mkdirSync(dest);
+async function copyFolder(src, dest) {
+    await fs.promises.mkdir(dest, { recursive: true });
+
+    const entries = await fs.promises.readdir(src, { withFileTypes: true });
+
+    for(const entry of entries) {
+        const srcPath = join(src, entry.name);
+        const destPath = join(dest, entry.name);
+
+        entry.isDirectory() ?
+            await copyFolder(srcPath, destPath) :
+            await fs.promises.copyFile(srcPath, destPath);
     }
-    readdirSync(src).map(file => {
-        if(lstatSync(join(src, file)).isFile()) {
-            copyFileSync(join(src, file), join(dest, file));
-        }
-        else {
-            copyFolder(join(src, file), join(dest, file));
-        }
-    });
-};
+}
 
 /**
  * Replicates a repository
  *
- * @param {String} repoPath
- * @returns {String} path to new repo
+ * @param {string} repoPath
+ * @returns {Promise<string>} path to new repo
  */
-const duplicateRepo = (repoPath) => {
+const duplicateRepo = async (repoPath) => {
     const newPath = createTempFolder();
-    copyFolder(repoPath, newPath);
+    await copyFolder(repoPath, newPath);
     return newPath;
 };
 
 /**
  * Adds remote from src to target repo
  *
- * @param {String} srcRepoPath
- * @param {String} targetRepoPath
- * @param {String} remoteName
+ * @param {string} srcRepoPath
+ * @param {string} targetRepoPath
+ * @param {string} remoteName
  * @return {Promise}
  */
 const addRemote = (srcRepoPath, targetRepoPath, remoteName = 'origin') => {
@@ -79,8 +80,8 @@ const addRemote = (srcRepoPath, targetRepoPath, remoteName = 'origin') => {
 /**
  * adds a file to a git repository
  *
- * @param {String} repoPath
- * @param {String} name
+ * @param {string} repoPath
+ * @param {string} name
  * @param {object} options stage: boolean, commit: boolean
  * @returns {Promise<void>} options stage: boolean, commit: boolean
  */
@@ -89,7 +90,7 @@ const addFileToRepo = async (repoPath, name, options = { stage: false, commit: f
     if(options.branch) {
         await repo.checkout(options.branch, { '-q': true, 'b': true });
     }
-    writeFileSync(join(repoPath, name), '');
+    await fs.promises.writeFile(join(repoPath, name), '');
     if(options.stage) {
         await repo.add(name);
         if(options.commit) {
@@ -101,7 +102,7 @@ const addFileToRepo = async (repoPath, name, options = { stage: false, commit: f
 /**
  * Check if repo has untracked or uncommitted changes
  *
- * @param {String} repoPath to repository
+ * @param {string} repoPath to repository
  * @returns {Promise<Boolean>}
  */
 const isDirty = async (repoPath) => {
@@ -114,8 +115,8 @@ const isDirty = async (repoPath) => {
 /**
  * Retrieve current branch
  *
- * @param {String} repoPath
- * @returns {Promise<String>} branch name
+ * @param {string} repoPath
+ * @returns {Promise<string>} branch name
  */
 const currentBranch = async (repoPath) => {
     try {
@@ -130,9 +131,9 @@ const currentBranch = async (repoPath) => {
 /**
  * Push local to remote
  *
- * @param {String} repoPath
- * @param {String} remote
- * @param {String} branch
+ * @param {string} repoPath
+ * @param {string} remote
+ * @param {string} branch
  * @returns {Promise<string>} branch
  */
 const push = (repoPath, remote = 'origin', branch = 'all') => {
@@ -146,10 +147,10 @@ const push = (repoPath, remote = 'origin', branch = 'all') => {
 /**
  * Pull from remote
  *
- * @param {String} repoPath
- * @param {String} remote
- * @param {String} branch
- * @returns {Promise<String>}
+ * @param {string} repoPath
+ * @param {string} remote
+ * @param {string} branch
+ * @returns {Promise<string>}
  */
 const pull = (repoPath, remote = 'origin', branch = 'master') => {
     return git(repoPath).pull(remote, branch, { '-q': true });
@@ -158,7 +159,7 @@ const pull = (repoPath, remote = 'origin', branch = 'master') => {
 /**
  * Fetch remotes quietly
  *
- * @param {String} repoPath
+ * @param {string} repoPath
  */
 const fetchRemotes = (repoPath) => {
     return git(repoPath).fetch({ '--quiet': true, '--all': true });
@@ -167,35 +168,40 @@ const fetchRemotes = (repoPath) => {
 /**
  * Create new local commit
  *
- * @param {String} repoPath
- * @param {String | null} fileName - optional file name
- * @param {String} branch - optional
- * @returns {Promise<String>} log subject
+ * @param {string} repoPath
+ * @param {string | null} fileName - optional file name
+ * @param {string} branch - optional
+ * @returns {Promise<string>} log subject
  */
 const addCommit = async (repoPath, fileName, branch) => {
     const repo = git(repoPath);
-    const _name = fileName || randomize('Aa0', commitLength);
-    writeFileSync(join(repoPath, _name), '');
+
     if(branch) {
-        await repo.checkout(branch, { '-q': true, 'b': true });
+        // create a new branch with simple-git
+        await repo.branch([ branch, 'HEAD' ]);
+        await repo.checkout(branch, { '-q': true });
     }
 
-    return repo.add(_name).commit(`${_name}`)
-        .log().latest.message;
+    const _name = fileName || randomize('Aa0', commitLength);
+    await fs.promises.writeFile(join(repoPath, _name), '');
+
+    const result = await repo.add(_name).commit(`${_name}`)
+        .log();
+    return result.latest.message;
 };
 
 /**
  * Create new local commit with message
  *
- * @param {String} repoPath
- * @param {String} message
- * @param {String} branch - optional
- * @returns {Promise<String>} log subject
+ * @param {string} repoPath
+ * @param {string} message
+ * @param {string} branch - optional
+ * @returns {Promise<string>} log subject
  */
 const addCommitWithMessage = async (repoPath, message, branch) => {
     const repo = git(repoPath);
     const _name = randomize('Aa0', commitLength);
-    writeFileSync(join(repoPath, _name), '');
+    await fs.promises.writeFile(join(repoPath, _name), '');
     if(branch) {
         await repo.checkout(branch, { '-q': true, 'b': true });
     }
@@ -207,9 +213,9 @@ const addCommitWithMessage = async (repoPath, message, branch) => {
 /**
  * Delete file from repository
  *
- * @param {String} repoPath
- * @param {String} name
- * @returns {Promise<String>} name
+ * @param {string} repoPath
+ * @param {string} name
+ * @returns {Promise<string>} name
  */
 const deleteFile = (repoPath, name) => {
     return git(repoPath).rm(name)
@@ -220,8 +226,8 @@ const deleteFile = (repoPath, name) => {
 /**
  * Returns branch log
  *
- * @param {String} repoPath
- * @param {String} branch
+ * @param {string} repoPath
+ * @param {string} branch
  * @returns {Array}
  */
 const log = (repoPath, branch = 'master') => {
