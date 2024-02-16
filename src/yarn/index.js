@@ -1,15 +1,11 @@
 
-const { spawn } = require('child_process');
-const { engines } = require('../../package.json');
-const { node } = engines;
+const { spawn } = require('node:child_process');
 require('../common/engine').properNodeVersions();
 const {
-    engineCheck
-    , versionStringToObject
+    versionStringToObject
     , versionToUseValidator
     , versions
 } = require('../common/engine');
-engineCheck(node);
 const yargs = require('yargs');
 
 /**
