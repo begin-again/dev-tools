@@ -39,22 +39,17 @@ const createBareRepo = createRepo;
  * @returns {Promise}
  */
 async function copyFolder(src, dest) {
-    try {
-        await fs.promises.mkdir(dest, { recursive: true });
+    await fs.promises.mkdir(dest, { recursive: true });
 
-        const entries = await fs.promises.readdir(src, { withFileTypes: true });
+    const entries = await fs.promises.readdir(src, { withFileTypes: true });
 
-        for(const entry of entries) {
-            const srcPath = join(src, entry.name);
-            const destPath = join(dest, entry.name);
+    for(const entry of entries) {
+        const srcPath = join(src, entry.name);
+        const destPath = join(dest, entry.name);
 
-            entry.isDirectory() ?
-                await copyFolder(srcPath, destPath) :
-                await fs.promises.copyFile(srcPath, destPath);
-        }
-    }
-    catch (error) {
-        console.error('An error occurred:', error);
+        entry.isDirectory() ?
+            await copyFolder(srcPath, destPath) :
+            await fs.promises.copyFile(srcPath, destPath);
     }
 }
 
@@ -190,14 +185,9 @@ const addCommit = async (repoPath, fileName, branch) => {
     const _name = fileName || randomize('Aa0', commitLength);
     await fs.promises.writeFile(join(repoPath, _name), '');
 
-    try {
-        const result = await repo.add(_name).commit(`${_name}`)
-            .log();
-        return result?.latest?.message;
-    }
-    catch (err) {
-        console.log('wtf');
-    }
+    const result = await repo.add(_name).commit(`${_name}`)
+        .log();
+    return result.latest.message;
 };
 
 /**
