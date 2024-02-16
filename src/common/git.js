@@ -3,8 +3,8 @@ const git = require('simple-git');
 /**
  * Determines if repo has any commits on current branch
  *
- * @param {String} repo - path to repository
- * @returns {Object} as Promise
+ * @param {string} repo - path to repository
+ * @returns {Promise<object>} as Promise
  * @returns o.repo - same as repo
  * @returns o.error - truthy if no commits
   */
@@ -23,8 +23,8 @@ const hasCommits = async (repo) => {
 /**
  * Retrieves branch name from local repo
  *
- * @param  {String} pathToProject
- * @returns {Promise} branch name
+ * @param  {string} pathToProject
+ * @returns {Promise<string>} branch name
  */
 const currentBranch = async (pathToProject) => {
     try {
@@ -40,8 +40,8 @@ const currentBranch = async (pathToProject) => {
 /**
  * Retrieves commit hash of local head
  *
- * @param  {String} pathToProject [description]
- * @returns {String}
+ * @param  {string} pathToProject [description]
+ * @returns {Promise<string>}
  */
 const currentHash = (pathToProject) => {
     return git(pathToProject).revparse({ 'HEAD': true });
@@ -50,7 +50,7 @@ const currentHash = (pathToProject) => {
 /**
  * Updates local refs by performing a fetch
  *
- * @param  {String} repoPath
+ * @param  {string} repoPath
  * @return {Promise}
  */
 const gitFetch = (repoPath) => {
@@ -60,9 +60,9 @@ const gitFetch = (repoPath) => {
 /**
  * Counts number of commits a branch has which is not on master
  *
- * @param {String} repoPath
- * @param {String} branch
- * @param {Boolean} isTotal
+ * @param {string} repoPath
+ * @param {string} branch
+ * @param {boolean} isTotal
  * @returns {Promise} number of commits
  */
 const commitsDiff = async (repoPath, branch = 'master', isTotal = false) => {
@@ -83,8 +83,8 @@ const commitsDiff = async (repoPath, branch = 'master', isTotal = false) => {
  * Calculate ahead and behind commits counts
  *
  * @private
- * @param {Array} results
- * @returns {Object} { ahead: Integer, behind: Integer }
+ * @param {array} results
+ * @returns {{ahead:number, behind:number}} { ahead: Integer, behind: Integer }
  */
 const diffResult = (results) => {
     const ahead = results[1];
@@ -95,7 +95,7 @@ const diffResult = (results) => {
 /**
  * Count commits which differ between origin and local
  *
- * @param  {String} repoPath
+ * @param  {string} repoPath
  * @returns {Promise} { ahead: Integer, behind: Integer }
  */
 const commitDiffCounts = (repoPath) => {
@@ -118,8 +118,8 @@ const commitDiffCounts = (repoPath) => {
 /**
  * Check status for un-committed changes including untracked files
  *
- * @param  {String} repoPath - resolved path to repository
- * @return {Promise<Boolean>} true is dirty
+ * @param  {string} repoPath - resolved path to repository
+ * @return {Promise<boolean>} true is dirty
  */
 const isDirty = async (repoPath) => {
     const status = await git(repoPath).status();
@@ -131,8 +131,8 @@ const isDirty = async (repoPath) => {
 /**
  * Obtain log message of HEAD
  *
- * @param {String} repoPath
- * @param {Object} logger
+ * @param {string} repoPath
+ * @param {object} logger
  * @returns {Promise} standard out
  */
 const headLog = async (repoPath, logger) => {

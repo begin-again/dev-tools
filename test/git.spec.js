@@ -9,9 +9,10 @@ const sinon = require('sinon');
 const chai = require('chai');
 chai.use(require('sinon-chai'));
 const { expect } = chai;
+const fs = require('node:fs');
 
-const gtools = require('./git-tools');
-const { initBase, destroy } = require('./temp');
+const gtools = require('../src/common/git-tools');
+const { initBase, destroy } = require('../src/common/temp');
 const {
     currentBranch
     , currentHash
@@ -21,7 +22,7 @@ const {
     , hasCommits
     , headLog
     , gitFetch
-} = require('./git');
+} = require('../src/common/git');
 
 const logger = {};
 
@@ -31,23 +32,23 @@ describe('git module - makes FS writes so is slow', function() {
     after(destroy);
     describe('currentBranch()', () => {
         it('should be test branch', async () => {
-            const repo = gtools.createRepo('afile');
-            gtools.addCommit(repo, null, 'test');
+            const repo = await gtools.createRepo('afile');
+            await gtools.addCommit(repo, null, 'test');
 
             const result = await currentBranch(repo);
 
             expect(result).to.equal('test');
         });
         it('should be master branch', async () => {
-            const repo = gtools.createRepo('afile');
-            gtools.addCommit(repo);
+            const repo = await gtools.createRepo('afile');
+            await gtools.addCommit(repo);
 
             const result = await currentBranch(repo);
 
             expect(result).to.equal('master');
         });
         it('should be HEAD if no commit', async () => {
-            const repo = gtools.createBareRepo();
+            const repo = await gtools.createBareRepo();
 
             const result = await currentBranch(repo);
 
@@ -56,8 +57,8 @@ describe('git module - makes FS writes so is slow', function() {
     });
     describe('currentHash()', () => {
         it('should be valid head commit hash', async () => {
-            const repo = gtools.createRepo('afile');
-            gtools.addCommit(repo);
+            const repo = await gtools.createRepo('afile');
+            await gtools.addCommit(repo);
 
             const result = await currentHash(repo);
 
@@ -67,16 +68,16 @@ describe('git module - makes FS writes so is slow', function() {
     });
     describe('isDirty', () => {
         it('should be true', async () => {
-            const repo = gtools.createRepo('afile');
-            gtools.addFileToRepo(repo, 'bfile');
+            const repo = await gtools.createRepo('afile');
+            await gtools.addFileToRepo(repo, 'bfile');
 
             const result = await isDirty(repo);
 
             expect(result).to.be.true;
         });
         it('should be false', async () => {
-            const repo = gtools.createRepo('afile');
-            gtools.addFileToRepo(repo, 'bfile', { stage: true, commit: true });
+            const repo = await gtools.createRepo('afile');
+            await gtools.addFileToRepo(repo, 'bfile', { stage: true, commit: true });
 
             const result = await isDirty(repo);
 
@@ -85,14 +86,14 @@ describe('git module - makes FS writes so is slow', function() {
     });
     describe('hasCommits()', () => {
         it('should not have error property when commits present', async () => {
-            const repo = gtools.createRepo('afile');
+            const repo = await gtools.createRepo('afile');
 
             const { error } = await hasCommits(repo);
 
             expect(error).to.be.undefined;
         });
         it('should have error property when not commits present', async () => {
-            const repo = gtools.createBareRepo();
+            const repo = await gtools.createBareRepo();
 
             const { error } = await hasCommits(repo);
 
@@ -103,16 +104,16 @@ describe('git module - makes FS writes so is slow', function() {
         this.timeout(14000);
         // must run in sequence due to shared repositories
         let origin; let local1; let local2;
-        before(() => {
-            origin = gtools.createBareRepo();
-            local1 = gtools.createRepo('afile');
-            gtools.addRemote(local1, origin);
-            gtools.push(local1);
-            local2 = gtools.duplicateRepo(local1);
-            gtools.addCommit(local2);
-            gtools.addCommitWithMessage(local2, 'hello, world');
-            gtools.push(local2);
-            gtools.fetchRemotes(local1);
+        before(async () => {
+            origin = await gtools.createBareRepo();
+            local1 = await gtools.createRepo('afile');
+            await gtools.addRemote(local1, origin);
+            await gtools.push(local1);
+            local2 = await gtools.duplicateRepo(local1);
+            await gtools.addCommit(local2);
+            await gtools.addCommitWithMessage(local2, 'hello, world');
+            await gtools.push(local2);
+            await gtools.fetchRemotes(local1);
         });
         describe('commitsDiff()', () => {
             it('should be zero ahead', async () => {
@@ -150,8 +151,8 @@ describe('git module - makes FS writes so is slow', function() {
             });
         });
         describe('getFetch()', () => {
-            it('should not throw error', (done) => {
-                const local3 = gtools.duplicateRepo(local1);
+            it('should not throw error', async (done) => {
+                const local3 = await gtools.duplicateRepo(local1);
 
                 const wrapper = async () => {
                     await gitFetch(local3);
@@ -161,12 +162,12 @@ describe('git module - makes FS writes so is slow', function() {
                 done();
             });
             it('should retrieve commits', async () => {
-                const local4 = gtools.duplicateRepo(local2);
+                const local4 = await gtools.duplicateRepo(local2);
                 const beforeFetch = gtools.log(local4, 'origin/master');
                 expect(beforeFetch.length).equals(4);
 
-                gtools.addCommitWithMessage(local2, 'new commit');
-                gtools.push(local2);
+                await gtools.addCommitWithMessage(local2, 'new commit');
+                await gtools.push(local2);
                 await gitFetch(local4);
 
                 const afterFetch = gtools.log(local4, 'origin/master');
