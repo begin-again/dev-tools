@@ -6,7 +6,7 @@ const { dirname } = require('path');
 const fs = require('fs');
 
 const options = {};
-const TF = require('./temp');
+const TF = require('../src/common/temp');
 
 const oldBase = TF.baseFolder;
 describe('Temp Folder utility', () => {

@@ -1,7 +1,6 @@
-const { realpathSync } = require('fs');
+const { realpathSync, mkdirSync, rmSync } = require('node:fs');
 const { tmpdir } = require('os');
-const { basename, dirname, join } = require('path');
-const shelljs = require('shelljs');
+const { basename, dirname, join } = require('node:path');
 const { v4: uuid } = require('uuid');
 
 let baseFolder;
@@ -25,7 +24,7 @@ const shortPath = (fullPath) =>
  */
 const createFolder = (pathName) => {
     try {
-        shelljs.mkdir('-p', pathName);
+        mkdirSync(pathName, { recursive: true });
         return pathName;
     }
     catch (error) {
@@ -42,7 +41,9 @@ const createFolder = (pathName) => {
 const createTempFolder = () => {
     const base = module.exports.baseFolder;
     if(base) {
-        return createFolder(join(base, `${num++}`));
+        const folderPath = join(base, `${num}`);
+        num += 1;
+        return createFolder(folderPath);
     }
     throw new Error(`base folder not defined yet`);
 };
@@ -66,7 +67,7 @@ const initBase = () => {
  */
 const destroy = () => {
     if(module.exports.baseFolder) {
-        shelljs.rm('-rf', module.exports.baseFolder);
+        rmSync(module.exports.baseFolder, { recursive: true });
         delete module.exports.baseFolder;
     }
 };

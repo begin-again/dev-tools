@@ -16,7 +16,7 @@ const { DEVROOT } = process.env;
  */
 const getPackage = (pkgFile) => {
     if(fileExists(pkgFile)) {
-        const data = readFileSync(pkgFile, { encoding: 'utf8' });
+        const data = readFileSync(pkgFile).toString();
         return JSON.parse(data);
     }
     return { error: true };

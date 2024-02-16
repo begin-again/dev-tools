@@ -1,0 +1,7 @@
+spec:
+  - "test/*.spec.js" # the positional arguments!
+reporter: "spec"
+watch-files:
+  - "src/**/*.js"
+  - "test/*.spec.js"
+timeout: 5000
