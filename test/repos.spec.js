@@ -8,7 +8,7 @@ const { join } = require('path');
 const { allRepoPaths
     , getBinaryPaths
     , getPackage
-} = require('./repos');
+} = require('../src/common/repos');
 const { sep } = require('path');
 
 const fakePackage = {
