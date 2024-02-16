@@ -5,6 +5,7 @@
         "checkJs": true
     },
     "include": [
-        "src/**/*.js"
+        "src/**/*.js",
+        "test/*.spec.js"
     ]
 }
