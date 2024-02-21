@@ -4,12 +4,12 @@ const { expect } = chai;
 const sinon = require('sinon');
 chai.use(require('sinon-chai'));
 
-const fs = require('fs');
+const fs = require('node:fs');
 const mockFS = require('mock-fs');
 const logger = console;
 const { DateTime } = require('luxon');
 
-const { removeTarget, folderList, removeSonarTemp } = require('./clean');
+const { removeTarget, folderList, removeSonarTemp } = require('../src/clean/clean.js');
 
 
 const fake = {

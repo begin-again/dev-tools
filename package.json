@@ -6,8 +6,8 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "test": "mocha -i --fgrep slow ./src/**/*.spec.js",
-        "test:slow": "mocha --fgrep slow ./src/**/*.spec.js"
+        "test": "mocha -i --fgrep slow ./test/**/*.spec.js",
+        "test:slow": "mocha --fgrep slow ./test/**/*.spec.js"
     },
     "engines": {
         "node": "^20.11.0",
