@@ -2612,7 +2612,7 @@ __metadata:
     randomatic: "npm:^3.1.1"
     semver: "npm:^7.6.0"
     shelljs: "npm:^0.8.5"
-    simple-git: "npm:^3.22.0"
+    simple-git: "npm:^3.24.0"
     sinon: "npm:^13.0.2"
     sinon-chai: "npm:^3.7.0"
     uuid: "npm:9.0.1"
@@ -3241,14 +3241,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"simple-git@npm:^3.22.0":
-  version: 3.22.0
-  resolution: "simple-git@npm:3.22.0"
+"simple-git@npm:^3.24.0":
+  version: 3.24.0
+  resolution: "simple-git@npm:3.24.0"
   dependencies:
     "@kwsites/file-exists": "npm:^1.1.1"
     "@kwsites/promise-deferred": "npm:^1.1.1"
     debug: "npm:^4.3.4"
-  checksum: 10/309e7f0b73550f99949c0c6cfd4b4799ec0452fc4835dc440f89ec9351fe553c979c4e2bf7a772308e608697d3a27512281fbc64df0328a73607641f389b0aaf
+  checksum: 10/be1b93c799cbb1daa6ceb0c9b8a5a501026c7add69cadf50b10e74fd03bdc801a582c45ff7f69f998c736defd495cc5c5840e95d069e0fb4ed5014e8af0abaf6
   languageName: node
   linkType: hard
 
