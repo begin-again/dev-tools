@@ -1,7 +1,7 @@
 spec:
-  - "test/*.spec.js" # the positional arguments!
+  - "test/*.spec.mjs" # the positional arguments!
 reporter: "spec"
 watch-files:
-  - "src/**/*.js"
-  - "test/*.spec.js"
+  - "src/**/*.mjs"
+  - "test/*.spec.mjs"
 timeout: 5000

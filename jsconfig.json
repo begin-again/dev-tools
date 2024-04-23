@@ -1,11 +1,12 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "ES2020",
         "target": "esnext",
         "checkJs": true
     },
     "include": [
-        "src/**/*.js",
-        "test/*.spec.js"
+        "src/**/*.mjs",
+        "test/*.spec.mjs",
+        "test/git.spec.mjs.old"
     ]
 }
