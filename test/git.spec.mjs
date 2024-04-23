@@ -8,7 +8,7 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 
-import { initBase, destroy } from '../src/common/temp.mjs';
+import Temp from '../src/common/temp-class.mjs';
 import {
     addCommit,
     addCommitWithMessage,
@@ -34,12 +34,17 @@ import {
 const logger = {};
 
 describe('git module - makes FS writes so is slow', function() {
+    let tmp;
+    before(() => {
+        tmp = new Temp();
+    });
+    after(() => {
+        tmp.destroy();
+    });
     this.timeout(12000);
-    before(initBase);
-    after(destroy);
     describe('currentBranch()', function() {
         it('should be test branch', async function() {
-            const repo = await createRepo('foo');
+            const repo = await createRepo(tmp, 'foo');
             await addCommit(repo, null, 'test');
 
             const result = await currentBranch(repo);
@@ -47,7 +52,7 @@ describe('git module - makes FS writes so is slow', function() {
             expect(result).to.equal('test');
         });
         it('should be master branch', async function() {
-            const repo = await createRepo('foo');
+            const repo = await createRepo(tmp, 'foo');
             await addCommit(repo);
 
             const result = await currentBranch(repo);
@@ -55,7 +60,7 @@ describe('git module - makes FS writes so is slow', function() {
             expect(result).to.equal('master');
         });
         it('should be HEAD if no commit', async function() {
-            const repo = await createBareRepo();
+            const repo = await createBareRepo(tmp);
 
             const result = await currentBranch(repo);
 
@@ -64,7 +69,7 @@ describe('git module - makes FS writes so is slow', function() {
     });
     describe('currentHash()', function() {
         it('should be valid head commit hash', async function() {
-            const repo = await createRepo('foo');
+            const repo = await createRepo(tmp, 'foo');
             await addCommit(repo);
 
             const result = await currentHash(repo);
@@ -75,7 +80,7 @@ describe('git module - makes FS writes so is slow', function() {
     });
     describe('isDirty', function() {
         it('should be true', async function() {
-            const repo = await createRepo('foo');
+            const repo = await createRepo(tmp, 'foo');
             await addFileToRepo(repo, 'bar');
 
             const result = await isDirty(repo);
@@ -83,7 +88,7 @@ describe('git module - makes FS writes so is slow', function() {
             expect(result).to.be.true;
         });
         it('should be false', async function() {
-            const repo = await createRepo('foo');
+            const repo = await createRepo(tmp, 'foo');
             await addFileToRepo(repo, 'bar', { stage: true, commit: true });
 
             const result = await isDirty(repo);
@@ -93,14 +98,14 @@ describe('git module - makes FS writes so is slow', function() {
     });
     describe('hasCommits()', function() {
         it('should not have error property when commits present', async function() {
-            const repo = await createRepo('foo');
+            const repo = await createRepo(tmp, 'foo');
 
             const { error } = await hasCommits(repo);
 
             expect(error).to.be.undefined;
         });
         it('should have error property when not commits present', async function() {
-            const repo = await createBareRepo();
+            const repo = await createBareRepo(tmp);
 
             const { error } = await hasCommits(repo);
 
@@ -112,11 +117,11 @@ describe('git module - makes FS writes so is slow', function() {
         // must run in sequence due to shared repositories
         let origin; let local1; let local2;
         before(async function() {
-            origin = await createBareRepo();
-            local1 = await createRepo('foo');
+            origin = await createBareRepo(tmp);
+            local1 = await createRepo(tmp, 'foo');
             await addRemote(local1, origin);
             await push(local1);
-            local2 = await duplicateRepo(local1);
+            local2 = await duplicateRepo(local1, tmp);
             await addCommit(local2);
             await addCommitWithMessage(local2, 'hello, world');
             await push(local2);
@@ -159,7 +164,7 @@ describe('git module - makes FS writes so is slow', function() {
         });
         describe('getFetch()', function() {
             it('should not throw error', async (done) => {
-                const local3 = await duplicateRepo(local1);
+                const local3 = await duplicateRepo(local1, tmp);
 
                 const wrapper = async function() {
                     await gitFetch(local3);
@@ -169,7 +174,7 @@ describe('git module - makes FS writes so is slow', function() {
                 done();
             });
             it('should retrieve commits', async function() {
-                const local4 = await duplicateRepo(local2);
+                const local4 = await duplicateRepo(local2, tmp);
                 const beforeFetch = log(local4, 'origin/master');
                 expect(beforeFetch.length).equals(4);
 

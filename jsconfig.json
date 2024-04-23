@@ -7,6 +7,6 @@
     "include": [
         "src/**/*.mjs",
         "test/*.spec.mjs",
-        "test/git.spec.mjs.old"
+        "test/temp.spec.mjs.old",
     ]
 }

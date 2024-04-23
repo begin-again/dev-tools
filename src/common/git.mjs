@@ -28,7 +28,7 @@ const hasCommits = async (repo) => {
  */
 const currentBranch = async (pathToProject) => {
     try {
-        const { current } = await simpleGitpathToProject).branch();
+        const { current } = await simpleGit(pathToProject).branch();
         return current || 'HEAD';
     }
     catch (err) {
@@ -148,7 +148,7 @@ const headLog = async (repoPath, logger) => {
     }
 };
 
-module.exports = {
+export {
     commitsDiff
     , commitDiffCounts
     , currentBranch

@@ -9,9 +9,9 @@ export default [
         , languageOptions: {
             ecmaVersion: 2020
             , globals: {
-                ...globals.mocha
-                , ...globals.es2020
+                ...globals.es2020
                 , ...globals.node
+                , ...globals.mocha
                 , console: true
                 , process: true
             }

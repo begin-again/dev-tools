@@ -6,7 +6,9 @@ import fs from 'node:fs';
 import { join } from 'node:path';
 import randomize from 'randomatic';
 import { simpleGit } from 'simple-git';
-import { createTempFolder } from './temp.mjs';
+
+// eslint-disable-next-line no-unused-vars
+import Temp from './temp-class.mjs';
 
 const commitLength = 20;
 
@@ -15,9 +17,10 @@ const commitLength = 20;
  * into a temp folder within the base temp folder
  *
  * @param {string} nameOfFileToCommit - name
+ * @param {Temp} tmp - instance on Temp
  */
-const createRepo = async (nameOfFileToCommit = '') => {
-    const path = createTempFolder();
+const createRepo = async (tmp, nameOfFileToCommit = '') => {
+    const path = tmp.add();
     if(nameOfFileToCommit) {
         await simpleGit(path).init();
         execSync(`git -C ${path} init`);
@@ -57,10 +60,11 @@ async function copyFolder(src, dest) {
  * Replicates a repository
  *
  * @param {string} repoPath
+ * @param {Temp} tmp
  * @returns {Promise<string>} path to new repo
  */
-const duplicateRepo = async (repoPath) => {
-    const newPath = createTempFolder();
+const duplicateRepo = async (repoPath, tmp) => {
+    const newPath = tmp.add();
     await copyFolder(repoPath, newPath);
     return newPath;
 };
