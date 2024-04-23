@@ -3,7 +3,7 @@ import mockFS from 'mock-fs';
 import fs from 'node:fs';
 import chai from 'chai';
 const { expect } = chai;
-import Temp from '../src/common/temp-class.mjs';
+import Temp from '../src/common/temp.mjs';
 
 
 describe('Temp Folder utility', function() {

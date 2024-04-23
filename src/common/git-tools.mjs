@@ -8,7 +8,7 @@ import randomize from 'randomatic';
 import { simpleGit } from 'simple-git';
 
 // eslint-disable-next-line no-unused-vars
-import Temp from './temp-class.mjs';
+import Temp from './temp.mjs';
 
 const commitLength = 20;
 

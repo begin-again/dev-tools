@@ -8,7 +8,7 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 
-import Temp from '../src/common/temp-class.mjs';
+import Temp from '../src/common/temp.mjs';
 import {
     addCommit,
     addCommitWithMessage,
