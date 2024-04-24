@@ -16,7 +16,7 @@ const now = Date.now();
 shell.config.silent = true;
 
 const home = {
-     
+
     user: process.env.HOME
         .replace(winSep, posixSep)
         .replace(dedupeSep, posixSep)
@@ -59,7 +59,7 @@ shell.echo('# dev-tools - end\n').toEnd(bash.home);
 shell.echo('\n# Personal additions and over-rides\n').toEnd(bash.home);
 
 // Over-ride some settings based on OS
-if(osType === 'Darwin') {
+if(osType() === 'Darwin') {
     shell.echo('unalias find').toEnd(bash.home);
 }
 
