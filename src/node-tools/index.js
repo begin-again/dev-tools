@@ -19,7 +19,7 @@ process.on('uncaughtException', (e) => {
  * @returns {boolean}
  */
 const validateWindows = () => {
-    if(osType !== 'Windows_NT') {
+    if(osType() !== 'Windows_NT') {
         throw new Error('This tools only works on MS Windows');
     }
     return true;
