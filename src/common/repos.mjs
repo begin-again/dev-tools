@@ -1,19 +1,18 @@
 
 
-import { readFileSync, readdirSync } from 'fs';
-import { basename, join } from 'path';
-import { fileExists, folderExists } from './files.mjs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import dotenv from 'dotenv';
+import { fileExists, folderExists } from './files.mjs';
 dotenv.config();
-
 
 const { DEVROOT } = process.env;
 
 /**
  * Obtains the package.json file from repo path
  *
- * @param {String} pkgFile file - path/package.json
- * @returns {Object} JSON object
+ * @param {string} pkgFile file - path/package.json
+ * @returns {object} JSON object
  */
 const getPackage = (pkgFile) => {
     if(fileExists(pkgFile)) {
@@ -26,17 +25,17 @@ const getPackage = (pkgFile) => {
 /**
  * Determine if a folder contains a .git folder
  *  - does not check that git can process the repo so we can still get false positives
- * @param  {String}  path
- * @return {Boolean}
+ * @param  {string}  path
+ * @return {boolean}
  */
 const isGitRepo = (path) => (basename(path) === '.git') && folderExists(path);
 
 /**
  * Obtains paths of all git repositories
  *  - only search down one folder
- * @param {String} folder
- * @param {Array} foldersToInclude
- * @return {Array<string>}  path strings
+ * @param {string} folder
+ * @param {array} foldersToInclude
+ * @return {array<string>}  path strings
  */
 const allRepoPaths = (folder = DEVROOT, foldersToInclude = []) => {
     // get files in root
@@ -65,32 +64,7 @@ const allRepoPaths = (folder = DEVROOT, foldersToInclude = []) => {
 };
 
 
-/**
- * Identify the location of the gulp binary
- *
- * @param {String} builderName - from package.builder
- * @param {String} repoPath - path of the repository which release is being run on
- * @param {String} [devRoot] - development root folder
- * @returns {Object} build root and the path to the gulp binary
- * @private
- */
-const getBinaryPaths = (builderName, repoPath, devRoot = DEVROOT) => {
-    const gulpBinary = `node_modules/gulp/bin/gulp.js`;
-    try {
-        const buildRoot = builderName ? join(devRoot, 'tooling', 'builders', builderName) : repoPath;
-        const gulpFile = join(buildRoot, gulpBinary);
-        return { buildRoot, gulpFile };
-    }
-
-    catch (e) {
-        if(e) {
-            return {};
-        }
-    }
-};
-
 export {
     allRepoPaths,
-    getBinaryPaths,
     getPackage
 };

@@ -2,7 +2,7 @@
 import { join, sep } from 'node:path';
 import { expect } from 'chai';
 import mockFS from 'mock-fs';
-import { allRepoPaths, getBinaryPaths, getPackage } from '../src/common/repos.mjs';
+import { allRepoPaths, getPackage } from '../src/common/repos.mjs';
 
 const fakePackage = {
     'name': 'faker'
@@ -92,29 +92,6 @@ describe('Repositories Modules', () => {
             expect(error).to.be.undefined;
 
             mockFS.restore();
-        });
-    });
-    describe('getBinaryPaths()', () => {
-        it('should be empty object on join fails', () => {
-            const { buildRoot, gulpFile } = getBinaryPaths();
-
-            expect(buildRoot).to.be.undefined;
-            expect(gulpFile).to.be.undefined;
-        });
-        it('buildRoot should be within tooling', () => {
-            const { buildRoot, gulpFile } = getBinaryPaths('myBuilder', 'myRepo', 'myRoot');
-
-            expect(buildRoot).matches(/^myRoot/);
-            expect(buildRoot).matches(/myBuilder$/);
-            expect(gulpFile).to.match(/myBuilder/);
-            expect(gulpFile).to.match(/gulp\.js$/);
-        });
-        it('buildRoot should be in calling repo', () => {
-            const { buildRoot, gulpFile } = getBinaryPaths('', 'myRepo', 'myRoot');
-
-            expect(buildRoot).matches(/^myRepo/);
-            expect(gulpFile).to.match(/^myRepo/);
-            expect(gulpFile).to.match(/gulp\.js$/);
         });
     });
 });
