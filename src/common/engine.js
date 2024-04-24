@@ -160,7 +160,7 @@ class Engine {
      * @throws RangeError
      * @memberof Engine
      */
-    versionToUseValidator ({ path, version, oldest }, { noPackage = false, repositoryEngines = this._defaultVersion }) {
+    versionToUseValidator ({ path, version, oldest }, { noPackage = false, repositoryEngines = this._defaultVersion } = {}) {
         const repoEngines = noPackage ? version : repositoryEngines;
         const repoName = basename(path);
 
