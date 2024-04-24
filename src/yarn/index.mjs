@@ -1,6 +1,6 @@
 
 import { spawn } from 'node:child_process';
-import { Engine } from '../common/engine.mjs';
+import { Engine } from '../common/engine.js';
 import yargs from 'yargs/yargs';
 
 const engine = new Engine();

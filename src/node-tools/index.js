@@ -1,10 +1,10 @@
 import { type as osType } from 'node:os';
 import yargs from 'yargs/yargs';
-import { Engine, versionKeys } from '../common/engine.mjs';
-import report from './report.mjs';
-import fix from './fix.mjs';
-import clean from './clean.mjs';
-import remove from './remove.mjs';
+import { Engine, versionKeys } from '../common/engine.js';
+import report from './report.js';
+import fix from './fix.js';
+import clean from './clean.js';
+import remove from './remove.js';
 
 // ... rest of your code ...
 

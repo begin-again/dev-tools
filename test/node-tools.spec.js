@@ -4,14 +4,14 @@ import { platform } from 'node:os';
 import { expect } from 'chai';
 import sinon from 'sinon';
 
-import Version from '../src/common/version.mjs';
+import Version from '../src/common/version.js';
 
 const isWindows = platform() === 'win32';
 
-import clean from '../src/node-tools/clean.mjs';
-import report from '../src/node-tools/report.mjs';
-import fix from '../src/node-tools/fix.mjs';
-import remove from '../src/node-tools/remove.mjs';
+import clean from '../src/node-tools/clean.js';
+import report from '../src/node-tools/report.js';
+import fix from '../src/node-tools/fix.js';
+import remove from '../src/node-tools/remove.js';
 
 let version10; let version12; let version14; let logger = {};
 

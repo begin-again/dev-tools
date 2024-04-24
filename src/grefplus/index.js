@@ -1,11 +1,11 @@
 /* eslint no-console:off */
 const DateLength = 6;
 
-import { setOptions, options } from './cmdline.mjs';
+import { setOptions, options } from './cmdline.js';
 setOptions();
 
 import { basename } from 'path';
-import { allRepoPaths } from '../common/repos.mjs';
+import { allRepoPaths } from '../common/repos.js';
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import { DateTime } from 'luxon';

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import mockFS from 'mock-fs';
-import { findFirstFile } from '../src/common/files.mjs';
+import { findFirstFile } from '../src/common/files.js';
 
 const testFolder = {
     a: {

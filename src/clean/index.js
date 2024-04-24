@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import yargs from 'yargs/yargs';
-import { removeTarget, removeSonarTemp } from './clean.mjs';
+import { removeTarget, removeSonarTemp } from './clean.js';
 
 const builds = /(^[a-z0-9]{32}$)|(^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$)/m;
 const yarns = /^yarn--.+/m;

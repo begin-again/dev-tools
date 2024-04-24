@@ -8,7 +8,7 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 
-import Temp from '../src/common/temp.mjs';
+import Temp from '../src/common/temp.js';
 import {
     addCommit,
     addCommitWithMessage,
@@ -19,7 +19,7 @@ import {
     fetchRemotes,
     log,
     push,
-} from '../src/common/git-tools.mjs';
+} from '../src/common/git-tools.js';
 import {
     commitDiffCounts,
     commitsDiff,
@@ -29,7 +29,7 @@ import {
     hasCommits,
     headLog,
     isDirty,
-} from '../src/common/git.mjs';
+} from '../src/common/git.js';
 
 const logger = {};
 

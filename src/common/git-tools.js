@@ -1,14 +1,13 @@
 /**
  * @module Git-Tools
  */
-import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import { join } from 'node:path';
 import randomize from 'randomatic';
 import { simpleGit } from 'simple-git';
 
 // eslint-disable-next-line no-unused-vars
-import Temp from './temp.mjs';
+import Temp from './temp.js';
 
 const commitLength = 20;
 
@@ -23,11 +22,10 @@ const createRepo = async (tmp, nameOfFileToCommit = '') => {
     const path = tmp.add();
     if(nameOfFileToCommit) {
         await simpleGit(path).init();
-        execSync(`git -C ${path} init`);
         await addFileToRepo(path, nameOfFileToCommit, { stage: true, commit: true });
     }
     else {
-        execSync(`git -C ${path} init --bare`);
+        await simpleGit(path).init({ '--bare': true });
     }
     return path;
 };
@@ -235,8 +233,8 @@ const deleteFile = (repoPath, name) => {
  * @returns {Array}
  */
 const log = (repoPath, branch = 'master') => {
-    simpleGit(repoPath).log();
-    return execSync(`git -C ${repoPath} log --format="%s" ${branch}`, { encoding: 'utf8' }).split('\n');
+    return simpleGit(repoPath).log({ '--format': '%s', branch });
+    // return execSync(`git -C ${repoPath} log --format="%s" ${branch}`, { encoding: 'utf8' }).split('\n');
 };
 
 export {

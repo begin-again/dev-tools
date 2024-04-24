@@ -1,12 +1,12 @@
 import { copyFileSync, readdirSync, symlinkSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { type as osType } from 'node:os';
-const targetName = osType === 'Windows_NT' ? 'node.exe' : 'node';
+const targetName = osType() === 'Windows_NT' ? 'node.exe' : 'node';
 
 /**
  * Obtains the executable file found in path
  *
- * @param {String} path - to the node version folder
+ * @param {string} path - to the node version folder
  */
 const execFileFound = (path) => {
     const files = readdirSync(path)
@@ -18,11 +18,11 @@ const execFileFound = (path) => {
 /**
  * Attempts to correct unusable version installations
  *
- * @param {Object} param0
- * @param {Array<Version>} param0.installed - installed versions
- * @param {Boolean} param0.dryRun - show action only
- * @param {String} param0.mode - create symbolic link or copy
- * @param {Object} [log] logger
+ * @param {object} param0
+ * @param {Version[]} param0.installed - installed versions
+ * @param {boolean} param0.execute -perform the action instead of logging only
+ * @param {string} param0.mode - create symbolic link or copy
+ * @param {object} [log] logger
  */
 const fix = ({ installed, execute, mode }, log = console) => {
     let exitCode = 0;

@@ -1,6 +1,6 @@
 import { basename } from 'node:path';
-import { options } from './cmdline.mjs';
-import { currentBranch, currentHash, commitDiffCounts, isDirty } from '../common/git.mjs';
+import { options } from './cmdline.js';
+import { currentBranch, currentHash, commitDiffCounts, isDirty } from '../common/git.js';
 const hashLength = 7;
 
 /**

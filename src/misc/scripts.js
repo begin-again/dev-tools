@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import yargs from 'yargs/yargs';
-import { findFirstFile, fileAsJSON } from '../common/files.mjs';
+import { findFirstFile, fileAsJSON } from '../common/files.js';
 
 /**
  * Writes scripts block to console from first package file found in specified path

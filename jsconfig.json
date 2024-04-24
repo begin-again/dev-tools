@@ -5,9 +5,7 @@
         "checkJs": true
     },
     "include": [
-        "src/**/*.mjs",
-        "test/*.spec.mjs",
-        "test/temp.spec.mjs.old",
-        "test/engine.spec.mjs.old",
+        "src/**/*.js",
+        "test/*.spec.js"
     ]
 }

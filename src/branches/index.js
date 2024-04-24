@@ -1,8 +1,8 @@
 
-import { setOptions, options } from './cmdline.mjs';
-import { allRepoPaths } from '../common/repos.mjs';
-import { branches, report } from './branches.mjs';
-import { hasCommits } from '../common/git.mjs';
+import { setOptions, options } from './cmdline.js';
+import { allRepoPaths } from '../common/repos.js';
+import { branches, report } from './branches.js';
+import { hasCommits } from '../common/git.js';
 
 setOptions();
 

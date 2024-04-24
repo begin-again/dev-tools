@@ -66,12 +66,16 @@ class Temp {
     */
     add () {
         if(this._baseFolder) {
-            const folderPath = join(this._baseFolder, `${this.num}`);
-            this.num += 1;
+            const folderPath = join(this._baseFolder, `${this._num}`);
+            this._num += 1;
             return this._createFolder(folderPath);
         }
         throw new Error(`base folder not defined`);
     };
+
+    get folderIncrement() {
+        return this._num;
+    }
 
     /**
     * Abbreviates the path

@@ -3,7 +3,7 @@ import mockFS from 'mock-fs';
 import fs from 'node:fs';
 import chai from 'chai';
 const { expect } = chai;
-import Temp from '../src/common/temp.mjs';
+import Temp from '../src/common/temp.js';
 
 
 describe('Temp Folder utility', function() {
@@ -46,8 +46,11 @@ describe('Temp Folder utility', function() {
             const tf = new Temp();
             const base = tf.baseFolder;
 
+            expect(tf.folderIncrement).equals(0);
+
             const result = tf.add();
 
+            expect(tf.folderIncrement).equals(1);
             expect(fs.statSync(result).isDirectory()).to.be.true;
             expect(dirname(result)).to.equal(base);
 

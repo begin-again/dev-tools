@@ -2,7 +2,7 @@
 import { join, sep } from 'node:path';
 import { expect } from 'chai';
 import mockFS from 'mock-fs';
-import { allRepoPaths, getPackage } from '../src/common/repos.mjs';
+import { allRepoPaths, getPackage } from '../src/common/repos.js';
 
 const fakePackage = {
     'name': 'faker'

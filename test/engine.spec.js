@@ -1,20 +1,20 @@
-/* eslint-disable no-console */
-/* eslint-disable no-magic-numbers */
+ 
+ 
 import { platform } from 'node:os';
 import { sep } from 'node:path';
 import mockFS from 'mock-fs';
 import fs from 'node:fs';
 import sinon from 'sinon';
 import chai, { expect } from 'chai';
-import sinonChai from '../node_modules/sinon-chai-es/lib/sinon-chai.mjs';
+import sinonChai from 'sinon-chai-es';
 chai.use(sinonChai);
 const isWindows = platform() === 'win32';
 import semver from 'semver';
 
-import { Engine } from '../src/common/engine.mjs';
+import { Engine } from '../src/common/engine.js';
 
 // eslint-disable-next-line no-unused-vars
-import Version from '../src/common/version.mjs';
+import Version from '../src/common/version.js';
 
 const myVersions = {
     afile: 'hello'

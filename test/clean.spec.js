@@ -3,10 +3,10 @@ import mockFS from 'mock-fs';
 import fs from 'node:fs';
 import sinon from 'sinon';
 import chai, { expect } from 'chai';
-import sinonChai from '../node_modules/sinon-chai-es/lib/sinon-chai.mjs';
+import sinonChai from 'sinon-chai-es';
 chai.use(sinonChai);
 import { DateTime } from 'luxon';
-import { removeTarget, folderList, removeSonarTemp } from '../src/clean/clean.mjs';
+import { removeTarget, folderList, removeSonarTemp } from '../src/clean/clean.js';
 
 
 const logger = console;

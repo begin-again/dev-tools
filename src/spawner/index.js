@@ -1,8 +1,8 @@
 
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
-import { fileExists } from '../common/files.mjs';
-import { Engine, repositoryEngines } from '../common/engine.mjs';
+import { fileExists } from '../common/files.js';
+import { Engine, repositoryEngines } from '../common/engine.js';
 import yargs from 'yargs/yargs';
 
 const engine = new Engine();
@@ -80,7 +80,7 @@ _yargs
                 })
                 .check(({ version }) => {
                     if(version) {
-                        const _version = engine.versionStringToObject(version, engine.versions);
+                        const _version = Engine.versionStringToObject(version, engine.versions);
                         if(!_version) {
                             throw new RangeError(`The specified version '${version}' is not installed`);
                         }

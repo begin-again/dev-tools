@@ -3,7 +3,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import dotenv from 'dotenv';
-import { fileExists, folderExists } from './files.mjs';
+import { fileExists, folderExists } from './files.js';
 dotenv.config();
 
 const { DEVROOT } = process.env;

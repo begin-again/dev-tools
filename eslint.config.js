@@ -5,7 +5,7 @@ const IndentSpaces = 4;
 export default [
     pluginJs.configs.recommended
     , {
-        files: [ '**/*.mjs' ]
+        files: [ '**/*.js' ]
         , languageOptions: {
             ecmaVersion: 2020
             , globals: {

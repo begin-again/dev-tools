@@ -1,5 +1,5 @@
-import { repositoryEngines } from '../common/engine.mjs';
-import { findFirstFile } from '../common/files.mjs';
+import { repositoryEngines } from '../common/engine.js';
+import { findFirstFile } from '../common/files.js';
 import yargs from 'yargs/yargs';
 const pwd = process.cwd();
 const options = {

@@ -7,8 +7,8 @@
 import { join, resolve, basename } from 'node:path';
 import fs, { readdirSync } from 'node:fs';
 import semver from 'semver';
-import { getPackage } from './repos.mjs';
-import Version from './version.mjs';
+import { getPackage } from './repos.js';
+import Version from './version.js';
 
 const defaultVersion = '16.15.0';
 
