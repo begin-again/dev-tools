@@ -2587,7 +2587,7 @@ __metadata:
     semver: "npm:^7.6.0"
     shelljs: "npm:^0.8.5"
     simple-git: "npm:^3.24.0"
-    sinon: "npm:^17.0.0"
+    sinon: "npm:^17.0.1"
     sinon-chai-es: "npm:^3.7.0"
     uuid: "npm:9.0.1"
     yargs: "npm:^17.7.2"
@@ -3234,7 +3234,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sinon@npm:^17.0.0":
+"sinon@npm:^17.0.1":
   version: 17.0.1
   resolution: "sinon@npm:17.0.1"
   dependencies:
