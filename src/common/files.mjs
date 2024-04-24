@@ -12,7 +12,6 @@ const folderExists = (folder) => {
     try {
         return statSync(folder).isDirectory();
     }
-
     catch (e) {
         if(e) {
             return false;

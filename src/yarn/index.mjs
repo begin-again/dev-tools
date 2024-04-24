@@ -1,9 +1,9 @@
 
 import { spawn } from 'node:child_process';
-import { properNodeVersions, versionStringToObject, versionToUseValidator, versions } from '../common/engine.mjs';
-import yargs from 'yargs';
+import { Engine } from '../common/engine.mjs';
+import yargs from 'yargs/yargs';
 
-properNodeVersions();
+const engine = new Engine();
 
 /**
  *
@@ -29,8 +29,8 @@ const spawner = (command, pathToActOn, pathToNodeBinary, ...yarnArgs) => {
 
 let versionToUse;
 
-
-yargs
+const _yargs = yargs(process.argv.slice(2));
+_yargs
     .command([ '$0' ], 'run yarn without changing node version',
         _yargs => {
             return _yargs
@@ -60,7 +60,7 @@ yargs
                 })
                 .check(({ version }) => {
                     if(version) {
-                        const _version = versionStringToObject(version, versions);
+                        const _version = Engine.versionStringToObject(version, engine.versions);
                         if(!_version) {
                             throw new RangeError(`The specified version '${version}' is not installed`);
                         }
@@ -68,7 +68,7 @@ yargs
                     return true;
                 })
                 .check(({ version, path, oldest }) => {
-                    versionToUse = versionToUseValidator({ path, version, oldest });
+                    versionToUse = engine.versionToUseValidator({ path, version, oldest });
                     return Boolean(versionToUse);
                 });
         },
@@ -79,8 +79,8 @@ yargs
             return spawner('yarn', argv.path, versionToUse.path, argv.command, ...argv._);
         });
 
-yargs.help(true)
+_yargs.help(true)
     .version(false)
     .strict(true)
-    .wrap(yargs.terminalWidth())
+    .wrap(_yargs.terminalWidth())
     .parse();

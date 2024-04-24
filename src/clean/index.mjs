@@ -1,13 +1,14 @@
 
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import yargs from 'yargs';
+import yargs from 'yargs/yargs';
 import { removeTarget, removeSonarTemp } from './clean.mjs';
 
 const builds = /(^[a-z0-9]{32}$)|(^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$)/m;
 const yarns = /^yarn--.+/m;
 
-yargs
+const _yargs = yargs(process.argv.slice(2));
+_yargs
     .command({
         command: [ 'sonar' ]
         , desc: 'Remove excess sonar work folders'
@@ -47,7 +48,7 @@ yargs
 
 
 // Main entry
-yargs.help(true)
+_yargs.help(true)
     .version(false)
     .strict(true)
     .parse();

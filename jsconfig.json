@@ -8,5 +8,6 @@
         "src/**/*.mjs",
         "test/*.spec.mjs",
         "test/temp.spec.mjs.old",
+        "test/engine.spec.mjs.old",
     ]
 }

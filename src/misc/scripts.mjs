@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import yargs from 'yargs';
+import yargs from 'yargs/yargs';
 import { findFirstFile, fileAsJSON } from '../common/files.mjs';
 
 /**
@@ -8,7 +8,7 @@ import { findFirstFile, fileAsJSON } from '../common/files.mjs';
  */
 const main = async () => {
 
-    const { argv } = yargs
+    const { argv } = yargs(process.argv.slice(2))
         .option('path', {
             alias: 'p'
             , describe: 'path to start looking for the package file'

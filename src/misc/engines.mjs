@@ -1,6 +1,6 @@
 import { repositoryEngines } from '../common/engine.mjs';
 import { findFirstFile } from '../common/files.mjs';
-import yargs from 'yargs';
+import yargs from 'yargs/yargs';
 const pwd = process.cwd();
 const options = {
     'path': {
@@ -11,7 +11,7 @@ const options = {
     }
 };
 
-const { argv } = yargs
+const { argv } = yargs(process.argv.slice(2))
     .option(options)
     .version(false);
 

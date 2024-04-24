@@ -1,6 +1,6 @@
 import { type as osType } from 'node:os';
-import yargs from 'yargs';
-import { allInstalledNodeVersions, versionKeys } from '../common/engine.mjs';
+import yargs from 'yargs/yargs';
+import { Engine, versionKeys } from '../common/engine.mjs';
 import report from './report.mjs';
 import fix from './fix.mjs';
 import clean from './clean.mjs';
@@ -25,14 +25,15 @@ const validateWindows = () => {
     return true;
 };
 
-yargs
+const _yargs = yargs(process.argv.slice(2));
+_yargs
     .command({
         command: [ '$0', 'report' ]
         , desc: 'Report on found executables'
         , builder: _yargs => {
             return _yargs
                 .check((argv) => {
-                    argv.installed = allInstalledNodeVersions();
+                    argv.installed = Engine.allInstalledNodeVersions();
                     return true;
                 });
         }
@@ -61,7 +62,7 @@ yargs
                     return true;
                 })
                 .check((argv) => {
-                    argv.installed = allInstalledNodeVersions();
+                    argv.installed = Engine.allInstalledNodeVersions();
                     return true;
                 });
         }
@@ -75,7 +76,7 @@ yargs
                 .option('dry-run', { alias: 'x', describe: 'show what will be fixed', type: 'boolean', default: false })
                 .check(validateWindows)
                 .check((argv) => {
-                    argv.installed = allInstalledNodeVersions();
+                    argv.installed = Engine.allInstalledNodeVersions();
                     return true;
                 });
         }
@@ -90,7 +91,7 @@ yargs
                 .option('version', { ...versionKeys.version, required: true })
                 .check(validateWindows)
                 .check((argv) => {
-                    argv.installed = allInstalledNodeVersions();
+                    argv.installed = Engine.allInstalledNodeVersions();
                     return true;
                 });
         }
@@ -98,7 +99,7 @@ yargs
     });
 
 // Main entry
-yargs.help(true)
+_yargs.help(true)
     .version(false)
     .strict(true)
     .parse();

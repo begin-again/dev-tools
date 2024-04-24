@@ -1,5 +1,5 @@
 import { accessSync, constants, lstatSync } from 'fs';
-import yargs from 'yargs';
+import yargs from 'yargs/yargs';
 import { DateTime } from 'luxon';
 
 const options = {
@@ -103,7 +103,7 @@ const isFuture = (checkDate) => {
  * @param {Boolean} test - used for testing only
  */
 const setOptions = (test) => {
-    const argv = test || yargs
+    const argv = test || yargs(process.argv.slice(2))
         .options(cmdKeys)
         .version(false)
         .help(true)

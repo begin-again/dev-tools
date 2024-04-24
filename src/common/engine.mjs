@@ -12,7 +12,7 @@ import Version from './version.mjs';
 
 const defaultVersion = '16.15.0';
 
-const NumbersPadding = 2;
+const NumbersPadding = 3;
 
 class Engine {
 
@@ -25,7 +25,7 @@ class Engine {
      * @param {string} param0.defaultVersion
      * @param {Version[]} param0.versions
      */
-    constructor({ env, defaultVersion, versions }) {
+    constructor({ env, defaultVersion, versions } = {}) {
         const _env = env || process.env;
         /** @type {Version[]} */
         this._allVersions = versions || Engine.allInstalledNodeVersions(null, _env);
@@ -109,7 +109,7 @@ class Engine {
      * @memberof Engine
      */
     satisfyingVersions (requiredVersionRange) {
-        return this._versions
+        const versions = this._versions
             .filter(
                 ({ version, error }) =>
                     !error && semver.satisfies(version, requiredVersionRange)
@@ -119,6 +119,7 @@ class Engine {
                     Engine.versionStringToNumber(b.version) -
                     Engine.versionStringToNumber(a.version)
             );
+        return versions;
     };
 
     /**
@@ -140,8 +141,8 @@ class Engine {
      * @memberof Engine
      */
     minInstalledSatisfyingVersion (requiredRange) {
-        const version = this.satisfyingVersions(requiredRange);
-        return version[version.length - 1];
+        const versions = this.satisfyingVersions(requiredRange);
+        return versions[versions.length - 1];
     };
 
     /**
@@ -150,13 +151,15 @@ class Engine {
      * @param {string} param0.path - to repository
      * @param {string=} param0.version - version number x.y.z
      * @param {boolean=} param0.oldest - choose oldest acceptable version
-     * @param {boolean} [noPackage] - path does not have package.json
+     * @param {object} [options]
+     * @param {boolean=} options.noPackage - path does not have package.json
+     * @param {string=} options.repositoryEngines - engines.node property from package.json
      * @returns {Version}
      * @throws RangeError
      * @memberof Engine
      */
-    versionToUseValidator ({ path, version, oldest }, noPackage) {
-        const repoEngines = noPackage ? version : repositoryEngines(path);
+    versionToUseValidator ({ path, version, oldest }, { noPackage = false, repositoryEngines = this._defaultVersion }) {
+        const repoEngines = noPackage ? version : repositoryEngines;
         const repoName = basename(path);
 
         if(version) {
@@ -239,20 +242,18 @@ class Engine {
     };
 
     /**
-    * converts a version string to number
-    *
-    * @param {string} version
-    * @returns {number}
-    * @memberof Engine
-    */
+     * converts a version string to number
+     *
+     * @param {string} version
+     * @returns {number}
+     * @memberof Engine
+     */
     static versionStringToNumber (version) {
-        const _version = version.startsWith('v') ? version.substring(1) : version;
-        let _expanded = '';
-        _version.split('.').forEach((s, i) => {
-            _expanded += i === 0 ? s : s.padStart(NumbersPadding, '0');
-        });
-        return parseInt(_expanded, 10);
+        const versionParts = version.replace(/^v/, '').split('.');
+        const expandedVersion = versionParts.map((part, index) => index === 0 ? part : part.padStart(NumbersPadding, '0')).join('');
+        return parseInt(expandedVersion, 10);
     };
+
     // end of class
 }
 

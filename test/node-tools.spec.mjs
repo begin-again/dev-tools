@@ -4,7 +4,7 @@ import { platform } from 'node:os';
 import { expect } from 'chai';
 import sinon from 'sinon';
 
-import { Version } from '../src/common/engine.mjs';
+import Version from '../src/common/version.mjs';
 
 const isWindows = platform() === 'win32';
 

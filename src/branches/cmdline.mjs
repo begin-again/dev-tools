@@ -1,5 +1,5 @@
 import { constants, accessSync, lstatSync } from 'node:fs';
-import yargs from 'yargs';
+import yargs from 'yargs/yargs';
 
 const cmdKeys = {
     'folder-names': {
@@ -70,7 +70,7 @@ const validateNoConflict = ({ folderNames, deploy }) => {
 const options = {};
 
 const setOptions = (test) => {
-    const argv = test || yargs
+    const argv = test || yargs(process.argv.slice(2))
         .options(cmdKeys)
         .help(true)
         .version(false)

@@ -1,539 +1,309 @@
+/* eslint-disable no-console */
+/* eslint-disable no-magic-numbers */
 import { platform } from 'node:os';
 import { sep } from 'node:path';
+import mockFS from 'mock-fs';
+import fs from 'node:fs';
 import sinon from 'sinon';
 import chai, { expect } from 'chai';
 import sinonChai from '../node_modules/sinon-chai-es/lib/sinon-chai.mjs';
 chai.use(sinonChai);
-import mockFS from 'mock-fs';
 const isWindows = platform() === 'win32';
-import * as engine from '../src/common/engine.mjs';
+import semver from 'semver';
 
-const removeVersions = (engine) => {
-    engine.state.versions = [];
+import { Engine } from '../src/common/engine.mjs';
+
+// eslint-disable-next-line no-unused-vars
+import Version from '../src/common/version.mjs';
+
+const myVersions = {
+    afile: 'hello'
+    , nvm: {
+        'v8.11.1':{
+            'node64.exe': ''
+            , node56: {}
+        }
+        , 'v0.0.1':{
+            'node64.exe': ''
+            , 'node.exe': ''
+            , node56: {}
+        }
+        , 'v2.10.22':{
+            'node.exe': ''
+            , node56: {}
+        }
+        , 'v10.23.0':{
+            'node64.exe': ''
+            , node56: {}
+            , node: {}
+        }
+        , 'v99.99.99':''
+    }
+    , '.nvm': {
+        versions: {
+            node: {
+                'v10.03.0':{
+                    bin: {
+                        node64: ''
+                        , node: ''
+                        , node56: {}
+                    }
+                }
+                , 'v0.0.1':{
+                    bin: {
+                        node64: ''
+                        , node: mockFS.file({
+                            content: ''
+                            , mode: 0o666
+                        })
+                        , node56: {}
+                    }
+                }
+                , 'v2.10.11':{
+                    bin: {
+                        node64: ''
+                        , node:  mockFS.file({
+                            content: ''
+                            , mode: 0o755
+                        })
+                        , node56: {}
+                    }
+                }
+                , 'v12.0.0':{
+                    bin: {
+                        node: ''
+                        , node64: ''
+                        , node56: {}
+                    }
+                }
+                , 'v10.14.0':{
+                    bin: {
+                        node64: ''
+                        , node56: {}
+                    }
+                }
+                , 'v99.99.99':''
+            }
+        }
+    }
 };
 
-describe('Engine Module', function() {
-    let logSpy;
+describe('Engine Class', function() {
+    const mockFSOptions = {
+        env: { NVM_HOME: 'nvm' }
+    };
     beforeEach(function() {
-        logSpy = sinon.stub();
-        engine.state.versions = [];
+        mockFS(myVersions);
     });
-    afterEach(sinon.restore);
+    afterEach(mockFS.restore);
+    describe('constructor', function() {
+        it('parameters', function() {
+            try {
+                /** @type {Version[]} */
+                const versions = [ {
+                    error: 'bad'
+                } ];
+                const defaultVersion = '1.1.1';
+                const engine = new Engine({
+                    env: { NVM_HOME: 'nvm' }
+                    , versions
+                    , defaultVersion
+                });
+                expect(engine.versionsAll).lengthOf(versions.length);
+                expect(engine.versions).lengthOf(0);
+                expect(engine.defaultVersion).equals(defaultVersion);
+            }
+            catch (err) {
+                expect.fail(err.message);
+            }
+        });
+        it('without parameters', function() {
+            // the versions will be obtained from the mocking of the file system
+            try {
+                // the env is still needed for consistent test result
+                const engine = new Engine(mockFSOptions);
+                expect(engine.versionsAll).lengthOf(4);
+                expect(engine.versions).lengthOf(2);
+                expect(engine.defaultVersion)
+                    .is.a('string')
+                    .length.greaterThan(0);
+            }
+            catch (err) {
+                expect.fail(err.message);
+            }
+        });
+    });
     describe('engineCheck()', function() {
-        it('should not throw when compatible', function() {
-            const satisfyFake = sinon.stub(engine.semver, 'satisfies').returns(true);
-            const cleanFake = sinon.stub(engine.semver, 'clean').returns('6.5.1');
-
-            try {
-                engine.engineCheck('^6.5.0', logSpy);
-            }
-            catch (err) {
-                expect.fail(`should not throw: ${err.message}`);
-            }
-
-            expect(logSpy).not.called;
-            expect(cleanFake).calledOnce;
-            expect(satisfyFake).calledOnce;
-        });
-        it('should throw on incompatible engines', function() {
-            const expected = 'Incompatible NodeJS version: detected version 6.5.0 but required ~6.1.0';
-            const satisfyFake = sinon.stub(engine.semver, 'satisfies').returns(false);
-            const cleanFake = sinon.stub(engine.semver, 'clean').returns('6.5.0');
-
-            try {
-                engine.engineCheck('~6.1.0', logSpy);
-                expect.fail('should not get here');
-            }
-            catch (err) {
-                expect(err.message).includes(expected);
-            }
-
-            expect(logSpy).calledOnce;
-            expect(satisfyFake).calledOnce;
-            expect(cleanFake).calledOnce;
-        });
-        it('should write to log', function() {
-            const expected = 'Incompatible NodeJS version: detected version 6.5.0 but required ~6.1.0';
-            const satisfyFake = sinon.stub(engine.semver, 'satisfies').returns(false);
-            const cleanFake = sinon.stub(engine.semver, 'clean').returns('6.5.0');
-
-            try {
-                engine.engineCheck('~6.1.0', logSpy);
-                expect.fail('should not get here');
-            }
-            catch (err) {
-                expect(err.message).includes(expected);
-            }
-
-            expect(logSpy).calledOnce;
-            expect(cleanFake).calledOnce;
-            expect(satisfyFake).calledOnce;
-        });
-        it('should write to log with additional message', function() {
-            const expectedMsg = '( target ) detected version 6.5.0 but required ~6.1.0';
-            const expected = `Incompatible NodeJS version: ${expectedMsg}`;
-            const satisfyFake = sinon.stub(engine.semver, 'satisfies').returns(false);
-            const cleanFake = sinon.stub(engine.semver, 'clean').returns('6.5.0');
-
-            try {
-                engine.engineCheck('~6.1.0', logSpy, 'target');
-                expect.fail('should not get here');
-            }
-            catch (err) {
-                expect(err.message).includes(expected);
-            }
-
-            expect(logSpy).calledOnceWith(expectedMsg);
-            expect(cleanFake).calledOnce;
-            expect(satisfyFake).calledOnce;
-        });
-    });
-    describe('satisfyingVersions()', function() {
-        it('should be empty array when nothing satisfies', function() {
-            const stub = sinon.stub();
-            engine.state.versions = [ { version: 'v10.12.13' } ];
-
-            const result = engine.satisfyingVersions('12.11.0', stub);
-
-            expect(result).to.be.an('array').lengthOf(0);
-            expect(stub).not.called;
-        });
-        it('should be empty array when nothing satisfies due to an error', function() {
-            const stub = sinon.stub();
-            engine.state.versions = [ { version: 'v10.12.13', error: 'for shame' } ];
-            const result = engine.satisfyingVersions('12.11.0', stub);
-
-            expect(result).to.be.an('array').lengthOf(0);
-
-            expect(stub).not.called;
-        });
-        it('should be empty array when nothing satisfies due to an error', function() {
-            const installedNodeVersionsStub = sinon.stub();
-            engine.state.versions = [ { version: 'v10.12.13', error: 'for shame' } ];
-            const result = engine.satisfyingVersions('12.11.0', installedNodeVersionsStub);
-
-            expect(result).to.be.an('array').lengthOf(0);
-
-            expect(installedNodeVersionsStub).not.called;
-            installedNodeVersionsStub.reset();
-        });
-        it('should find 2 matches sorted desc', function() {
-            const stub = sinon.stub();
-            engine.state.versions = [
-                { version: 'v10.12.13' }
-                , { version: 'v12.12.13' }
-                , { version: 'v12.19.0' }
-            ];
-            const result = engine.satisfyingVersions('^12.0.0', stub);
-
-            expect(result).to.be.an('array').lengthOf(2);
-            expect(result[0].version).to.equal('v12.19.0');
-            expect(result[1].version).to.equal('v12.12.13');
-
-            expect(stub).not.called;
-        });
-        it('should find 2 matches sorted desc via default', function() {
-            engine.state.versions = [
-                { version: 'v10.12.13' }
-                , { version: 'v12.12.13' }
-                , { version: 'v12.19.0' }
-            ];
-            const stub = sinon.stub();
-
-            const result = engine.satisfyingVersions('^12.0.0', stub);
-
-            expect(result).to.be.an('array').lengthOf(2);
-            expect(result[0].version).to.equal('v12.19.0');
-            expect(result[1].version).to.equal('v12.12.13');
-
-            expect(stub).not.called;
-        });
-        it('should find 2 matches sorted desc via default when engines.versions not defined', function() {
-            const versions = [
-                { version: 'v10.12.13' }
-                , { version: 'v12.12.13' }
-                , { version: 'v12.19.0' }
-            ];
-            const stub = sinon.stub().returns(versions);
-            expect(engine.state.versions).to.be.empty;
-
-            const result = engine.satisfyingVersions('^12.0.0', stub);
-
-            expect(stub).calledOnce;
-            expect(result).to.be.an('array').lengthOf(2);
-            expect(result[0].version).to.equal('v12.19.0');
-            expect(result[1].version).to.equal('v12.12.13');
-        });
-        it('should work with major versions', function() {
-            const versions = [
-                { version: 'v10.12.13' }
-                , { version: 'v12.12.13' }
-                , { version: 'v12.19.0' }
-            ];
-            const stub = sinon.stub().returns(versions);
-            expect(engine.state.versions).to.be.empty;
-
-            const result = engine.satisfyingVersions('^12', stub);
-
-            expect(stub).calledOnce;
-            expect(result).to.be.an('array').lengthOf(2);
-            expect(result[0].version).to.equal('v12.19.0');
-            expect(result[1].version).to.equal('v12.12.13');
-
-        });
-    });
-    describe('node version managers', function() {
-        const env = {};
+        let satisfiesStub;
+        let cleanStub;
+        let logStub;
         beforeEach(function() {
-            delete env.NVM_HOME;
-            delete env.NVM_BIN;
-            if(engine.state.versions.length > 0) {
-                engine.state.versions = [];
-            }
-            mockFS({
-                afile: 'hello'
-                , nvm: {
-                    'v8.11.1':{
-                        'node64.exe': ''
-                        , node56: {}
-                    }
-                    , 'v0.0.1':{
-                        'node64.exe': ''
-                        , 'node.exe': ''
-                        , node56: {}
-                    }
-                    , 'v2.10.22':{
-                        'node.exe': ''
-                        , node56: {}
-                    }
-                    , 'v10.23.0':{
-                        'node64.exe': ''
-                        , node56: {}
-                        , node: {}
-                    }
-                    , 'v99.99.99':''
-                }
-                , '.nvm': {
-                    versions: {
-                        node: {
-                            'v10.03.0':{
-                                bin: {
-                                    node64: ''
-                                    , node: ''
-                                    , node56: {}
-                                }
-                            }
-                            , 'v0.0.1':{
-                                bin: {
-                                    node64: ''
-                                    , node: mockFS.file({
-                                        content: ''
-                                        , mode: 0o666
-                                    })
-                                    , node56: {}
-                                }
-                            }
-                            , 'v2.10.11':{
-                                bin: {
-                                    node64: ''
-                                    , node:  mockFS.file({
-                                        content: ''
-                                        , mode: 0o755
-                                    })
-                                    , node56: {}
-                                }
-                            }
-                            , 'v12.0.0':{
-                                bin: {
-                                    node: ''
-                                    , node64: ''
-                                    , node56: {}
-                                }
-                            }
-                            , 'v10.14.0':{
-                                bin: {
-                                    node64: ''
-                                    , node56: {}
-                                }
-                            }
-                            , 'v99.99.99':''
-                        }
-                    }
-                }
-            });
+            satisfiesStub = sinon.stub(semver, 'satisfies');
+            cleanStub = sinon.stub(semver, 'clean');
+            logStub = sinon.stub(console, 'error');
         });
-        afterEach(mockFS.restore);
-
-        describe('allInstalledNodeVersions()', function() {
-            it('should be empty if not env', function() {
-                const result = engine.allInstalledNodeVersions(null, {});
-
-                expect(result).to.be.an('array').lengthOf(0);
-            });
-            it('should be empty if nvm home is not a folder', function() {
-                env.NVM_HOME = 'afile';
-                const result = engine.allInstalledNodeVersions(null, env);
-
-                expect(result).to.be.an('array').lengthOf(0);
-            });
-            it('should find 4 versions in nvm', function() {
-                env.NVM_HOME = 'nvm';
-                const result = engine.allInstalledNodeVersions(null, env);
-
-                expect(result).to.be.an('array');
-                for(const version of result) {
-                    expect(version).to.have.property('version');
-                    expect(version).to.have.property('path');
-                }
-                const [ v1, v2, v3, v4, v5 ] = result;
-                expect(v1.version).to.equal('v10.23.0');
-                expect(v2.version).to.equal('v8.11.1');
-                expect(v3.version).to.equal('v2.10.22');
-                expect(v4.version).to.equal('v0.0.1');
-                expect(v5).to.be.undefined;
-
-            });
+        afterEach(function() {
+            satisfiesStub.restore();
+            cleanStub.restore();
+            logStub.restore();
         });
-        describe('properNodeVersions()', function() {
-            it('should be empty when no env vars present', function() {
-                expect(engine.state.versions).to.be.empty;
-                const result = engine.properNodeVersions(null, env);
+        it('should not throw an error when the detected version is within the required range', function() {
+            cleanStub.returns('12.13.1');
+            satisfiesStub.returns(true);
 
-                expect(result).to.be.an('array').lengthOf(0);
-                expect(engine.state.versions).to.be.an('array').lengthOf(0);
-            });
-            describe('NVM for Windows', function() {
-                it('should have length of 2', function() {
-                    if(!isWindows) {
-                        return this.skip();
-                    }
-                    env.NVM_HOME = 'nvm';
-                    expect(engine.state.versions).to.be.empty;
+            expect(() => Engine.engineCheck('>=12.13.1', console.error, 'ERROR: ')).to.not.throw();
+            expect(logStub).to.not.have.been.called;
+        });
 
-                    const result = engine.properNodeVersions(null, env);
+        it('should throw an error when the detected version is not within the required range', function() {
+            cleanStub.returns('12.13.0');
+            satisfiesStub.returns(false);
 
-                    expect(result).to.be.an('array').lengthOf(2);
-                    expect(result[0].version).to.equal('v2.10.22');
-                    expect(result[1].version).to.equal('v0.0.1');
-                    expect(engine.state.versions).lengthOf(2);
-                });
-                it('should have path to binary on windows', function() {
-                    if(!isWindows) {
-                        return this.skip();
-                    }
-                    env.NVM_HOME = 'nvm';
-                    const { bin, path } = engine.properNodeVersions(null, env)[0];
+            expect(() => Engine.engineCheck('>=12.13.1', console.error, 'ERROR: ')).to.throw();
+            expect(logStub).to.have.been.calledOnce;
+        });
+    });
+    describe('versionStringToNumber', function() {
+        it('should correctly convert a version string to a number', function() {
+            const version = 'v12.13.1';
+            const result = Engine.versionStringToNumber(version);
+            expect(result).to.equal(12013001);
+        });
 
-                    expect(bin).to.equal(`${path}${sep}node.exe`);
-                });
-                it('should have path to binary when not named \'node\'', function() {
-                    if(!isWindows) {
-                        return this.skip();
-                    }
-                    env.NVM_HOME = 'nvm';
-                    const { bin, path } = engine.properNodeVersions(null, env)[1];
+        it('should correctly handle version strings without a leading "v"', function() {
+            const version = '12.13.1';
+            const result = Engine.versionStringToNumber(version);
+            expect(result).to.equal(12013001);
+        });
 
-                    expect(bin).to.equal(`${path}${sep}node.exe`);
-                });
-            });
+        it('should return NaN for invalid version strings', function() {
+            const version = 'invalid';
+            const result = Engine.versionStringToNumber(version);
+            expect(result).to.be.NaN;
+        });
+    });
+
+    describe('versionToUseValidator', function() {
+        let satisfyingVersionsStub;
+        let versionStringToObjectStub;
+        let minInstalledSatisfyingVersionStub;
+        let maxInstalledSatisfyingVersionStub;
+
+        beforeEach(function() {
+            satisfyingVersionsStub = sinon.stub(Engine.prototype, 'satisfyingVersions');
+            versionStringToObjectStub = sinon.stub(Engine, 'versionStringToObject');
+            minInstalledSatisfyingVersionStub = sinon.stub(Engine.prototype, 'minInstalledSatisfyingVersion');
+            maxInstalledSatisfyingVersionStub = sinon.stub(Engine.prototype, 'maxInstalledSatisfyingVersion');
+        });
+
+        afterEach(function() {
+            satisfyingVersionsStub.restore();
+            versionStringToObjectStub.restore();
+            minInstalledSatisfyingVersionStub.restore();
+            maxInstalledSatisfyingVersionStub.restore();
+        });
+
+        it('should return the version if it satisfies the engine requirements', function() {
+            const path = '/path/to/repo';
+            const version = '1.2.3';
+            const repoEngines = '>=1.2.3';
+            const satisfies = [ { version: '1.2.3' } ];
+
+            satisfyingVersionsStub.returns(satisfies);
+            versionStringToObjectStub.returns({ version });
+
+            const result = new Engine(mockFSOptions).versionToUseValidator({ path, version }, { repositoryEngines: repoEngines });
+
+            expect(result).to.deep.equal({ version });
+        });
+
+        it('should return the minimum installed satisfying version if oldest is true', function() {
+            const path = '/path/to/repo';
+            const repoEngines = '>=1.2.3';
+            const minVersion = { version: '1.2.3' };
+
+            minInstalledSatisfyingVersionStub.returns(minVersion);
+
+            const result = new Engine(mockFSOptions).versionToUseValidator({ path, oldest: true }, { repositoryEngines: repoEngines });
+
+            expect(result).to.deep.equal(minVersion);
+        });
+
+        it('should return the maximum installed satisfying version if oldest is false', function() {
+            const path = '/path/to/repo';
+            const repoEngines = '>=1.2.3';
+            const maxVersion = { version: '1.2.3' };
+
+            maxInstalledSatisfyingVersionStub.returns(maxVersion);
+
+            const result = new Engine(mockFSOptions).versionToUseValidator({ path }, { repositoryEngines: repoEngines });
+
+            expect(result).to.deep.equal(maxVersion);
+        });
+
+        it('should throw a RangeError if no satisfying versions are installed', function() {
+            const path = '/path/to/repo';
+            const version = '16.15.0';
+            const repoEngines = '^8.11.1 || ^10.13.0 || ^12.13.0';
+
+            satisfyingVersionsStub.returns([]);
+
+            expect(() => new Engine(mockFSOptions).versionToUseValidator({ path, version }, { repositoryEngines: repoEngines })).to.throw(RangeError);
         });
     });
     describe('maxInstalledSatisfyingVersion()', function() {
-        beforeEach(removeVersions.bind(null, engine));
         it('should be undefined when not satisfied', function() {
-            engine.state.versions = [ { version: 'v12.0.0' } ];
+            const versions = [ { version: 'v12.0.0' } ];
             const stub = sinon.stub();
 
-            const result = engine.maxInstalledSatisfyingVersion('^8.11.1', stub);
+            const result = new Engine({ versions }).maxInstalledSatisfyingVersion('^8.11.1', stub);
 
             expect(result).to.be.undefined;
             expect(stub).not.called;
         });
         it('should be versions', function() {
-            engine.state.versions = [ { version: 'v12.0.0' } ];
-            const stub = sinon.stub();
+            const versions = [ { version: 'v12.0.0' } ];
 
-            const { version } = engine.maxInstalledSatisfyingVersion('^12.0.0', stub);
+            const { version } = new Engine({ versions }).maxInstalledSatisfyingVersion('^12.0.0');
 
-            expect(version).to.equal(engine.state.versions[0].version);
-            expect(stub).not.called;
+            expect(version).to.equal(versions[0].version);
         });
         it('should be versions largest matching version', function() {
-            engine.state.versions = [ { version: 'v12.19.0' }, { version: 'v12.0.0' } ];
-            const stub = sinon.stub();
+            const versions = [ { version: 'v12.19.0' }, { version: 'v12.0.0' } ];
 
-            const { version } = engine.maxInstalledSatisfyingVersion('^12.0.0', stub);
+            const { version } = new Engine({ versions }).maxInstalledSatisfyingVersion('^12.0.0');
 
-            expect(version).to.equal(engine.state.versions[0].version);
-            expect(stub).not.called;
+            expect(version).to.equal(versions[0].version);
         });
     });
-    describe('minInstalledSatisfyingVersion()', function() {
-        it('should be undefined when not satisfied', function() {
-            engine.state.versions = [ { version: 'v12.0.0' } ];
-            const stub = sinon.stub();
+    describe('minInstalledSatisfyingVersion', function() {
+        it('should return the oldest installed version that satisfies the required range', function() {
+            const versions = [ { version: 'v8.0.0' }, { version: 'v12.19.0' } ];
 
-            const result = engine.minInstalledSatisfyingVersion('^8.11.1', stub);
+            const result = new Engine({ versions }).minInstalledSatisfyingVersion('^12.0.0 || ^8.0.0');
 
-            expect(result).to.be.undefined;
-            expect(stub).not.called;
-            stub.reset();
-        });
-        it('should be versions', function() {
-            engine.state.versions = [ { version: 'v12.0.0' } ];
-            const stub = sinon.stub();
-
-            const { version } = engine.minInstalledSatisfyingVersion('^12.0.0', stub);
-
-            expect(version).to.equal(engine.state.versions[0].version);
-            expect(stub).not.called;
-            stub.reset();
-        });
-        it('should be versions oldest matching version', function() {
-            engine.state.versions = [ { version: 'v12.19.0' }, { version: 'v8.0.0' } ];
-            const stub = sinon.stub();
-
-            const { version } = engine.minInstalledSatisfyingVersion('^12.0.0 || ^8.0.0', stub);
-
-            expect(version).to.equal(engine.state.versions[1].version);
-            stub.reset();
-        });
-        it('should allow matching on major versions', function() {
-            engine.state.versions = [ { version: 'v12.19.0' }, { version: 'v8.0.0' } ];
-            const stub = sinon.stub();
-
-            const { version } = engine.minInstalledSatisfyingVersion('^12', stub);
-
-            expect(version).to.equal(engine.state.versions[0].version);
-            expect(stub).not.called;
+            expect(result.version).to.equal(versions[0].version);
         });
         it('should pick 16.12.0 -- issue 116', function() {
-            engine.state.versions = [ { version: 'v16.13.0' }, { version: 'v16.12.0' } ];
-            const stub = sinon.stub();
+            const versions = [ { version: 'v16.13.0' }, { version: 'v16.12.0' } ];
 
-            const { version } = engine.minInstalledSatisfyingVersion('^16', stub);
+            const result = new Engine({ versions }).minInstalledSatisfyingVersion('^16');
 
-            expect(version).to.equal(engine.state.versions[1].version);
-            expect(stub).not.called;
+            expect(result.version).to.equal(versions[1].version);
         });
-    });
-    describe('repositoryEngines()', function() {
-        afterEach(mockFS.restore);
-        it('should throw RangeError when package not found', function() {
-            const wrapper = () => engine.repositoryEngines('missing');
+        it('should allow matching on major versions', function() {
+            const versions = [ { version: 'v12.19.0' }, { version: 'v8.0.0' } ];
 
-            expect(wrapper).to.throw(RangeError);
+            const result = new Engine({ versions }).minInstalledSatisfyingVersion('^12');
+
+            expect(result.version).to.equal(versions[0].version);
         });
-        it('should not throw', function() {
-            const content = { engines:{ node: '8.11.1' } };
-            mockFS({
-                myRepo: {
-                    'package.json': JSON.stringify(content)
-                }
-            });
+        it('should return undefined if no installed versions satisfy the required range', function() {
+            const versions = [ { version: 'v12.0.0' } ];
 
-            let result;
-            const wrapper = function() {
-                result = engine.repositoryEngines('myRepo');
-            };
+            const result = new Engine({ versions }).minInstalledSatisfyingVersion('^8.11.1');
 
-            expect(wrapper).not.to.throw();
-            expect(result).to.equal('8.11.1');
-        });
-        it('should return default there is not a node property', function() {
-            const content = { engines:{ yarn: '^1.22.4' } };
-            mockFS({
-                myRepo: {
-                    'package.json': JSON.stringify(content)
-                }
-            });
-            let result;
             expect(result).to.be.undefined;
-
-            const wrapper = function() {
-                result = engine.repositoryEngines('myRepo');
-            };
-
-            expect(wrapper).not.to.throw();
-            expect(result).not.to.be.undefined;
-
-        });
-    });
-    describe('versionToUseValidator()', function() {
-        let satisfyingVersions; let maxInstalledSatisfyingVersion;let versionStringToObject;
-        let minInstalledSatisfyingVersion;
-        beforeEach(function() {
-            sinon.stub(engine, 'properNodeVersions');
-        });
-        describe('user specified version', function() {
-            beforeEach(function() {
-                versionStringToObject = sinon.stub(engine, 'versionStringToObject');
-                satisfyingVersions = sinon.stub(engine, 'satisfyingVersions');
-            });
-            it('should throw when specified version is not compatible with target repository', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
-
-                const satVersions = [];
-                satisfyingVersions.callsFake(() => satVersions);
-                versionStringToObject.callsFake(() => ({ version: '' }));
-                const expectedMessage = 'requires NodeJS version(s) \'^8.11.1 || ^10.13.0 || ^12.13.0\' but got \'14.1.1\'';
-                const path = '';
-                const version = '14.1.1';
-                expect(() => engine.versionToUseValidator({ path, version })).to.Throw(RangeError, expectedMessage);
-            });
-            it('should be v12.13.1', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
-
-                const satVersions = [ { version: 'v12.13.1' }, { version: 'v12.19.1' }, { version: 'v8.11.1' } ];
-                satisfyingVersions.callsFake(() => satVersions);
-                versionStringToObject.callsFake(() => ({ version: 'v12.13.1' }));
-                const expectedVersion = 'v12.13.1';
-                const path = '';
-                const version = '12.13.1';
-
-                const result = engine.versionToUseValidator({ path, version });
-
-                expect(result.version).to.equal(expectedVersion);
-            });
-            it('should pick 16.13.0 -- issue 116', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^12.13.0 || ^14.15.0 || ^16.13.0');
-                const satVersions = [ { version: 'v17.0.1' }, { version: 'v16.13.0' }, { version: 'v16.12.0' }, { version: 'v14.18.1' } ];
-                satisfyingVersions.callsFake(() => satVersions);
-                versionStringToObject.callsFake(() => ({ version: 'v12.13.1' }));
-            });
-        });
-        describe('default', function() {
-            beforeEach(function() {
-                maxInstalledSatisfyingVersion = sinon.stub(engine, 'maxInstalledSatisfyingVersion');
-                minInstalledSatisfyingVersion = sinon.stub(engine, 'minInstalledSatisfyingVersion');
-            });
-            it('should throw when version not specified and not installed versions satisfy', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
-                maxInstalledSatisfyingVersion.callsFake(() => undefined);
-                const expectedMessage = 'repo requires NodeJS version(s) \'^8.11.1 || ^10.13.0 || ^12.13.0\' but no satisfying versions installed!';
-                const path = 'projects/repo';
-
-                expect(() => engine.versionToUseValidator({ path })).to.Throw(RangeError, expectedMessage);
-            });
-            it('should be 12.11.1 when oldest not specified', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
-                maxInstalledSatisfyingVersion.callsFake(() => ({ version: 'v12.11.1' }));
-                const path = 'projects/repo';
-
-                const result = engine.versionToUseValidator({ path });
-
-                expect(result.version).to.equal('v12.11.1');
-            });
-            it('should be 12.11.1 when oldest is true', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
-                minInstalledSatisfyingVersion.callsFake(() => ({ version: 'v12.11.1' }));
-                const path = 'projects/repo';
-                const oldest = true;
-
-                const result = engine.versionToUseValidator({ path, oldest });
-
-                expect(result.version).to.equal('v12.11.1');
-            });
         });
     });
     describe('versionStringToObject()', function() {
@@ -549,26 +319,26 @@ describe('Engine Module', function() {
             it('should find full versions', function() {
                 const versionExpected = 'v2.3.0';
 
-                const { version } = engine.versionStringToObject('2.3.0', versions);
+                const { version } = Engine.versionStringToObject('2.3.0', versions);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should find major versions', function() {
                 const versionExpected = 'v2.3.0';
 
-                const { version } = engine.versionStringToObject('2', versions);
+                const { version } = Engine.versionStringToObject('2', versions);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should find major.minor versions', function() {
                 const versionExpected = 'v2.2.1';
 
-                const { version } = engine.versionStringToObject('2.2', versions);
+                const { version } = Engine.versionStringToObject('2.2', versions);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should be undefined when not found', function() {
-                const result = engine.versionStringToObject('1.2.0', versions);
+                const result = Engine.versionStringToObject('1.2.0', versions);
 
                 expect(result).to.be.undefined;
             });
@@ -577,26 +347,26 @@ describe('Engine Module', function() {
             it('should find full versions', function() {
                 const versionExpected = 'v2.3.0';
 
-                const { version } = engine.versionStringToObject('2.3.0', versions, true);
+                const { version } = Engine.versionStringToObject('2.3.0', versions, true);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should find major versions', function() {
                 const versionExpected = 'v2.0.0';
 
-                const { version } = engine.versionStringToObject('2', versions, true);
+                const { version } = Engine.versionStringToObject('2', versions, true);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should find major.minor versions', function() {
                 const versionExpected = 'v2.2.0';
 
-                const { version } = engine.versionStringToObject('2.2', versions, true);
+                const { version } = Engine.versionStringToObject('2.2', versions, true);
 
                 expect(version).to.equal(versionExpected);
             });
             it('should be undefined when not found', function() {
-                const result = engine.versionStringToObject('1.2.0', versions, true);
+                const result = Engine.versionStringToObject('1.2.0', versions, true);
 
                 expect(result).to.be.undefined;
             });

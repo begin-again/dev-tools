@@ -1,9 +1,11 @@
 
-import { spawn } from 'mode:child_process';
+import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { fileExists } from '../common/files.mjs';
-import { versionStringToObject, versionToUseValidator, state } from '../common/engine.mjs';
-import yargs from 'yargs';
+import { Engine, repositoryEngines } from '../common/engine.mjs';
+import yargs from 'yargs/yargs';
+
+const engine = new Engine();
 
 /**
  *
@@ -29,7 +31,8 @@ const spawner = (command, pathToActOn, pathToNodeBinary, ...myArgs) => {
 
 let versionToUse;
 
-yargs
+const _yargs = yargs(process.argv.slice(2));
+_yargs
     .command([ '$0' ], 'run a cli without changing node version',
         yargs => {
             return yargs
@@ -77,7 +80,7 @@ yargs
                 })
                 .check(({ version }) => {
                     if(version) {
-                        const _version = versionStringToObject(version, state.versions);
+                        const _version = engine.versionStringToObject(version, engine.versions);
                         if(!_version) {
                             throw new RangeError(`The specified version '${version}' is not installed`);
                         }
@@ -86,7 +89,11 @@ yargs
                 })
                 .check(({ version, path, oldest }) => {
                     const hasPackage = path.endsWith('package.json') || fileExists(join(path, 'package.json'));
-                    versionToUse = versionToUseValidator({ path, version, oldest }, !hasPackage);
+                    let allowedEngines = '';
+                    if(hasPackage) {
+                        allowedEngines = repositoryEngines(path);
+                    }
+                    versionToUse = engine.versionToUseValidator({ path, version, oldest }, { noPackage: !hasPackage, repositoryEngines: allowedEngines });
                     return Boolean(versionToUse);
                 });
         },
@@ -96,10 +103,9 @@ yargs
                 process.stdout.write(`launching ${argv.name}${argCommand} with version '${versionToUse.version}' in path '${argv.path}' ${argv._.join(', ')}\n`);
             }
             return spawner(argv.name, argv.path, versionToUse.path, argv.command, ...argv._);
-        });
-
-yargs.help(true)
+        })
+    .help(true)
     .version(false)
+    .wrap(_yargs.terminalWidth())
     .strict(true)
-    .wrap(yargs.terminalWidth())
     .parse();
