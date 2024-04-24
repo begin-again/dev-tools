@@ -1,14 +1,10 @@
- 
- 
-import { platform } from 'node:os';
-import { sep } from 'node:path';
+
+
 import mockFS from 'mock-fs';
-import fs from 'node:fs';
 import sinon from 'sinon';
 import chai, { expect } from 'chai';
 import sinonChai from 'sinon-chai-es';
 chai.use(sinonChai);
-const isWindows = platform() === 'win32';
 import semver from 'semver';
 
 import { Engine } from '../src/common/engine.js';
@@ -17,72 +13,74 @@ import { Engine } from '../src/common/engine.js';
 import Version from '../src/common/version.js';
 
 const myVersions = {
-    afile: 'hello'
-    , nvm: {
-        'v8.11.1':{
-            'node64.exe': ''
-            , node56: {}
+    'c:\\test': {
+        afile: 'hello'
+        , nvm: {
+            'v8.11.1':{
+                'node64.exe': ''
+                , node56: {}
+            }
+            , 'v0.0.1':{
+                'node64.exe': ''
+                , 'node.exe': ''
+                , node56: {}
+            }
+            , 'v2.10.22':{
+                'node.exe': ''
+                , node56: {}
+            }
+            , 'v10.23.0':{
+                'node64.exe': ''
+                , node56: {}
+                , node: {}
+            }
+            , 'v99.99.99':''
         }
-        , 'v0.0.1':{
-            'node64.exe': ''
-            , 'node.exe': ''
-            , node56: {}
-        }
-        , 'v2.10.22':{
-            'node.exe': ''
-            , node56: {}
-        }
-        , 'v10.23.0':{
-            'node64.exe': ''
-            , node56: {}
-            , node: {}
-        }
-        , 'v99.99.99':''
-    }
-    , '.nvm': {
-        versions: {
-            node: {
-                'v10.03.0':{
-                    bin: {
-                        node64: ''
-                        , node: ''
-                        , node56: {}
+        , '.nvm': {
+            versions: {
+                node: {
+                    'v10.03.0':{
+                        bin: {
+                            node64: ''
+                            , node: ''
+                            , node56: {}
+                        }
                     }
-                }
-                , 'v0.0.1':{
-                    bin: {
-                        node64: ''
-                        , node: mockFS.file({
-                            content: ''
-                            , mode: 0o666
-                        })
-                        , node56: {}
+                    , 'v0.0.1':{
+                        bin: {
+                            node64: ''
+                            , node: mockFS.file({
+                                content: ''
+                                , mode: 0o666
+                            })
+                            , node56: {}
+                        }
                     }
-                }
-                , 'v2.10.11':{
-                    bin: {
-                        node64: ''
-                        , node:  mockFS.file({
-                            content: ''
-                            , mode: 0o755
-                        })
-                        , node56: {}
+                    , 'v2.10.11':{
+                        bin: {
+                            node64: ''
+                            , node:  mockFS.file({
+                                content: ''
+                                , mode: 0o755
+                            })
+                            , node56: {}
+                        }
                     }
-                }
-                , 'v12.0.0':{
-                    bin: {
-                        node: ''
-                        , node64: ''
-                        , node56: {}
+                    , 'v12.0.0':{
+                        bin: {
+                            node: ''
+                            , node64: ''
+                            , node56: {}
+                        }
                     }
-                }
-                , 'v10.14.0':{
-                    bin: {
-                        node64: ''
-                        , node56: {}
+                    , 'v10.14.0':{
+                        bin: {
+                            node64: ''
+                            , node56: {}
+                        }
                     }
+                    , 'v99.99.99':''
                 }
-                , 'v99.99.99':''
             }
         }
     }
@@ -90,7 +88,7 @@ const myVersions = {
 
 describe('Engine Class', function() {
     const mockFSOptions = {
-        env: { NVM_HOME: 'nvm' }
+        env: { NVM_HOME: 'c:\\test\\nvm' }
     };
     beforeEach(function() {
         mockFS(myVersions);

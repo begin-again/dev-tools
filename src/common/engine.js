@@ -4,7 +4,7 @@
  * @module engines
  */
 
-import { join, resolve, basename } from 'node:path';
+import { join, resolve, basename, dirname } from 'node:path';
 import fs, { readdirSync } from 'node:fs';
 import semver from 'semver';
 import { getPackage } from './repos.js';
@@ -79,7 +79,9 @@ class Engine {
         const { NVM_BIN, NVM_HOME } = _env;
         if(NVM_BIN || NVM_HOME) {
             const nodeHome = NVM_BIN ? join(NVM_BIN, '..', '..') : NVM_HOME;
-            if(fs.existsSync(nodeHome) && fs.statSync(nodeHome).isDirectory()) {
+            const dirents = fs.readdirSync(dirname(nodeHome), { withFileTypes: true });
+            const found = dirents.find(d => d.name === basename(nodeHome) && d.isDirectory());
+            if(found) {
                 //  creates an array of Version
 
                 const folders = readdirSync(nodeHome, { withFileTypes:true })
