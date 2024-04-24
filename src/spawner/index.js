@@ -98,10 +98,8 @@ _yargs
                 });
         },
         (argv) => {
-            if(argv.log) {
-                const argCommand = argv.command.length ? '"argv.command"' : '';
-                process.stdout.write(`launching ${argv.name}${argCommand} with version '${versionToUse.version}' in path '${argv.path}' ${argv._.join(', ')}\n`);
-            }
+            const argCommand = argv.command.length ? argv.command : '';
+            process.stdout.write(`launching ${argv.name} ${argCommand} with version '${versionToUse.version}' in path '${argv.path}' ${argv._.join(', ')}\n`);
             return spawner(argv.name, argv.path, versionToUse.path, argv.command, ...argv._);
         })
     .help(true)

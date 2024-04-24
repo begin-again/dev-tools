@@ -74,8 +74,7 @@ _yargs
         },
         (argv) => {
             const _len = argv._.length ? `: ${argv._}` : ``;
-
-            console.log(`launching yarn '${argv.command}' with version '${versionToUse.version}' in path '${argv.path}' ${_len}`);
+            process.stdout.write(`launching yarn '${argv.command}' with version '${versionToUse.version}' in path '${argv.path}' ${_len} \n`);
             return spawner('yarn', argv.path, versionToUse.path, argv.command, ...argv._);
         });
 
