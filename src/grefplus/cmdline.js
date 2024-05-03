@@ -31,7 +31,7 @@ const cmdKeys = {
     , 'dev-root': {
         alias: 'r'
         , describe: 'root folder of development environment (/c/blah/blah). Default is DEVROOT'
-        , type: 'string'
+        , type: 'array'
         // eslint-disable-next-line no-process-env
         , default: process.env.DEVROOT
     }
@@ -74,14 +74,25 @@ const validateDate = (checkDate, msg) => {
  * @private
  */
 const validatePath = ({ devRoot }) => {
-    try {
-        accessSync(devRoot, constants.R_OK);
-        return lstatSync(devRoot).isDirectory();
+    let problematicRoot = null;
+
+    devRoot.forEach(root => {
+        try {
+            accessSync(root, constants.R_OK);
+            if(!lstatSync(root).isDirectory()) {
+                problematicRoot = root;
+            }
+        }
+        catch (error) {
+            problematicRoot = { root, error };
+        }
+    });
+
+    if(problematicRoot) {
+        throw new Error(`Unable to access specified dev root folder of '${problematicRoot.root}'. Due to ${problematicRoot.error.message}`);
     }
-    // eslint-disable-next-line no-unused-vars
-    catch (e) {
-        throw new Error(`Unable to access specified dev root folder of '${devRoot}'. Due to ${e.message}`);
-    }
+    return true;
+
 };
 
 /**
