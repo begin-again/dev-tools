@@ -1,6 +1,6 @@
-const { basename } = require('path');
-const { options } = require('./cmdline');
-const { currentBranch, currentHash, commitDiffCounts, isDirty } = require('../common/git');
+import { basename } from 'node:path';
+import { options } from './cmdline.js';
+import { currentBranch, currentHash, commitDiffCounts, isDirty } from '../common/git.js';
 const hashLength = 7;
 
 /**
@@ -68,7 +68,7 @@ const branches = (repoPath) => {
         });
 };
 
-module.exports = {
+export {
     branches
     , report
 };

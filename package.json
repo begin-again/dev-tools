@@ -1,7 +1,8 @@
 {
     "name": "my-dev-tools",
-    "version": "4.0.0",
+    "version": "5.0.0",
     "main": "",
+    "type": "module",
     "repository": "https://github.com/begin-again/dev-tools.git",
     "license": "MIT",
     "private": true,
@@ -23,10 +24,12 @@
         "yargs": "^17.7.2"
     },
     "devDependencies": {
+        "@eslint/js": "^9.1.1",
         "chai": "^4.4.1",
-        "eslint": "^8.56.0",
+        "eslint": "^9.1.1",
         "eslint-plugin-node": "^11.1.0",
-        "mocha": "10",
+        "globals": "^15.0.0",
+        "mocha": "^10.4.0",
         "mock-fs": "^5.2.0",
         "nyc": "^17.0.0",
         "proxyquire": "^2.1.3",

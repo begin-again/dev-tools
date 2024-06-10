@@ -1,4 +1,4 @@
-const git = require('simple-git');
+import { simpleGit } from 'simple-git';
 
 /**
  * Determines if repo has any commits on current branch
@@ -10,7 +10,7 @@ const git = require('simple-git');
   */
 const hasCommits = async (repo) => {
     try {
-        await git(repo).log();
+        await simpleGit(repo).log();
         return { repo };
     }
     catch (err) {
@@ -28,7 +28,7 @@ const hasCommits = async (repo) => {
  */
 const currentBranch = async (pathToProject) => {
     try {
-        const { current } = await git(pathToProject).branch();
+        const { current } = await simpleGit(pathToProject).branch();
         return current || 'HEAD';
     }
     catch (err) {
@@ -44,7 +44,7 @@ const currentBranch = async (pathToProject) => {
  * @returns {Promise<string>}
  */
 const currentHash = (pathToProject) => {
-    return git(pathToProject).revparse({ 'HEAD': true });
+    return simpleGit(pathToProject).revparse({ 'HEAD': true });
 };
 
 /**
@@ -54,7 +54,7 @@ const currentHash = (pathToProject) => {
  * @return {Promise}
  */
 const gitFetch = (repoPath) => {
-    return git(repoPath).fetch();
+    return simpleGit(repoPath).fetch();
 };
 
 /**
@@ -71,7 +71,7 @@ const commitsDiff = async (repoPath, branch = 'master', isTotal = false) => {
     const option = `origin/${branch}${dots}HEAD`;
     options[option] = true;
 
-    const stdout = await git(repoPath).raw('rev-list', options);
+    const stdout = await simpleGit(repoPath).raw('rev-list', options);
     const out = `${stdout}`.trim();
     if(out.length) {
         return out.split('\n').length;
@@ -122,7 +122,7 @@ const commitDiffCounts = (repoPath) => {
  * @return {Promise<boolean>} true is dirty
  */
 const isDirty = async (repoPath) => {
-    const status = await git(repoPath).status();
+    const status = await simpleGit(repoPath).status();
     const clean = status.isClean();
     const untracked = status.not_added.length > 0;
     return !clean || untracked;
@@ -137,7 +137,7 @@ const isDirty = async (repoPath) => {
  */
 const headLog = async (repoPath, logger) => {
     try {
-        const { latest } = await git(repoPath).log();
+        const { latest } = await simpleGit(repoPath).log();
         return latest.message;
     }
     catch (err) {
@@ -148,7 +148,7 @@ const headLog = async (repoPath, logger) => {
     }
 };
 
-module.exports = {
+export {
     commitsDiff
     , commitDiffCounts
     , currentBranch

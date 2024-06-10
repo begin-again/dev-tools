@@ -1,12 +1,17 @@
 /* eslint no-console:off */
-require('./cmdline').setOptions();
-const { basename } = require('path');
-const { allRepoPaths } = require('../common/repos');
-const { promisify } = require('util');
-const _exec = promisify(require('child_process').exec);
-const { DateTime } = require('luxon');
-const { options } = require('./cmdline');
 const DateLength = 6;
+
+import { setOptions, options } from './cmdline.js';
+setOptions();
+
+import { basename } from 'path';
+import { allRepoPaths } from '../common/repos.js';
+import { promisify } from 'util';
+import { exec } from 'child_process';
+import { DateTime } from 'luxon';
+
+const _exec = promisify(exec);
+setOptions();
 
 /**
  * Creates command string
@@ -66,8 +71,8 @@ const processRepo = (repo, errors) => {
                         return item.trim();
                     })
                     .map(item => {
-                        const date = DateTime.fromFormat(item.substring(DateLength, item.search(/[=]{2}/)), options.dateOptions);
-                        const body = item.substring(item.search(/[=]{2}/) + options.offset);
+                        const date = DateTime.fromFormat(item.substring(DateLength, item.search('==')), options.dateOptions);
+                        const body = item.substring(item.search('==') + options.offset);
                         return { date, body, repo: basename(repo) };
                     })
                     .filter(filterPeriod);

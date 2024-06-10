@@ -1,14 +1,11 @@
 
-const { spawn } = require('child_process');
-const { fileExists } = require('../common/files');
-const { join } = require('path');
-require('../common/engine').properNodeVersions();
-const {
-    versionStringToObject
-    , versionToUseValidator
-    , versions
-} = require('../common/engine');
-const yargs = require('yargs');
+import { spawn } from 'node:child_process';
+import { join } from 'node:path';
+import { fileExists } from '../common/files.js';
+import { Engine, repositoryEngines } from '../common/engine.js';
+import yargs from 'yargs/yargs';
+
+const engine = new Engine();
 
 /**
  *
@@ -20,7 +17,7 @@ const yargs = require('yargs');
 const spawner = (command, pathToActOn, pathToNodeBinary, ...myArgs) => {
     const opts = {
         cwd: pathToActOn
-        // eslint-disable-next-line no-process-env
+
         , env: { ...process.env, PATH: `${pathToNodeBinary};${process.env.PATH}` }
         , encoding:'utf8'
         , shell: true
@@ -34,7 +31,8 @@ const spawner = (command, pathToActOn, pathToNodeBinary, ...myArgs) => {
 
 let versionToUse;
 
-yargs
+const _yargs = yargs(process.argv.slice(2));
+_yargs
     .command([ '$0' ], 'run a cli without changing node version',
         yargs => {
             return yargs
@@ -82,7 +80,7 @@ yargs
                 })
                 .check(({ version }) => {
                     if(version) {
-                        const _version = versionStringToObject(version, versions);
+                        const _version = Engine.versionStringToObject(version, engine.versions);
                         if(!_version) {
                             throw new RangeError(`The specified version '${version}' is not installed`);
                         }
@@ -91,20 +89,21 @@ yargs
                 })
                 .check(({ version, path, oldest }) => {
                     const hasPackage = path.endsWith('package.json') || fileExists(join(path, 'package.json'));
-                    versionToUse = versionToUseValidator({ path, version, oldest }, !hasPackage);
+                    let allowedEngines = '';
+                    if(hasPackage) {
+                        allowedEngines = repositoryEngines(path);
+                    }
+                    versionToUse = engine.versionToUseValidator({ path, version, oldest }, { noPackage: !hasPackage, repositoryEngines: allowedEngines });
                     return Boolean(versionToUse);
                 });
         },
         (argv) => {
-            if(argv.log) {
-                const argCommand = argv.command.length ? '"argv.command"' : '';
-                process.stdout.write(`launching ${argv.name}${argCommand} with version '${versionToUse.version}' in path '${argv.path}' ${argv._.join(', ')}\n`);
-            }
+            const argCommand = argv.command.length ? argv.command : '';
+            process.stdout.write(`launching ${argv.name} ${argCommand} with version '${versionToUse.version}' in path '${argv.path}' ${argv._.join(', ')}\n`);
             return spawner(argv.name, argv.path, versionToUse.path, argv.command, ...argv._);
-        });
-
-yargs.help(true)
+        })
+    .help(true)
     .version(false)
+    .wrap(_yargs.terminalWidth())
     .strict(true)
-    .wrap(yargs.terminalWidth())
     .parse();

@@ -3,11 +3,10 @@
  * @module Clean
  * removes temporary folders matching known patterns
  */
-const { join } = require('path');
-const { realpathSync, statSync } = require('fs');
-const fsPromises = require('fs').promises;
+import { join } from 'node:path';
+import { realpathSync, statSync, promises as fsPromises } from 'node:fs';
 const { readdir } = fsPromises;
-const { tmpdir } = require('os');
+import { tmpdir } from 'node:os';
 const logger = console;
 
 const defaultTempPath = realpathSync(tmpdir());
@@ -107,7 +106,7 @@ const removeSonarTemp = async ({ root, age }, logger = console) => {
     });
 };
 
-module.exports = {
+export {
     removeTarget
     , folderList
     , removeSonarTemp

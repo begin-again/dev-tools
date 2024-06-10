@@ -1,6 +1,6 @@
-const { accessSync, constants, lstatSync } = require('fs');
-const yargs = require('yargs');
-const { DateTime } = require('luxon');
+import { accessSync, constants, lstatSync } from 'fs';
+import yargs from 'yargs/yargs';
+import { DateTime } from 'luxon';
 
 const options = {
     dateOptions: 'yyyy-MM-dd hh:mm:ss a'
@@ -114,7 +114,7 @@ const isFuture = (checkDate) => {
  * @param {Boolean} test - used for testing only
  */
 const setOptions = (test) => {
-    const argv = test || yargs
+    const argv = test || yargs(process.argv.slice(2))
         .options(cmdKeys)
         .version(false)
         .help(true)
@@ -173,18 +173,15 @@ const setOptions = (test) => {
 
     if(argv.date) {
         const date = DateTime.fromFormat(argv.date, options.allowedFormat);
-        module.exports.options.fromDate = date.startOf('day');
-        module.exports.options.toDate = date.endOf('day');
+        options.fromDate = date.startOf('day');
+        options.toDate = date.endOf('day');
     }
     else {
-        module.exports.options.fromDate = argv.fromDate ? DateTime.fromFormat(argv.fromDate, options.allowedFormat).startOf('day') : null;
-        module.exports.options.toDate = argv.toDate ? DateTime.fromFormat(argv.toDate, options.allowedFormat).endOf('day') : null;
+        options.fromDate = argv.fromDate ? DateTime.fromFormat(argv.fromDate, options.allowedFormat).startOf('day') : null;
+        options.toDate = argv.toDate ? DateTime.fromFormat(argv.toDate, options.allowedFormat).endOf('day') : null;
     }
-    module.exports.options.devRoot = argv.devRoot;
-    module.exports.options.folderNames = argv.folderNames || [];
+    options.devRoot = argv.devRoot;
+    options.folderNames = argv.folderNames || [];
 };
 
-module.exports = {
-    options
-    , setOptions
-};
+export { options, setOptions };

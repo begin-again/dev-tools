@@ -1,78 +1,77 @@
-const chai = require('chai');
+import { dirname, basename } from 'node:path';
+import mockFS from 'mock-fs';
+import fs from 'node:fs';
+import chai from 'chai';
 const { expect } = chai;
+import Temp from '../src/common/temp.js';
 
-const mockFS = require('mock-fs');
-const { dirname } = require('path');
-const fs = require('fs');
 
-const options = {};
-const TF = require('../src/common/temp');
-
-const oldBase = TF.baseFolder;
-describe('Temp Folder utility', () => {
-    beforeEach(() => {
+describe('Temp Folder utility', function() {
+    beforeEach(function() {
         mockFS({});
-        delete TF.baseFolder;
-        options.tempFolder = '';
     });
     afterEach(mockFS.restore);
-    after(() => {
-        TF.baseFolder = oldBase;
+
+    describe('constructor()', function() {
+        it('should not throw', function() {
+            let tf;
+            try {
+                tf = new Temp();
+                expect(tf.baseFolder).not.to.be.undefined;
+            }
+            catch (err) {
+                expect.fail(err.message);
+            }
+            finally {
+                tf.destroy();
+            }
+        });
+        it('should set baseName to input name', function() {
+            let tf;
+            try {
+                tf = new Temp('abc');
+                expect(basename(tf.baseFolder)).equals('abc');
+            }
+            catch (err) {
+                expect.fail(err.message);
+            }
+            finally {
+                tf.destroy();
+            }
+        });
+
     });
-    describe('initBase()', () => {
-        it('should not throw', () => {
-            expect(TF.baseFolder).to.be.undefined;
-            expect(TF.initBase).not.to.throw();
-            expect(TF.baseFolder).not.to.be.undefined;
-        });
-        it('should set base to system temp', () => {
-            expect(TF.baseFolder).to.be.undefined;
+    describe('add()', function() {
+        it('should create new folder within base path', function() {
+            const tf = new Temp();
+            const base = tf.baseFolder;
 
-            const result = TF.initBase();
+            expect(tf.folderIncrement).equals(0);
 
-            expect(fs.statSync(result).isDirectory()).to.be.true;
+            const result = tf.add();
 
-            const subs = fs.readdirSync(result);
-            expect(subs.length).to.equal(0);
-
-            expect(TF.baseFolder).not.to.be.undefined;
-        });
-        it('should not set base more than onece', () => {
-            expect(TF.baseFolder).to.be.undefined;
-
-            const first = TF.initBase();
-            const second = TF.initBase();
-
-            expect(second).to.equal(first);
-        });
-    });
-    describe('createTempFolder()', () => {
-        it('should create new folder within base path', () => {
-            expect(TF.baseFolder).to.be.undefined;
-
-            const base = TF.initBase();
-            const result = TF.createTempFolder();
-
+            expect(tf.folderIncrement).equals(1);
             expect(fs.statSync(result).isDirectory()).to.be.true;
             expect(dirname(result)).to.equal(base);
 
         });
-        it('should throw error', () => {
-            expect(TF.createTempFolder).to.throw('base folder not defined');
-        });
+
     });
-    describe('destroy()', () => {
-        it('should remove system base', () => {
+    describe('destroy()', function() {
+        it('should remove system base', function() {
             mockFS({ 'folly': {} });
-            TF.baseFolder = './folly';
-            let subs = fs.readdirSync('.');
+
+            const tf = new Temp('folly');
+            const oldBase = dirname(tf.baseFolder);
+
+            let subs = fs.readdirSync(oldBase);
             expect(subs).to.contain('folly');
 
-            TF.destroy();
-            subs = fs.readdirSync('.');
+            tf.destroy();
+            subs = fs.readdirSync(oldBase);
 
             expect(subs).not.to.contain('folly');
-            expect(TF.baseFolder).to.be.undefined;
+            expect(tf.baseFolder).to.be.empty;
         });
     });
 });

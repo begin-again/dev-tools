@@ -1,13 +1,14 @@
 /* eslint-disable no-console */
-const yargs = require('yargs');
-const { findFirstFile, fileAsJSON } = require('../common/files');
+
+import yargs from 'yargs/yargs';
+import { findFirstFile, fileAsJSON } from '../common/files.js';
 
 /**
  * Writes scripts block to console from first package file found in specified path
  */
 const main = async () => {
 
-    const { argv } = yargs
+    const { argv } = yargs(process.argv.slice(2))
         .option('path', {
             alias: 'p'
             , describe: 'path to start looking for the package file'

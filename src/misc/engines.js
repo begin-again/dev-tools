@@ -1,8 +1,6 @@
-/* eslint-disable no-console */
-
-const { repositoryEngines } = require('../common/engine');
-const { findFirstFile } = require('../common/files');
-const yargs = require('yargs');
+import { repositoryEngines } from '../common/engine.js';
+import { findFirstFile } from '../common/files.js';
+import yargs from 'yargs/yargs';
 const pwd = process.cwd();
 const options = {
     'path': {
@@ -13,7 +11,7 @@ const options = {
     }
 };
 
-const { argv } = yargs
+const { argv } = yargs(process.argv.slice(2))
     .option(options)
     .version(false);
 
