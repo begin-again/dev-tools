@@ -17,10 +17,10 @@
     "dependencies": {
         "dotenv": "^16.4.5",
         "luxon": "^3.4.4",
-        "semver": "^7.6.0",
+        "semver": "^7.6.2",
         "shelljs": "^0.8.5",
         "simple-git": "^3.24.0",
-        "uuid": "9.0.1",
+        "uuid": "10.0.0",
         "yargs": "^17.7.2"
     },
     "devDependencies": {
@@ -37,5 +37,5 @@
         "sinon": "^17.0.1",
         "sinon-chai-es": "^3.7.0"
     },
-    "packageManager": "yarn@4.1.1"
+    "packageManager": "yarn@4.2.1"
 }
