@@ -34,6 +34,7 @@ describe('Cleaner Module', () => {
             const result = await folderList(/bogus/, '.');
 
             expect(result).an('array').with.lengthOf(0);
+            mockFS.restore();
         });
     });
     describe('removeTarget()', function() {
@@ -42,6 +43,7 @@ describe('Cleaner Module', () => {
             logger.info = sinon.spy();
             logger.debug = sinon.spy();
         });
+         afterEach(mockFS.restore);
         it('should remove 1 folder and log', async function() {
             mockFS(fake);
             let list = fs.readdirSync('.');
@@ -57,7 +59,6 @@ describe('Cleaner Module', () => {
             expect(logger.warn).calledOnceWith('attempting to delete 1 folders - please be patient');
             expect(logger.warn).calledOnceWith('attempting to delete 1 folders - please be patient');
             expect(logger.info).callCount(2);
-            mockFS.restore();
 
         });
         it('should log warning when no matching folders found', async function() {
@@ -66,7 +67,6 @@ describe('Cleaner Module', () => {
             await removeTarget('Fake', /^xyz$/m, '.');
 
             expect(logger.warn).to.calledOnceWith(`no suitable folders found`);
-            mockFS.restore();
         });
     });
     describe('removeSonarTemp', function() {
