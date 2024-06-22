@@ -6,14 +6,88 @@ import chai, { expect } from 'chai';
 import sinonChai from 'sinon-chai-es';
 chai.use(sinonChai);
 import semver from 'semver';
+import os from 'node:os';
 
 import { Engine } from '../src/common/engine.js';
 
 // eslint-disable-next-line no-unused-vars
 import Version from '../src/common/version.js';
 
-const myVersions = {
+const myWindowsVersions = {
     'c:\\test': {
+        afile: 'hello'
+        , nvm: {
+            'v8.11.1':{
+                'node64.exe': ''
+                , node56: {}
+            }
+            , 'v0.0.1':{
+                'node64.exe': ''
+                , 'node.exe': ''
+                , node56: {}
+            }
+            , 'v2.10.22':{
+                'node.exe': ''
+                , node56: {}
+            }
+            , 'v10.23.0':{
+                'node64.exe': ''
+                , node56: {}
+                , node: {}
+            }
+            , 'v99.99.99':''
+        }
+        , '.nvm': {
+            versions: {
+                node: {
+                    'v10.03.0':{
+                        bin: {
+                            node64: ''
+                            , node: ''
+                            , node56: {}
+                        }
+                    }
+                    , 'v0.0.1':{
+                        bin: {
+                            node64: ''
+                            , node: mockFS.file({
+                                content: ''
+                                , mode: 0o666
+                            })
+                            , node56: {}
+                        }
+                    }
+                    , 'v2.10.11':{
+                        bin: {
+                            node64: ''
+                            , node:  mockFS.file({
+                                content: ''
+                                , mode: 0o755
+                            })
+                            , node56: {}
+                        }
+                    }
+                    , 'v12.0.0':{
+                        bin: {
+                            node: ''
+                            , node64: ''
+                            , node56: {}
+                        }
+                    }
+                    , 'v10.14.0':{
+                        bin: {
+                            node64: ''
+                            , node56: {}
+                        }
+                    }
+                    , 'v99.99.99':''
+                }
+            }
+        }
+    }
+};
+const myLinuxVersions = {
+    'test': {
         afile: 'hello'
         , nvm: {
             'v8.11.1':{
@@ -87,11 +161,24 @@ const myVersions = {
 };
 
 describe('Engine Class', function() {
-    const mockFSOptions = {
-        env: { NVM_HOME: 'c:\\test\\nvm' }
-    };
+    let mockFSOptions = {};
+    if(os.platform() === 'win32') {
+        mockFSOptions = {
+            env: { NVM_HOME: 'c:\\test\\nvm' }
+        };
+    }
+    else {
+        mockFSOptions = {
+            env: { NVM_HOME: '~/.nvm' }
+        };
+    }
     beforeEach(function() {
-        mockFS(myVersions);
+        if(os.platform() === 'win32') {
+            mockFS(myWindowsVersions);
+        }
+        else {
+            mockFS(myLinuxVersions);
+        }
     });
     afterEach(mockFS.restore);
     describe('constructor', function() {
