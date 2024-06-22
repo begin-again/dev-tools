@@ -76,7 +76,7 @@ class Engine {
      */
     static allInstalledNodeVersions (log, env) {
         const _env = env || process.env;
-        const { NVM_BIN, NVM_HOME } = _env;
+        const { NVM_BIN, NVM_HOME } = _env || {};
         if(NVM_BIN || NVM_HOME) {
             const nodeHome = NVM_BIN ? join(NVM_BIN, '..', '..') : NVM_HOME;
             const dirents = fs.readdirSync(dirname(nodeHome), { withFileTypes: true });
@@ -273,7 +273,7 @@ const repositoryEngines = (repoPath) => {
     if(error) {
         throw new RangeError(`package file not found in ${repoPath}`);
     }
-    if(engines && engines.node) {
+    if(engines?.node) {
         return engines.node;
     }
     return defaultVersion;
