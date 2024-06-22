@@ -22,7 +22,8 @@ const { argv } = yargs(process.argv.slice(2))
 const main = ({ path }) => {
     const file = findFirstFile('package.json', path);
     if(!file) {
-        throw new Error(`unable to find package.json file in '${path}'`);
+        console.error(`unable to find package.json file in '${path}'`);
+        process.exit(1);
     }
 
     process.stdout.write(`${repositoryEngines(file)}\n`);
