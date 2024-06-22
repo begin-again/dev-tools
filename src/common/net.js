@@ -1,5 +1,5 @@
 
-import { createWriteStream, unlink } from 'mode:fs';
+import { createWriteStream, unlink } from 'node:fs';
 import https from 'node:https';
 const OK = 200;
 
