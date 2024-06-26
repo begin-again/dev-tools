@@ -1,17 +1,21 @@
+/* eslint-disable no-magic-numbers */
 
 
 import mockFS from 'mock-fs';
 import sinon from 'sinon';
 import chai, { expect } from 'chai';
-import sinonChai from 'sinon-chai-es';
-chai.use(sinonChai);
+
+let sinonChai;
+
+(async () => {
+    sinonChai = await import('sinon-chai');
+    // Use sinonChai here
+    chai.use(sinonChai.default);
+})();
+
 import semver from 'semver';
-import os from 'node:os';
-
 import { Engine } from '../src/common/engine.js';
-
-// eslint-disable-next-line no-unused-vars
-import Version from '../src/common/version.js';
+import os from 'os';
 
 const myWindowsVersions = {
     'c:\\test': {
@@ -86,111 +90,31 @@ const myWindowsVersions = {
         }
     }
 };
-const myLinuxVersions = {
-    'test': {
-        afile: 'hello'
-        , nvm: {
-            'v8.11.1':{
-                'node64.exe': ''
-                , node56: {}
-            }
-            , 'v0.0.1':{
-                'node64.exe': ''
-                , 'node.exe': ''
-                , node56: {}
-            }
-            , 'v2.10.22':{
-                'node.exe': ''
-                , node56: {}
-            }
-            , 'v10.23.0':{
-                'node64.exe': ''
-                , node56: {}
-                , node: {}
-            }
-            , 'v99.99.99':''
-        }
-        , '.nvm': {
-            versions: {
-                node: {
-                    'v10.03.0':{
-                        bin: {
-                            node64: ''
-                            , node: ''
-                            , node56: {}
-                        }
-                    }
-                    , 'v0.0.1':{
-                        bin: {
-                            node64: ''
-                            , node: mockFS.file({
-                                content: ''
-                                , mode: 0o666
-                            })
-                            , node56: {}
-                        }
-                    }
-                    , 'v2.10.11':{
-                        bin: {
-                            node64: ''
-                            , node:  mockFS.file({
-                                content: ''
-                                , mode: 0o755
-                            })
-                            , node56: {}
-                        }
-                    }
-                    , 'v12.0.0':{
-                        bin: {
-                            node: ''
-                            , node64: ''
-                            , node56: {}
-                        }
-                    }
-                    , 'v10.14.0':{
-                        bin: {
-                            node64: ''
-                            , node56: {}
-                        }
-                    }
-                    , 'v99.99.99':''
-                }
-            }
-        }
-    }
-};
 
-describe('Engine Class', function() {
-    let mockFSOptions = {};
-    if(os.platform() === 'win32') {
-        mockFSOptions = {
-            env: { NVM_HOME: 'c:\\test\\nvm' }
-        };
-    }
-    else {
-        mockFSOptions = {
-            env: { NVM_HOME: '~/.nvm' }
-        };
-    }
+describe('Engine Class Win32', function() {
+    before(function() {
+        if(os.platform() !== 'win32') {
+            this.skip();
+        }
+    });
+    const mockFSOptions = {
+        env: { NVM_HOME: 'c:\\test\\nvm' }
+    };
+
     beforeEach(function() {
-        if(os.platform() === 'win32') {
-            mockFS(myWindowsVersions);
-        }
-        else {
-            mockFS(myLinuxVersions);
-        }
+        mockFS(myWindowsVersions);
     });
     afterEach(mockFS.restore);
     describe('constructor', function() {
         it('parameters', function() {
             try {
-                /** @type {Version[]} */
                 const versions = [ {
                     error: 'bad'
                 } ];
                 const defaultVersion = '1.1.1';
                 const engine = new Engine({
                     env: { NVM_HOME: 'nvm' }
+                    // @ts-ignore
                     , versions
                     , defaultVersion
                 });
@@ -206,7 +130,7 @@ describe('Engine Class', function() {
             // the versions will be obtained from the mocking of the file system
             try {
                 // the env is still needed for consistent test result
-                const engine = new Engine(mockFSOptions);
+                const engine = new Engine({});
                 expect(engine.versionsAll).lengthOf(4);
                 expect(engine.versions).lengthOf(2);
                 expect(engine.defaultVersion)

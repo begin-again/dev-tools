@@ -21,11 +21,11 @@ const commitLength = 20;
 const createRepo = async (tmp, nameOfFileToCommit = '') => {
     const path = tmp.add();
     if(nameOfFileToCommit) {
-        await simpleGit(path).init();
+        await simpleGit(path).init([ '--initial-branch=master' ]);
         await addFileToRepo(path, nameOfFileToCommit, { stage: true, commit: true });
     }
     else {
-        await simpleGit(path).init({ '--bare': true });
+        await simpleGit(path).init(true);
     }
     return path;
 };
@@ -171,8 +171,8 @@ const fetchRemotes = (repoPath) => {
  * Create new local commit
  *
  * @param {string} repoPath
- * @param {string | null} fileName - optional file name
- * @param {string} branch - optional
+ * @param {string | null} [fileName] - optional file name
+ * @param {string} [branch] - optional
  * @returns {Promise<string>} log subject
  */
 const addCommit = async (repoPath, fileName, branch) => {
@@ -197,7 +197,7 @@ const addCommit = async (repoPath, fileName, branch) => {
  *
  * @param {string} repoPath
  * @param {string} message
- * @param {string} branch - optional
+ * @param {string} [branch] - optional
  * @returns {Promise<string>} log subject
  */
 const addCommitWithMessage = async (repoPath, message, branch) => {
@@ -208,8 +208,8 @@ const addCommitWithMessage = async (repoPath, message, branch) => {
         await repo.checkout(branch, { '-q': true, 'b': true });
     }
 
-    return repo.add(_name).commit(`${message}`)
-        .log().latest.message;
+    await repo.add(_name).commit(`${message}`);
+    return repo.log().latest.message;
 };
 
 /**

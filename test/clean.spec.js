@@ -3,8 +3,13 @@ import mockFS from 'mock-fs';
 import fs from 'node:fs';
 import sinon from 'sinon';
 import chai, { expect } from 'chai';
-import sinonChai from 'sinon-chai-es';
-chai.use(sinonChai);
+let sinonChai;
+
+(async () => {
+    sinonChai = await import('sinon-chai');
+    // Use sinonChai here
+    chai.use(sinonChai.default);
+})();
 import { DateTime } from 'luxon';
 import { removeTarget, folderList, removeSonarTemp } from '../src/clean/clean.js';
 
@@ -43,7 +48,7 @@ describe('Cleaner Module', () => {
             logger.info = sinon.spy();
             logger.debug = sinon.spy();
         });
-         afterEach(mockFS.restore);
+        afterEach(mockFS.restore);
         it('should remove 1 folder and log', async function() {
             mockFS(fake);
             let list = fs.readdirSync('.');

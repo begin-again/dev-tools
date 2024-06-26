@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-        "module": "ES2020",
+        "module": "NodeNext",
         "target": "esnext",
-        "checkJs": true
+        "checkJs": true,
     },
     "include": [
         "src/**/*.js",

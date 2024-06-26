@@ -8,7 +8,7 @@ import { join, resolve, basename, dirname } from 'node:path';
 import fs, { readdirSync } from 'node:fs';
 import semver from 'semver';
 import { getPackage } from './repos.js';
-import Version from './version.js';
+import createVersion from './versionFactory.js';
 
 const defaultVersion = '16.15.0';
 
@@ -19,17 +19,13 @@ class Engine {
     /**
      *
      * @param {object} param0
-     * @param {object} param0.env
-     * @param {string=} param0.env.NVM_BIN
-     * @param {string=} param0.env.NVM_HOME
+     * @param {{NVM_HOME?:string, NVM_BIN?:string}=} param0.env
      * @param {string} param0.defaultVersion
-     * @param {Version[]} param0.versions
+     * @param {import('../../types/index').Version[]} param0.versions
      */
-    constructor({ env, defaultVersion, versions } = {}) {
+    constructor({ env, defaultVersion, versions }) {
         const _env = env || process.env;
-        /** @type {Version[]} */
         this._allVersions = versions || Engine.allInstalledNodeVersions(null, _env);
-        /** @type {Version[]} */
         this._versions = this._allVersions.filter(({ error }) => !error);
         this._defaultVersion = defaultVersion || '16.15.0';
     }
@@ -69,12 +65,11 @@ class Engine {
      * populating engines.versions to Version[]
      *  - NVM_HOME is folder to the version folders
      *  - NVM_BIN is folder of the node executable, The version name is part of the path.
-     * @param {object} [log] - standard logger or console
      * @param {{NVM_HOME?:string, NVM_BIN?:string}} [env] - defaults to process.env
-     * @returns {Version[]}
+     * @returns {import('../../types/index').Version[]}
      * @memberof Engine
      */
-    static allInstalledNodeVersions (log, env) {
+    static allInstalledNodeVersions (env) {
         const _env = env || process.env;
         const { NVM_BIN, NVM_HOME } = _env || {};
         if(NVM_BIN || NVM_HOME) {
@@ -94,7 +89,8 @@ class Engine {
                             path = join(path, 'bin');
                         }
 
-                        return new Version(version, path, log);
+                        return createVersion({ version, path, env: _env });
+                        // return new Version(version, path, log);
                     });
                 return folders;
             }
@@ -107,7 +103,7 @@ class Engine {
      * Determines which installed versions are compatible with specified range
      *
      * @param {string} requiredVersionRange
-     * @returns {Version[]} satisfying versions sorted descending
+     * @returns {import('../../types/index').Version[]} satisfying versions sorted descending
      * @memberof Engine
      */
     satisfyingVersions (requiredVersionRange) {
@@ -128,7 +124,7 @@ class Engine {
      * Obtains the latest installed node version which is compatible within a given range
      *
      * @param {string} requiredRange
-     * @returns {Version|undefined} version, path, bin
+     * @returns {import('../../types/index').Version|undefined} version, path, bin
      * @memberof Engine
      */
     maxInstalledSatisfyingVersion (requiredRange) {
@@ -139,7 +135,7 @@ class Engine {
      * Obtains the oldest installed node version which is compatible within a given range
      *
      * @param {string} requiredRange
-     * @returns {Version|undefined} version, path, bin
+     * @returns {import('../../types/index').Version|undefined} version, path, bin
      * @memberof Engine
      */
     minInstalledSatisfyingVersion (requiredRange) {
@@ -156,7 +152,7 @@ class Engine {
      * @param {object} [options]
      * @param {boolean=} options.noPackage - path does not have package.json
      * @param {string=} options.repositoryEngines - engines.node property from package.json
-     * @returns {Version}
+     * @returns {import('../../types/index').Version}
      * @throws RangeError
      * @memberof Engine
      */
@@ -205,9 +201,9 @@ class Engine {
      * Locates first or last version string in versions
      *
      * @param {string} v - version number (1.1.1)
-     * @param {Version[]} versions - objects
+     * @param {import('../../types/index').Version[]} versions - objects
      * @param {boolean} oldest - select oldest version
-     * @returns {Version}
+     * @returns {import('../../types/index').Version}
      * @memberof Engine
      */
     static versionStringToObject (v, versions, oldest = false) {

@@ -1,10 +1,9 @@
 
 
+import 'dotenv/config';
 import { readFileSync, readdirSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import dotenv from 'dotenv';
 import { fileExists, folderExists } from './files.js';
-dotenv.config();
 
 const { DEVROOT } = process.env;
 
@@ -35,7 +34,7 @@ const isGitRepo = (path) => (basename(path) === '.git') && folderExists(path);
  *  - only search down one folder
  * @param {string} folder
  * @param {array} foldersToInclude
- * @return {array<string>}  path strings
+ * @return {string[]}  path strings
  */
 const allRepoPaths = (folder = DEVROOT, foldersToInclude = []) => {
     // get files in root
