@@ -76,7 +76,7 @@ const duplicateRepo = async (repoPath, tmp) => {
  * @return {Promise}
  */
 const addRemote = (srcRepoPath, targetRepoPath, remoteName = 'origin') => {
-    return simpleGit(srcRepoPath).remote(remoteName, targetRepoPath);
+    return simpleGit(srcRepoPath).addRemote(remoteName, targetRepoPath);
 };
 
 /**
@@ -90,7 +90,7 @@ const addRemote = (srcRepoPath, targetRepoPath, remoteName = 'origin') => {
 const addFileToRepo = async (repoPath, name, options = { stage: false, commit: false }) => {
     const repo = simpleGit(repoPath);
     if(options.branch) {
-        await repo.checkout(options.branch, { '-q': true, 'b': true });
+        await repo.checkoutLocalBranch(options.branch);
     }
     await fs.promises.writeFile(join(repoPath, name), '');
     if(options.stage) {
@@ -136,14 +136,14 @@ const currentBranch = async (repoPath) => {
  * @param {string} repoPath
  * @param {string} remote
  * @param {string} branch
- * @returns {Promise<string>} branch
+ * @returns {Promise<*>} branch
  */
 const push = (repoPath, remote = 'origin', branch = 'all') => {
     if(branch === 'all') {
-        return simpleGit(repoPath).push(remote, { '--all':true, '-q': true });
+        return simpleGit(repoPath).push(remote, '--all');
     }
 
-    return simpleGit(repoPath).push(remote, branch, { '-u':true, '-q': true });
+    return simpleGit(repoPath).push(remote, branch, [ '-u', '-q' ]);
 };
 
 /**
@@ -152,10 +152,10 @@ const push = (repoPath, remote = 'origin', branch = 'all') => {
  * @param {string} repoPath
  * @param {string} remote
  * @param {string} branch
- * @returns {Promise<string>}
+ * @returns {Promise<*>}
  */
 const pull = (repoPath, remote = 'origin', branch = 'master') => {
-    return simpleGit(repoPath).pull(remote, branch, { '-q': true });
+    return simpleGit(repoPath).pull(remote, branch, [ '-q' ]);
 };
 
 /**
@@ -164,7 +164,7 @@ const pull = (repoPath, remote = 'origin', branch = 'master') => {
  * @param {string} repoPath
  */
 const fetchRemotes = (repoPath) => {
-    return simpleGit(repoPath).fetch({ '--quiet': true, '--all': true });
+    return simpleGit(repoPath).fetch([ '--quiet', '--all' ]);
 };
 
 /**
@@ -181,7 +181,7 @@ const addCommit = async (repoPath, fileName, branch) => {
     if(branch) {
         // create a new branch with simple-git
         await repo.branch([ branch, 'HEAD' ]);
-        await repo.checkout(branch, { '-q': true });
+        await repo.checkout(branch, [ '-q' ]);
     }
 
     const _name = fileName || randomize('Aa0', commitLength);
@@ -205,11 +205,12 @@ const addCommitWithMessage = async (repoPath, message, branch) => {
     const _name = randomize('Aa0', commitLength);
     await fs.promises.writeFile(join(repoPath, _name), '');
     if(branch) {
-        await repo.checkout(branch, { '-q': true, 'b': true });
+        await repo.checkout(branch, [ '-q', 'b' ]);
     }
 
     await repo.add(_name).commit(`${message}`);
-    return repo.log().latest.message;
+    const log = await repo.log();
+    return log.latest.message;
 };
 
 /**
@@ -217,7 +218,7 @@ const addCommitWithMessage = async (repoPath, message, branch) => {
  *
  * @param {string} repoPath
  * @param {string} name
- * @returns {Promise<string>} name
+ * @returns {Promise<*>} name
  */
 const deleteFile = (repoPath, name) => {
     return simpleGit(repoPath).rm(name)
@@ -230,11 +231,15 @@ const deleteFile = (repoPath, name) => {
  *
  * @param {string} repoPath
  * @param {string} branch
- * @returns {Array}
+ * @returns {Promise<object>}
  */
 const log = (repoPath, branch = 'master') => {
-    return simpleGit(repoPath).log({ '--format': '%s', branch });
-    // return execSync(`git -C ${repoPath} log --format="%s" ${branch}`, { encoding: 'utf8' }).split('\n');
+    const options = {};
+    if(branch) {
+        options.from = branch;
+    }
+    options.format = '%s';
+    return simpleGit(repoPath).log(options);
 };
 
 export {
