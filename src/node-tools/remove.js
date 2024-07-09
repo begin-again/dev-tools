@@ -4,8 +4,9 @@
  * Removes node versions
 */
 
-const fsPromises = require('fs').promises;
-const semver = require('semver');
+import { promises as fsPromises } from 'fs';
+import semver from 'semver';
+
 /**
  * compatibility check for rm & rmdir
  * @returns {Function}
@@ -58,4 +59,4 @@ const remove = async ({ installed, version, execute }, log = console) => {
     return exitCode;
 };
 
-module.exports = remove;
+export default remove;

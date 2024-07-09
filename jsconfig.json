@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "NodeNext",
         "target": "esnext",
-        "checkJs": true
+        "checkJs": true,
     },
     "include": [
         "src/**/*.js",

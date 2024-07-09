@@ -1,12 +1,9 @@
 
-const { spawn } = require('node:child_process');
-require('../common/engine').properNodeVersions();
-const {
-    versionStringToObject
-    , versionToUseValidator
-    , versions
-} = require('../common/engine');
-const yargs = require('yargs');
+import { spawn } from 'node:child_process';
+import { Engine } from '../common/engine.js';
+import yargs from 'yargs/yargs';
+
+const engine = new Engine();
 
 /**
  *
@@ -18,7 +15,7 @@ const yargs = require('yargs');
 const spawner = (command, pathToActOn, pathToNodeBinary, ...yarnArgs) => {
     const opts = {
         cwd: pathToActOn
-        // eslint-disable-next-line no-process-env
+
         , env: { ...process.env, PATH: `${pathToNodeBinary};${process.env.PATH}` }
         , encoding:'utf8'
         , shell: true
@@ -32,8 +29,8 @@ const spawner = (command, pathToActOn, pathToNodeBinary, ...yarnArgs) => {
 
 let versionToUse;
 
-
-yargs
+const _yargs = yargs(process.argv.slice(2));
+_yargs
     .command([ '$0' ], 'run yarn without changing node version',
         _yargs => {
             return _yargs
@@ -63,7 +60,7 @@ yargs
                 })
                 .check(({ version }) => {
                     if(version) {
-                        const _version = versionStringToObject(version, versions);
+                        const _version = Engine.versionStringToObject(version, engine.versions);
                         if(!_version) {
                             throw new RangeError(`The specified version '${version}' is not installed`);
                         }
@@ -71,19 +68,18 @@ yargs
                     return true;
                 })
                 .check(({ version, path, oldest }) => {
-                    versionToUse = versionToUseValidator({ path, version, oldest });
+                    versionToUse = engine.versionToUseValidator({ path, version, oldest });
                     return Boolean(versionToUse);
                 });
         },
         (argv) => {
             const _len = argv._.length ? `: ${argv._}` : ``;
-            // eslint-disable-next-line no-console
-            console.log(`launching yarn '${argv.command}' with version '${versionToUse.version}' in path '${argv.path}' ${_len}`);
+            process.stdout.write(`launching yarn '${argv.command}' with version '${versionToUse.version}' in path '${argv.path}' ${_len} \n`);
             return spawner('yarn', argv.path, versionToUse.path, argv.command, ...argv._);
         });
 
-yargs.help(true)
+_yargs.help(true)
     .version(false)
     .strict(true)
-    .wrap(yargs.terminalWidth())
+    .wrap(_yargs.terminalWidth())
     .parse();

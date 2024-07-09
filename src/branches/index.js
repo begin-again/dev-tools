@@ -1,9 +1,10 @@
 
-require('./cmdline').setOptions();
-const { options } = require('./cmdline');
-const { allRepoPaths } = require('../common/repos');
-const { branches, report } = require('./branches');
-const { hasCommits } = require('../common/git');
+import { setOptions, options } from './cmdline.js';
+import { allRepoPaths } from '../common/repos.js';
+import { branches, report } from './branches.js';
+import { hasCommits } from '../common/git.js';
+
+setOptions();
 
 const main = async () => {
 
@@ -16,7 +17,7 @@ const main = async () => {
     }
 
     if(!options.silent) {
-        // eslint-disable-next-line no-console
+
         console.log(`Processing ${repos.length} repositories in ${options.root}`);
     }
 
@@ -32,7 +33,7 @@ const main = async () => {
                     return report(br);
                 })
                 .catch(err => {
-                    // eslint-disable-next-line no-console
+
                     console.error('main threw error', `${err.message} | ${err.cmd}`);
                     process.exitCode = 1;
                     throw err;
@@ -40,12 +41,12 @@ const main = async () => {
         })
         .then((reports) => {
             reports.forEach(line => {
-                // eslint-disable-next-line no-console
+
                 console.log(line);
             });
         });
 };
 
 
-// eslint-disable-next-line no-console
+
 main().catch(console.error);

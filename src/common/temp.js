@@ -1,80 +1,91 @@
-const { realpathSync, mkdirSync, rmSync } = require('node:fs');
-const { tmpdir } = require('os');
-const { basename, dirname, join } = require('node:path');
-const { v4: uuid } = require('uuid');
-
-let baseFolder;
-let num = 1;
+import { realpathSync, mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { basename, dirname, join } from 'node:path';
+import { v4 as uuid } from 'uuid';
 
 /**
- * Abbreviates the path
- *
- * @param {} fullPath
+ * @class Temp
  */
-const shortPath = (fullPath) =>
-    fullPath ? `${basename(dirname(fullPath))}/${basename(fullPath)}` : `Empty`;
+class Temp {
 
-
-/**
- * Create the new folder
- *
- * @param {String} pathName
- * @returns path to folder
- * @throws on error
- */
-const createFolder = (pathName) => {
-    try {
-        mkdirSync(pathName, { recursive: true });
-        return pathName;
-    }
-    catch (error) {
-        throw new Error(`createFolder threw trying to create:\n ${shortPath(pathName)} \n ${error.message}`);
-    }
-};
-
-/**
- * Creates temp folders inside of a common parent.
- *
- * @returns {String} full path to temp folder
- * @throws base folder not defined yet
- */
-const createTempFolder = () => {
-    const base = module.exports.baseFolder;
-    if(base) {
-        const folderPath = join(base, `${num}`);
-        num += 1;
-        return createFolder(folderPath);
-    }
-    throw new Error(`base folder not defined yet`);
-};
-
-/**
- * created new base directory within temp folder space
- * only if base not already set
- */
-const initBase = () => {
-    if(!module.exports.baseFolder) {
+    /**
+     * creates temp folder in system temp folder
+     * @param {string} [baseFolderName] defaults to uuid v4
+     */
+    constructor(baseFolderName) {
         const temp = realpathSync(tmpdir());
-        const name = uuid();
-        const newBase = createFolder(join(temp, name));
-        module.exports.baseFolder = newBase;
+        const name = baseFolderName || uuid();
+        this._baseFolder = this._createFolder(join(temp, name));
+        this._num = 0;
     }
-    return module.exports.baseFolder;
-};
 
-/**
- * removes base folder
- */
-const destroy = () => {
-    if(module.exports.baseFolder) {
-        rmSync(module.exports.baseFolder, { recursive: true });
-        delete module.exports.baseFolder;
+    /**
+     * root of th the temp folder within the system
+     * temp.
+     *
+     * @readonly
+     * @memberof Temp
+     */
+    get baseFolder() {
+        return this._baseFolder;
     }
-};
 
-module.exports = {
-    baseFolder
-    , createTempFolder
-    , destroy
-    , initBase
-};
+    /**
+    * removes base folder
+    */
+    destroy () {
+        if(this._baseFolder) {
+            rmSync(this._baseFolder, { recursive: true });
+            this._baseFolder = '';
+        }
+    };
+
+    /**
+    * Create a folder
+    *
+    * @param {String} pathName
+    * @returns path to folder
+    * @throws on error
+    * @private
+    */
+    _createFolder (pathName) {
+        try {
+            mkdirSync(pathName, { recursive: true });
+            return pathName;
+        }
+        catch (error) {
+            throw new Error(`createFolder threw trying to create:\n ${this._shortPath(pathName)} \n ${error.message}`);
+        }
+    };
+
+    /**
+    * Creates temp folders inside of a common parent.
+    *
+    * @returns {String} full path to temp folder
+    * @throws base folder not defined yet
+    */
+    add () {
+        if(this._baseFolder) {
+            const folderPath = join(this._baseFolder, `${this._num}`);
+            this._num += 1;
+            return this._createFolder(folderPath);
+        }
+        throw new Error(`base folder not defined`);
+    };
+
+    get folderIncrement() {
+        return this._num;
+    }
+
+    /**
+    * Abbreviates the path
+    *
+    * @param {string} fullPath
+    * @private
+    */
+    _shortPath(fullPath) {
+        return fullPath ? `${basename(dirname(fullPath))}/${basename(fullPath)}` : `Empty`;
+    }
+}
+
+export default Temp;

@@ -3,11 +3,10 @@
  * @module Clean
  * removes temporary folders matching known patterns
  */
-const { join } = require('path');
-const { realpathSync, statSync } = require('fs');
-const fsPromises = require('fs').promises;
+import { join } from 'node:path';
+import { realpathSync, statSync, promises as fsPromises } from 'node:fs';
 const { readdir } = fsPromises;
-const { tmpdir } = require('os');
+import { tmpdir } from 'node:os';
 const logger = console;
 
 const defaultTempPath = realpathSync(tmpdir());
@@ -80,10 +79,10 @@ const DAY_MS = 86400000;
  * @param {object} options
  * @param {string} options.root - over-ride sonarlint work folder path for testing
  * @param {number} options.age
- * @param {Function} logger
- * @param {Promise<number>}
+ * @param {object=} options.logger
+ * @returns {Promise<number>} - number of folders removed
  */
-const removeSonarTemp = async ({ root, age }, logger = console) => {
+const removeSonarTemp = async ({ root, age, logger }) => {
     const _root = root || join(process.env.HOME, '.sonarlint', 'work');
     const now = Date.now();
     const folders = await readdir(_root, { withFileTypes: true })
@@ -96,7 +95,9 @@ const removeSonarTemp = async ({ root, age }, logger = console) => {
                     return daysOld >= age;
                 })
         );
-    logger.debug(`removing ${folders.length} folders`);
+    if(logger && logger.debug) {
+        logger.debug(`removing ${folders.length} folders`);
+    }
 
     return Promise.allSettled(
         folders.map(async d => {
@@ -107,7 +108,7 @@ const removeSonarTemp = async ({ root, age }, logger = console) => {
     });
 };
 
-module.exports = {
+export {
     removeTarget
     , folderList
     , removeSonarTemp

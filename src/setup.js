@@ -4,18 +4,19 @@
  * do not already know how to configure their own bash files.
  */
 
+import { type as osType } from 'node:os';
+import path from 'node:path';
+import shell from 'shelljs';
+
 const winSep = new RegExp(/\\/g);
 const dedupeSep = new RegExp(/\/\//g);
 const posixSep = '/';
-const path = require('path');
-const osType = require('os').type();
-const shell = require('shelljs');
 const now = Date.now();
 
 shell.config.silent = true;
 
 const home = {
-    // eslint-disable-next-line no-process-env
+
     user: process.env.HOME
         .replace(winSep, posixSep)
         .replace(dedupeSep, posixSep)
@@ -58,7 +59,7 @@ shell.echo('# dev-tools - end\n').toEnd(bash.home);
 shell.echo('\n# Personal additions and over-rides\n').toEnd(bash.home);
 
 // Over-ride some settings based on OS
-if(osType === 'Darwin') {
+if(osType() === 'Darwin') {
     shell.echo('unalias find').toEnd(bash.home);
 }
 

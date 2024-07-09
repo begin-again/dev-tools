@@ -1,8 +1,6 @@
-/* eslint-disable no-console */
-
-const { repositoryEngines } = require('../common/engine');
-const { findFirstFile } = require('../common/files');
-const yargs = require('yargs');
+import { repositoryEngines } from '../common/engine.js';
+import { findFirstFile } from '../common/files.js';
+import yargs from 'yargs/yargs';
 const pwd = process.cwd();
 const options = {
     'path': {
@@ -13,7 +11,7 @@ const options = {
     }
 };
 
-const { argv } = yargs
+const { argv } = yargs(process.argv.slice(2))
     .option(options)
     .version(false);
 
@@ -24,7 +22,8 @@ const { argv } = yargs
 const main = ({ path }) => {
     const file = findFirstFile('package.json', path);
     if(!file) {
-        throw new Error(`unable to find package.json file in '${path}'`);
+        console.error(`unable to find package.json file in '${path}'`);
+        process.exit(1);
     }
 
     process.stdout.write(`${repositoryEngines(file)}\n`);

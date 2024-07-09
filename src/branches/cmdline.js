@@ -1,6 +1,5 @@
-
-const yargs = require('yargs');
-const { constants, accessSync, lstatSync } = require('fs');
+import { constants, accessSync, lstatSync } from 'node:fs';
+import yargs from 'yargs/yargs';
 
 const cmdKeys = {
     'folder-names': {
@@ -13,7 +12,7 @@ const cmdKeys = {
         alias: 'r'
         , describe: 'over ride the value in $DEVROOT'
         , type: 'string'
-        // eslint-disable-next-line no-process-env
+
         , default: process.env.DEVROOT
     }
     , 'fetch': {
@@ -71,7 +70,7 @@ const validateNoConflict = ({ folderNames, deploy }) => {
 const options = {};
 
 const setOptions = (test) => {
-    const argv = test || yargs
+    const argv = test || yargs(process.argv.slice(2))
         .options(cmdKeys)
         .help(true)
         .version(false)
@@ -85,14 +84,14 @@ const setOptions = (test) => {
         .check(validateNoConflict)
         .argv;
 
-    module.exports.options.root = argv.root;
-    module.exports.options.folderNames = argv.folderNames || [];
-    module.exports.options.fetch = argv.fetch;
-    module.exports.options.silent = argv.silent;
-    module.exports.options.deploy = argv.deploy;
+    options.root = argv.root;
+    options.folderNames = argv.folderNames || [];
+    options.fetch = argv.fetch;
+    options.silent = argv.silent;
+    options.deploy = argv.deploy;
 };
 
-module.exports = {
+export {
     options
     , setOptions
 };

@@ -1,8 +1,7 @@
-const chai = require('chai');
-const { expect } = chai;
-const mockFS = require('mock-fs');
+import { expect } from 'chai';
+import mockFS from 'mock-fs';
+import { findFirstFile } from '../src/common/files.js';
 
-const files = require('../src/common/files.js');
 const testFolder = {
     a: {
         b: {
@@ -18,29 +17,29 @@ const testFolder = {
     }
 };
 
-describe('files module', () => {
-    describe('findFirstFile()', () => {
-        beforeEach(() => {
+describe('files module', function() {
+    describe('findFirstFile()', function() {
+        beforeEach(function() {
             mockFS(testFolder);
         });
         afterEach(mockFS.restore);
-        it('should return null if supplied startPath does not exist as a folder', () => {
-            const result = files.findFirstFile('missing', 'a/b/c/d/someFolder');
+        it('should return null if supplied startPath does not exist as a folder', function() {
+            const result = findFirstFile('missing', 'a/b/c/d/someFolder');
 
             expect(result).to.be.null;
         });
-        it('should stop at root returning null', () => {
-            const result = files.findFirstFile('missing', 'a/b');
+        it('should stop at root returning null', function() {
+            const result = findFirstFile('missing', 'a/b');
 
             expect(result).to.be.null;
         });
-        it('should return a path if found', () => {
-            const result = files.findFirstFile('found', 'a/b/c/d');
+        it('should return a path if found', function() {
+            const result = findFirstFile('found', 'a/b/c/d');
 
             expect(result).is.a('String').with.length.greaterThan(0);
         });
-        it('should trap errors returning null', () => {
-            const result = files.findFirstFile(/wtf/);
+        it('should trap errors returning null', function() {
+            const result = findFirstFile(/wtf/);
 
             expect(result).to.be.null;
         });

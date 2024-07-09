@@ -1,6 +1,6 @@
-const { statSync, lstatSync, writeFile } = require('fs');
-const { readFile } = require('fs').promises;
-const { join, resolve, parse } = require('path');
+import { statSync, lstatSync, writeFile, promises } from 'node:fs';
+const { readFile } = promises;
+import { join, resolve, parse } from 'node:path';
 
 /**
  * Checks that folder exists and is in fact a folder
@@ -12,7 +12,6 @@ const folderExists = (folder) => {
     try {
         return statSync(folder).isDirectory();
     }
-    // eslint-disable-next-line no-unused-vars
     catch (e) {
         if(e) {
             return false;
@@ -31,7 +30,7 @@ const fileExists = (file, isLink = false) => {
     try {
         return isLink ? lstatSync(file).isSymbolicLink() : statSync(file).isFile();
     }
-    // eslint-disable-next-line no-unused-vars
+
     catch (e) {
         if(e) {
             return false;
@@ -63,7 +62,7 @@ const writeToFile = (content, dest, encoding = 'utf8', append = false) => {
     return new Promise((res, reject) => {
         writeFile(dest, content, { flags, encoding }, (err) => {
             if(err) {
-                reject(`problem writing to ${dest}`);
+                reject(new Error(`problem writing to ${dest}`));
             }
             res();
         });
@@ -78,7 +77,7 @@ const writeToFile = (content, dest, encoding = 'utf8', append = false) => {
  * @param {String} [startPath] - path to start from
  * @returns {String|null} null if not found
  */
-const findFirstFile = (fileName, startPath = __dirname) => {
+const findFirstFile = (fileName, startPath = import.meta.dirname) => {
 
     if(!folderExists(startPath)) {
         return null;
@@ -115,11 +114,4 @@ const fileAsJSON = async (file) => {
     }
 };
 
-module.exports = {
-    decodeBase64
-    , fileAsJSON
-    , fileExists
-    , folderExists
-    , writeToFile
-    , findFirstFile
-};
+export { decodeBase64, fileAsJSON, fileExists, folderExists, writeToFile, findFirstFile };

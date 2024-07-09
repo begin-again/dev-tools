@@ -1,21 +1,21 @@
-/* eslint-disable no-magic-numbers */
-const chai = require('chai');
-const { expect } = chai;
+import mockFS from 'mock-fs';
+import fs from 'node:fs';
+import { platform } from 'node:os';
+import { expect } from 'chai';
+import sinon from 'sinon';
 
-const mockFS = require('mock-fs');
-const fs = require('fs');
-const { Version } = require('../src/common/engine.js');
-const sinon = require('sinon');
-chai.use(require('sinon-chai'));
-const { platform } = require('os');
+import Version from '../src/common/version.js';
+
 const isWindows = platform() === 'win32';
 
-const clean = require('../src/node-tools/clean.js');
-const report = require('../src/node-tools/report.js');
-const fix = require('../src/node-tools/fix.js');
-const remove = require('../src/node-tools/remove.js');
+import clean from '../src/node-tools/clean.js';
+import report from '../src/node-tools/report.js';
+import fix from '../src/node-tools/fix.js';
+import remove from '../src/node-tools/remove.js';
 
 let version10; let version12; let version14; let logger = {};
+
+// ... rest of your test cases ...
 
 
 describe('node-tools', function() {

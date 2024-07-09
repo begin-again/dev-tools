@@ -1,6 +1,6 @@
 
-const { createWriteStream, unlink } = require('fs');
-const https = require('https');
+import { createWriteStream, unlink } from 'node:fs';
+import https from 'node:https';
 const OK = 200;
 
 /**
@@ -46,6 +46,6 @@ const download = async (url, filePath) => {
     });
 };
 
-module.exports = {
+export {
     download
 };

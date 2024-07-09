@@ -1,0 +1,11 @@
+
+reviews:
+  path_instructions:
+    - path: "**/*.js"
+      instructions: |
+        Review the JavaScript code against the Google JavaScript style guide and point out any mismatches
+    - path: "test/**.*"
+      instructions: |
+        Review the following unit test code written using the Mocha test library. Ensure that:
+        - The code adheres to best practices associated with Mocha.
+        - Descriptive test names are used to clearly convey the intent of each test.

@@ -1,10 +1,12 @@
-const osType = require('os').type();
-const yargs = require('yargs');
-const { allInstalledNodeVersions, versionKeys } = require('../common/engine.js');
-const report = require('./report');
-const fix = require('./fix.js');
-const clean = require('./clean.js');
-const remove = require('./remove.js');
+import { type as osType } from 'node:os';
+import yargs from 'yargs/yargs';
+import { Engine, versionKeys } from '../common/engine.js';
+import report from './report.js';
+import fix from './fix.js';
+import clean from './clean.js';
+import remove from './remove.js';
+
+// ... rest of your code ...
 
 process.on('uncaughtException', (e) => {
     process.stdout.write(`${e.message}\n`);
@@ -17,20 +19,21 @@ process.on('uncaughtException', (e) => {
  * @returns {boolean}
  */
 const validateWindows = () => {
-    if(osType !== 'Windows_NT') {
+    if(osType() !== 'Windows_NT') {
         throw new Error('This tools only works on MS Windows');
     }
     return true;
 };
 
-yargs
+const _yargs = yargs(process.argv.slice(2));
+_yargs
     .command({
         command: [ '$0', 'report' ]
         , desc: 'Report on found executables'
         , builder: _yargs => {
             return _yargs
                 .check((argv) => {
-                    argv.installed = allInstalledNodeVersions();
+                    argv.installed = Engine.allInstalledNodeVersions();
                     return true;
                 });
         }
@@ -59,7 +62,7 @@ yargs
                     return true;
                 })
                 .check((argv) => {
-                    argv.installed = allInstalledNodeVersions();
+                    argv.installed = Engine.allInstalledNodeVersions();
                     return true;
                 });
         }
@@ -73,7 +76,7 @@ yargs
                 .option('dry-run', { alias: 'x', describe: 'show what will be fixed', type: 'boolean', default: false })
                 .check(validateWindows)
                 .check((argv) => {
-                    argv.installed = allInstalledNodeVersions();
+                    argv.installed = Engine.allInstalledNodeVersions();
                     return true;
                 });
         }
@@ -88,7 +91,7 @@ yargs
                 .option('version', { ...versionKeys.version, required: true })
                 .check(validateWindows)
                 .check((argv) => {
-                    argv.installed = allInstalledNodeVersions();
+                    argv.installed = Engine.allInstalledNodeVersions();
                     return true;
                 });
         }
@@ -96,7 +99,7 @@ yargs
     });
 
 // Main entry
-yargs.help(true)
+_yargs.help(true)
     .version(false)
     .strict(true)
     .parse();

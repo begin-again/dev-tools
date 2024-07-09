@@ -4,9 +4,8 @@
  * Locates node versions and reports the node binary files present, including symbolic links
 */
 
-const osType = require('os').type();
+import { type as osType } from 'node:os';
 const binName = osType === 'Windows_NT' ? 'node.exe' : 'node';
-// eslint-disable-next-line no-process-env
 const { NVM_HOME } = process.env;
 
 /**
@@ -44,4 +43,4 @@ const report = ({ installed }, log = console) => {
 
 };
 
-module.exports = report;
+export default report;
