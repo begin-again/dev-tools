@@ -107,11 +107,16 @@ const logErrors = (errors, isDebug, err) => {
  * Entry point
  */
 const main = () => {
-    if(options.devRoot) {
+    if(options.devRoot.length) {
         const errors = [];
         let maxRepoLength = 0;
-        const promises = allRepoPaths(options.devRoot, options.folderNames)
-            .map(repo => processRepo(repo, errors));
+        const repos = [];
+        options.devRoot.forEach(root => {
+            allRepoPaths(root, options.folderNames).forEach(repo => {
+                repos.push(repo);
+            });
+        });
+        const promises = repos.map(repo => processRepo(repo, errors));
 
         return Promise
             .all(promises)

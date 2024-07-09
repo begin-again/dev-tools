@@ -31,7 +31,8 @@ const cmdKeys = {
     , 'dev-root': {
         alias: 'r'
         , describe: 'root folder of development environment (/c/blah/blah). Default is DEVROOT'
-        , type: 'string'
+        , type: 'array'
+        // eslint-disable-next-line no-process-env
         , default: process.env.DEVROOT
     }
     , 'date': {
@@ -82,6 +83,7 @@ const validatePath = (devRoot) => {
     catch (e) {
         throw new Error(`Unable to access specified dev root folder of '${devRoot}'. Due to ${e.message}`);
     }
+
 };
 
 /**
