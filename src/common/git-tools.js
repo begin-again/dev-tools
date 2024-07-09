@@ -230,16 +230,15 @@ const deleteFile = (repoPath, name) => {
  * Returns branch log
  *
  * @param {string} repoPath
- * @param {string} branch
+ * @param {string} [branch]
  * @returns {Promise<object>}
  */
 const log = (repoPath, branch = 'master') => {
-    const options = {};
     if(branch) {
-        options.from = branch;
+        // @ts-ignore
+        return simpleGit(repoPath).log(branch);
     }
-    options.format = '%s';
-    return simpleGit(repoPath).log(options);
+    return simpleGit(repoPath).log();
 };
 
 export {

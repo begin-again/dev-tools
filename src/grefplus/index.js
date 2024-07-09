@@ -1,16 +1,15 @@
 /* eslint no-console:off */
 const DateLength = 6;
 
-import { setOptions, options } from './cmdline.js';
-setOptions();
+import { exec } from 'node:child_process';
+import { basename } from 'node:path';
+import { promisify } from 'node:util';
 
-import { basename } from 'path';
-import { allRepoPaths } from '../common/repos.js';
-import { promisify } from 'util';
-import { exec } from 'child_process';
 import { DateTime } from 'luxon';
-
+import { setOptions, options } from './cmdline.js';
+import { allRepoPaths } from '../common/repos.js';
 const _exec = promisify(exec);
+
 setOptions();
 
 /**
@@ -28,11 +27,11 @@ const gitCommand = (repo) => {
  * determines if item falls within range
  *
  * @param {Object} item
- * @param {DateTime | undefined} item.fromDate
- * @param {DateTime | undefined} item.toDate
+ * @param {DateTime} item.date
+ * @param {string} item.body
+ * @param {string} item.repo
  * @returns {Boolean}
  * @private
- *
  */
 const filterPeriod = (item) => {
     let result;
@@ -53,9 +52,9 @@ const filterPeriod = (item) => {
 
 /**
  * Obtains the git reflogs result
- * @param  {String} repo - full path to a repository
- * @param  {Array}  errors - place to store skippable errors
- * @return {Array}  objects containing date, body, and the repository base name
+ * @param  {string} repo - full path to a repository
+ * @param  {array}  errors - place to store skippable errors
+ * @return {Promise<{date:DateTime, body:string, repo:string}[]>}  objects containing date, body, and the repository base name
  */
 const processRepo = (repo, errors) => {
     return new Promise((resolve) => {
@@ -75,7 +74,7 @@ const processRepo = (repo, errors) => {
                         const body = item.substring(item.search('==') + options.offset);
                         return { date, body, repo: basename(repo) };
                     })
-                    .filter(filterPeriod);
+                    .filter(item => filterPeriod(item));
                 return resolve(results);
             })
             .catch(err => {
@@ -88,8 +87,8 @@ const processRepo = (repo, errors) => {
 
 /**
  * writes errors to console if in debug mode
- * @param  {Array}   errors - collection of error objects
- * @param  {Boolean} isDebug - command line flag
+ * @param  {array}   errors - collection of error objects
+ * @param  {number} isDebug - command line flag
  * @param  {*}       err - catch all error not otherwise specified
  */
 const logErrors = (errors, isDebug, err) => {

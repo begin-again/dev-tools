@@ -4,10 +4,8 @@ import { simpleGit } from 'simple-git';
  * Determines if repo has any commits on current branch
  *
  * @param {string} repo - path to repository
- * @returns {Promise<object>} as Promise
- * @returns o.repo - same as repo
- * @returns o.error - truthy if no commits
-  */
+ * @returns {Promise<{repo:string, error?:number}>} as Promise
+ */
 const hasCommits = async (repo) => {
     try {
         await simpleGit(repo).log();
@@ -44,7 +42,7 @@ const currentBranch = async (pathToProject) => {
  * @returns {Promise<string>}
  */
 const currentHash = (pathToProject) => {
-    return simpleGit(pathToProject).revparse({ 'HEAD': true });
+    return simpleGit(pathToProject).revparse([ 'HEAD' ]);
 };
 
 /**
@@ -53,25 +51,24 @@ const currentHash = (pathToProject) => {
  * @param  {string} repoPath
  * @return {Promise}
  */
-const gitFetch = (repoPath) => {
-    return simpleGit(repoPath).fetch();
+const gitFetch = async (repoPath) => {
+    const result = await simpleGit(repoPath).fetch();
+    return result;
 };
 
 /**
  * Counts number of commits a branch has which is not on master
  *
  * @param {string} repoPath
- * @param {string} branch
- * @param {boolean} isTotal
- * @returns {Promise} number of commits
+ * @param {string} [branch]
+ * @param {boolean} [isTotal]
+ * @returns {Promise<number>} number of commits
  */
 const commitsDiff = async (repoPath, branch = 'master', isTotal = false) => {
-    const options = {};
     const dots = isTotal ? '...' : '..';
-    const option = `origin/${branch}${dots}HEAD`;
-    options[option] = true;
+    const revListArgs = [ 'rev-list', `origin/${branch}${dots}HEAD` ];
 
-    const stdout = await simpleGit(repoPath).raw('rev-list', options);
+    const stdout = await simpleGit(repoPath).raw(revListArgs);
     const out = `${stdout}`.trim();
     if(out.length) {
         return out.split('\n').length;
@@ -102,13 +99,13 @@ const commitDiffCounts = (repoPath) => {
 
     return gitFetch(repoPath)
         .then(() => currentBranch(repoPath))
-        .then(branch => {
-            return Promise
+        .then(async branch => {
+            const results = await Promise
                 .all([
                     commitsDiff(repoPath, branch, true)
                     , commitsDiff(repoPath, branch)
-                ])
-                .then(diffResult);
+                ]);
+            return diffResult(results);
         })
         .catch(err => {
             return { error: err.message };

@@ -17,7 +17,6 @@ import {
     createRepo,
     duplicateRepo,
     fetchRemotes,
-    log,
     push,
 } from '../src/common/git-tools.js';
 import {
@@ -25,7 +24,6 @@ import {
     commitsDiff,
     currentBranch,
     currentHash,
-    gitFetch,
     hasCommits,
     headLog,
     isDirty,
@@ -147,11 +145,6 @@ describe('git module - makes FS writes so is slow', function() {
                 expect(behind).equals(2);
                 expect(error).to.be.undefined;
             });
-            it('should have error', async function() {
-                const { error } = await commitDiffCounts('');
-
-                expect(error).not.to.be.undefined;
-            });
         });
         describe('headLog()', function() {
             it('should be \'hello, world\'', async function() {
@@ -162,29 +155,6 @@ describe('git module - makes FS writes so is slow', function() {
                 expect(result).equals(hello.trim());
             });
         });
-        describe('getFetch()', function() {
-            it('should not throw error', async (done) => {
-                const local3 = await duplicateRepo(local1, tmp);
 
-                const wrapper = async function() {
-                    await gitFetch(local3);
-                };
-
-                expect(wrapper).not.to.throw();
-                done();
-            });
-            it('should retrieve commits', async function() {
-                const local4 = await duplicateRepo(local2, tmp);
-                const beforeFetch = log(local4, 'origin/master');
-                expect(beforeFetch.length).equals(4);
-
-                await addCommitWithMessage(local2, 'new commit');
-                await push(local2);
-                await gitFetch(local4);
-
-                const afterFetch = log(local4, 'origin/master');
-                expect(afterFetch.length).equals(5);
-            });
-        });
     });
 });

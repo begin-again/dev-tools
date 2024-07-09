@@ -2,14 +2,13 @@ import { lstatSync, accessSync, constants } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 
-
 /**
  *
  * @param {object} param0
  * @param {string} param0.version
  * @param {string=} param0.path
  * @param {object=} param0.env
- * @returns {import('../../types/index').Version}
+ * @returns {{error: string, path: string, version: string, bin: string, isLink: boolean}}
  */
 function createVersion({ version, path, env }) {
     const versionInstance = {};

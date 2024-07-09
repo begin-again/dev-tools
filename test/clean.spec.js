@@ -62,7 +62,6 @@ describe('Cleaner Module', () => {
             expect(list).not.includes('abc');
 
             expect(logger.warn).calledOnceWith('attempting to delete 1 folders - please be patient');
-            expect(logger.warn).calledOnceWith('attempting to delete 1 folders - please be patient');
             expect(logger.info).callCount(2);
 
         });
@@ -84,13 +83,15 @@ describe('Cleaner Module', () => {
             mockFS({
                 folder1: mockFS.directory({
                     ctime: now.minus({ day: 1 }).startOf('day')
+                        .toJSDate()
                 })
                 , folder2: mockFS.directory({
                     ctime: now.minus({ day: 2 }).startOf('day')
+                        .toJSDate()
                 })
             });
 
-            const result = await removeSonarTemp({ root: rootPath, age: 3 }, logStub);
+            const result = await removeSonarTemp({ root: rootPath, age: 3, logger: logStub });
 
             const folders = fs.readdirSync(rootPath, { withFileTypes: true }).filter(d => d.isDirectory());
 
@@ -103,13 +104,15 @@ describe('Cleaner Module', () => {
             mockFS({
                 folder1: mockFS.directory({
                     ctime: now.minus({ day: 1 }).startOf('day')
+                        .toJSDate()
                 })
                 , folder2: mockFS.directory({
                     ctime: now.minus({ day: 2 }).startOf('day')
+                        .toJSDate()
                 })
             });
 
-            const result = await removeSonarTemp({ root: rootPath, age: 2 }, logStub);
+            const result = await removeSonarTemp({ root: rootPath, age: 2, logger: logStub });
 
             const folders = fs.readdirSync(rootPath, { withFileTypes: true }).filter(d => d.isDirectory());
 
