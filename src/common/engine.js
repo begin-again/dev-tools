@@ -21,11 +21,11 @@ class Engine {
      * @param {object} param0
      * @param {{NVM_HOME?:string, NVM_BIN?:string}=} param0.env
      * @param {string} param0.defaultVersion
-     * @param {import('../../types/index').Version[]} param0.versions
+     * @param {import('../../types/index.ts').Version[]} param0.versions
      */
     constructor({ env, defaultVersion, versions }) {
-        const _env = env || process.env;
-        this._allVersions = versions || Engine.allInstalledNodeVersions(null, _env);
+        const { NVM_BIN, NVM_HOME } = env || process.env;
+        this._allVersions = versions || Engine.allInstalledNodeVersions({ NVM_BIN, NVM_HOME });
         this._versions = this._allVersions.filter(({ error }) => !error);
         this._defaultVersion = defaultVersion || '16.15.0';
     }
@@ -66,7 +66,7 @@ class Engine {
      *  - NVM_HOME is folder to the version folders
      *  - NVM_BIN is folder of the node executable, The version name is part of the path.
      * @param {{NVM_HOME?:string, NVM_BIN?:string}} [env] - defaults to process.env
-     * @returns {import('../../types/index').Version[]}
+     * @returns {import('../../types/index.ts').Version[]}
      * @memberof Engine
      */
     static allInstalledNodeVersions (env) {
@@ -90,7 +90,6 @@ class Engine {
                         }
 
                         return createVersion({ version, path, env: _env });
-                        // return new Version(version, path, log);
                     });
                 return folders;
             }
@@ -103,7 +102,7 @@ class Engine {
      * Determines which installed versions are compatible with specified range
      *
      * @param {string} requiredVersionRange
-     * @returns {import('../../types/index').Version[]} satisfying versions sorted descending
+     * @returns {import('../../types/index.ts').Version[]} satisfying versions sorted descending
      * @memberof Engine
      */
     satisfyingVersions (requiredVersionRange) {
@@ -124,7 +123,7 @@ class Engine {
      * Obtains the latest installed node version which is compatible within a given range
      *
      * @param {string} requiredRange
-     * @returns {import('../../types/index').Version|undefined} version, path, bin
+     * @returns {import('../../types/index.ts').Version|undefined} version, path, bin
      * @memberof Engine
      */
     maxInstalledSatisfyingVersion (requiredRange) {
@@ -135,7 +134,7 @@ class Engine {
      * Obtains the oldest installed node version which is compatible within a given range
      *
      * @param {string} requiredRange
-     * @returns {import('../../types/index').Version|undefined} version, path, bin
+     * @returns {import('../../types/index.ts').Version|undefined} version, path, bin
      * @memberof Engine
      */
     minInstalledSatisfyingVersion (requiredRange) {
@@ -152,7 +151,7 @@ class Engine {
      * @param {object} [options]
      * @param {boolean=} options.noPackage - path does not have package.json
      * @param {string=} options.repositoryEngines - engines.node property from package.json
-     * @returns {import('../../types/index').Version}
+     * @returns {import('../../types/index.ts').Version}
      * @throws RangeError
      * @memberof Engine
      */
@@ -201,9 +200,9 @@ class Engine {
      * Locates first or last version string in versions
      *
      * @param {string} v - version number (1.1.1)
-     * @param {import('../../types/index').Version[]} versions - objects
+     * @param {import('../../types/index.ts').Version[]} versions - objects
      * @param {boolean} oldest - select oldest version
-     * @returns {import('../../types/index').Version}
+     * @returns {import('../../types/index.ts').Version}
      * @memberof Engine
      */
     static versionStringToObject (v, versions, oldest = false) {

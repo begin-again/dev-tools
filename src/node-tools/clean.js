@@ -13,7 +13,7 @@ const maxWidth = 9;
  * Remove node.exe symbolic links
  *
  * @param {Object} param0
- * @param {Array<Version>} param0.installed
+ * @param {import('../../types/index.ts').Version[]} param0.installed
  * @param {Boolean} param0.dryRun
  * @param {Object} [log] logger
  */
@@ -35,7 +35,6 @@ const clean = ({ installed, dryRun }, log = console) => {
                     msg += `deleted symbolic link ${bin}`;
                     log.debug(msg);
                 }
-                 
                 catch (e) {
                     msg += `Unable to delete ${bin}, due to ${e.message}`;
                     log.error(msg);
