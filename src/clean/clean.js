@@ -4,7 +4,8 @@
  * removes temporary folders matching known patterns
  */
 const { join } = require('path');
-const { realpathSync, statSync } = require('fs');
+const { realpathSync } = require('fs');
+const { stat } = require('fs/promises');
 const fsPromises = require('fs').promises;
 const { readdir } = fsPromises;
 const { tmpdir } = require('os');
@@ -73,7 +74,7 @@ const removeTarget = async (name, regex, root = defaultTempPath) => {
 
 
 
-const DAY_MS = 86400000;
+
 
 /**
  *
@@ -84,14 +85,15 @@ const DAY_MS = 86400000;
  * @param {Promise<number>}
  */
 const removeSonarTemp = async ({ root, age }, logger = console) => {
-    const _root = root || join(process.env.HOME, '.sonarlint', 'work');
+    const _root = root || join(process.env.HOME, '.sonarlint');
     const now = Date.now();
+    const DAY_MS = 86400000;
     const folders = await readdir(_root, { withFileTypes: true })
         .then(dirs =>
             dirs
-                .filter(d => d.isDirectory())
-                .filter(d => {
-                    const { ctimeMs } = statSync(join(_root, d.name));
+                .filter(d => d.isDirectory() && (d.name.startsWith('.sonarlinttmp_') || d.name.startsWith('xodus-local-only')))
+                .filter(async d => {
+                    const { ctimeMs } = await stat(join(_root, d.name)).catch(() => 0);
                     const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
                     return daysOld >= age;
                 })
@@ -99,8 +101,8 @@ const removeSonarTemp = async ({ root, age }, logger = console) => {
     logger.debug(`removing ${folders.length} folders`);
 
     return Promise.allSettled(
-        folders.map(async d => {
-            await remover(join(_root, d.name), { recursive: true }).then(() => `removed ${d.name}`);
+        folders.map(d => {
+            return remover(join(_root, d.name), { recursive: true }).then(() => `removed ${d.name}`);
         })
     ).then(r => {
         return r.filter(f => f.status === 'fulfilled').length;

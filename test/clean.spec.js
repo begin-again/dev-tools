@@ -13,7 +13,7 @@ const { removeTarget, folderList, removeSonarTemp } = require('../src/clean/clea
 
 
 const fake = {
-    'abc': {}
+    '.sonarlinttmp_1': {}
     , 'xyz':''
     , '123': {}
     , '456': ''
@@ -77,10 +77,10 @@ describe('Cleaner Module', () => {
 
         it('should remove no folders', async function() {
             mockFS({
-                folder1: mockFS.directory({
+                'sonarlinttmp_1': mockFS.directory({
                     ctime: now.minus({ day: 1 }).startOf('day')
                 })
-                , folder2: mockFS.directory({
+                , 'sonarlinttmp_2': mockFS.directory({
                     ctime: now.minus({ day: 2 }).startOf('day')
                 })
             });
@@ -96,10 +96,10 @@ describe('Cleaner Module', () => {
         });
         it('should remove 1 folders', async function() {
             mockFS({
-                folder1: mockFS.directory({
+                'sonarlinttmp_1': mockFS.directory({
                     ctime: now.minus({ day: 1 }).startOf('day')
                 })
-                , folder2: mockFS.directory({
+                , 'xodus-local-only': mockFS.directory({
                     ctime: now.minus({ day: 2 }).startOf('day')
                 })
             });

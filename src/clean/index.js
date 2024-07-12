@@ -19,7 +19,7 @@ yargs
                     alias: 'r'
                     , describe: 'root path of work folders'
                     , type: 'string'
-                    , default: join(process.env.HOME, '.sonarlint', 'work')
+                    , default: join(process.env.HOME, '.sonarlint')
                 })
                 .option('age', {
                     alias: 'd'
