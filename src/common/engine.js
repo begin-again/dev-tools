@@ -20,12 +20,12 @@ class Engine {
      *
      * @param {object} param0
      * @param {{NVM_HOME?:string, NVM_BIN?:string}=} param0.env
-     * @param {string} param0.defaultVersion
+     * @param {string=} param0.defaultVersion
      * @param {import('../../types/index.ts').Version[]} param0.versions
      */
-    constructor({ env, defaultVersion, versions }) {
-        const { NVM_BIN, NVM_HOME } = env || process.env;
-        this._allVersions = versions || Engine.allInstalledNodeVersions({ NVM_BIN, NVM_HOME });
+    constructor({ env, defaultVersion = '', versions = null }) {
+        const _env = env || process.env;
+        this._allVersions = versions || Engine.allInstalledNodeVersions(_env);
         this._versions = this._allVersions.filter(({ error }) => !error);
         this._defaultVersion = defaultVersion || '16.15.0';
     }
@@ -69,7 +69,7 @@ class Engine {
      * @returns {import('../../types/index.ts').Version[]}
      * @memberof Engine
      */
-    static allInstalledNodeVersions (env) {
+    static allInstalledNodeVersions (env = {}) {
         const _env = env || process.env;
         const { NVM_BIN, NVM_HOME } = _env || {};
         if(NVM_BIN || NVM_HOME) {

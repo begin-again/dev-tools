@@ -17,7 +17,7 @@ const main = async () => {
     }
 
     if(!options.silent) {
-
+        // eslint-disable-next-line no-console
         console.log(`Processing ${repos.length} repositories in ${options.root}`);
     }
 
@@ -33,15 +33,13 @@ const main = async () => {
                     return report(br);
                 })
                 .catch(err => {
-
-                    console.error('main threw error', `${err.message} | ${err.cmd}`);
                     process.exitCode = 1;
                     throw err;
                 });
         })
         .then((reports) => {
             reports.forEach(line => {
-
+                // eslint-disable-next-line no-console
                 console.log(line);
             });
         });
@@ -49,4 +47,5 @@ const main = async () => {
 
 
 
+// eslint-disable-next-line no-console
 main().catch(console.error);

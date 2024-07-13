@@ -2398,7 +2398,7 @@ __metadata:
     simple-git: "npm:^3.25.0"
     sinon: "npm:^18.0.0"
     sinon-chai: "npm:^3.7.0"
-    uuid: "npm:10.0.0"
+    uuid: "npm:^10.0.0"
     yargs: "npm:^17.7.2"
   languageName: unknown
   linkType: soft
@@ -3322,7 +3322,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:10.0.0":
+"uuid@npm:^10.0.0":
   version: 10.0.0
   resolution: "uuid@npm:10.0.0"
   bin:

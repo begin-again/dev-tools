@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-magic-numbers */
 
 
@@ -98,7 +99,7 @@ describe('Engine Class Win32', function() {
         }
     });
     const mockFSOptions = {
-        env: { NVM_HOME: 'c:\\test\\nvm' }
+        env: { NVM_HOME: 'c:\\test\\nvm', NVM_BIN: '' }
     };
 
     beforeEach(function() {
@@ -245,7 +246,7 @@ describe('Engine Class Win32', function() {
 
             maxInstalledSatisfyingVersionStub.returns(maxVersion);
 
-            const result = new Engine(mockFSOptions).versionToUseValidator({ path }, { repositoryEngines: repoEngines });
+            const result = new Engine({ env:mockFSOptions }).versionToUseValidator({ path }, { repositoryEngines: repoEngines });
 
             expect(result).to.deep.equal(maxVersion);
         });
@@ -256,8 +257,7 @@ describe('Engine Class Win32', function() {
             const repoEngines = '^8.11.1 || ^10.13.0 || ^12.13.0';
 
             satisfyingVersionsStub.returns([]);
-
-            expect(() => new Engine(mockFSOptions).versionToUseValidator({ path, version }, { repositoryEngines: repoEngines })).to.throw(RangeError);
+            expect(() => new Engine({ env:mockFSOptions }).versionToUseValidator({ path, version }, { repositoryEngines: repoEngines })).to.throw(RangeError);
         });
     });
     describe('maxInstalledSatisfyingVersion()', function() {
@@ -265,7 +265,7 @@ describe('Engine Class Win32', function() {
             const versions = [ { version: 'v12.0.0' } ];
             const stub = sinon.stub();
 
-            const result = new Engine({ versions }).maxInstalledSatisfyingVersion('^8.11.1', stub);
+            const result = new Engine({ versions }).maxInstalledSatisfyingVersion('^8.11.1');
 
             expect(result).to.be.undefined;
             expect(stub).not.called;

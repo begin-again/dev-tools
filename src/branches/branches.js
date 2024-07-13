@@ -4,10 +4,20 @@ import { currentBranch, currentHash, commitDiffCounts, isDirty } from '../common
 const hashLength = 7;
 
 /**
+ * @typedef {object} BranchReport
+ * @property {string} name
+ * @property {string} branch
+ * @property {string} head
+ * @property {boolean} dirty
+ * @property {{ahead:number, behind:number}} [fetch]
+ *
+ */
+
+/**
  * String sort
  *
- * @param {String} a
- * @param {String} b
+ * @param {BranchReport} a
+ * @param {BranchReport} b
  * @private
  */
 const sorter = (a, b) => {
@@ -17,8 +27,8 @@ const sorter = (a, b) => {
 /**
  * Creates formatted report
  *
- * @param {Array} results
- * @returns {String}
+ * @param {BranchReport[]} results
+ * @returns {string[]}
  */
 const report = (results) => {
     results.sort(sorter);
@@ -47,7 +57,8 @@ const report = (results) => {
 /**
  * Fetches and prepares output for a repository
  *
- * @param  {String} repoPath
+ * @param  {string} repoPath
+ * @returns {Promise<BranchReport>}
  */
 const branches = (repoPath) => {
     const promises = [
@@ -60,10 +71,15 @@ const branches = (repoPath) => {
     }
     return Promise.all(promises)
         .then(results => {
-            const result = { name: basename(repoPath), branch: results[0], head: results[1], dirty: results[2] };
-            if(results[3]) {
-                result.fetch = { ahead: results[3].ahead, behind: results[3].behind };
-            }
+            const [ branch, head, dirty, fetch = { ahead:0, behind:0 } ] = results;
+
+            /** @type {BranchReport} */
+            const result = {
+                name: basename(repoPath)
+                , branch, head, dirty
+                , fetch
+            };
+
             return result;
         });
 };

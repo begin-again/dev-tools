@@ -93,23 +93,23 @@ const diffResult = (results) => {
  * Count commits which differ between origin and local
  *
  * @param  {string} repoPath
- * @returns {Promise} { ahead: Integer, behind: Integer }
+ * @returns {Promise<{ ahead?: number, behind?: number, error?:string}>}
  */
-const commitDiffCounts = (repoPath) => {
+const commitDiffCounts = async (repoPath) => {
 
-    return gitFetch(repoPath)
-        .then(() => currentBranch(repoPath))
-        .then(async branch => {
-            const results = await Promise
-                .all([
-                    commitsDiff(repoPath, branch, true)
-                    , commitsDiff(repoPath, branch)
-                ]);
-            return diffResult(results);
-        })
-        .catch(err => {
-            return { error: err.message };
-        });
+    try {
+        await gitFetch(repoPath);
+        const branch = await currentBranch(repoPath);
+        const results = await Promise.all([
+            commitsDiff(repoPath, branch, true)
+            , commitsDiff(repoPath, branch)
+        ]);
+        return diffResult(results);
+    }
+    catch (err) {
+        return { error: err.message };
+    }
+
 };
 
 /**

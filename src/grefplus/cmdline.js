@@ -32,7 +32,6 @@ const cmdKeys = {
         alias: 'r'
         , describe: 'root folder of development environment (/c/blah/blah). Default is DEVROOT'
         , type: 'array'
-
         , default: process.env.DEVROOT
     }
     , 'date': {
@@ -179,6 +178,7 @@ const setOptions = (test) => {
             return true;
         })
         .check(argv => {
+            /** @type {string[]} */
             const devRoot = `${argv.devRoot}`;
             return validatePath(devRoot);
         })
