@@ -101,8 +101,9 @@ const removeSonarTemp = async ({ root, age }, logger = console) => {
     logger.debug(`removing ${folders.length} folders`);
 
     return Promise.allSettled(
-        folders.map(d => {
-            return remover(join(_root, d.name), { recursive: true }).then(() => `removed ${d.name}`);
+        folders.map(d => remover(join(_root, d.name), { recursive: true })
+            .then(() => `removed ${d.name}`)
+        )
         })
     ).then(r => {
         return r.filter(f => f.status === 'fulfilled').length;
