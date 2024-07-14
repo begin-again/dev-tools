@@ -4,12 +4,11 @@ const git = require('simple-git');
  * Determines if repo has any commits on current branch
  *
  * @param {string} repo - path to repository
- * @returns {Promise<object>} as Promise
- * @returns o.repo - same as repo
- * @returns o.error - truthy if no commits
+ * @returns {Promise<{repo:string, error?:number}>} as Promise
   */
 const hasCommits = async (repo) => {
     try {
+        // @ts-ignore
         await git(repo).log();
         return { repo };
     }
@@ -28,6 +27,7 @@ const hasCommits = async (repo) => {
  */
 const currentBranch = async (pathToProject) => {
     try {
+        // @ts-ignore
         const { current } = await git(pathToProject).branch();
         return current || 'HEAD';
     }
@@ -44,6 +44,7 @@ const currentBranch = async (pathToProject) => {
  * @returns {Promise<string>}
  */
 const currentHash = (pathToProject) => {
+    // @ts-ignore
     return git(pathToProject).revparse({ 'HEAD': true });
 };
 
@@ -54,6 +55,7 @@ const currentHash = (pathToProject) => {
  * @return {Promise}
  */
 const gitFetch = (repoPath) => {
+    // @ts-ignore
     return git(repoPath).fetch();
 };
 
@@ -71,6 +73,7 @@ const commitsDiff = async (repoPath, branch = 'master', isTotal = false) => {
     const option = `origin/${branch}${dots}HEAD`;
     options[option] = true;
 
+    // @ts-ignore
     const stdout = await git(repoPath).raw('rev-list', options);
     const out = `${stdout}`.trim();
     if(out.length) {
@@ -122,6 +125,7 @@ const commitDiffCounts = (repoPath) => {
  * @return {Promise<boolean>} true is dirty
  */
 const isDirty = async (repoPath) => {
+    // @ts-ignore
     const status = await git(repoPath).status();
     const clean = status.isClean();
     const untracked = status.not_added.length > 0;
@@ -137,6 +141,7 @@ const isDirty = async (repoPath) => {
  */
 const headLog = async (repoPath, logger) => {
     try {
+        // @ts-ignore
         const { latest } = await git(repoPath).log();
         return latest.message;
     }

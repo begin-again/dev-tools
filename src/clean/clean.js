@@ -34,7 +34,7 @@ const remover = rmCompatibility();
 const folderList = async (regex, rootFolder) => {
     const folders = await fsPromises.readdir(rootFolder, { withFileTypes: true });
     return folders.reduce((acc, dirent) => {
-        if (dirent.isDirectory() && regex.test(dirent.name)) {
+        if(dirent.isDirectory() && regex.test(dirent.name)) {
             acc.push(join(rootFolder, dirent.name));
         }
         return acc;
@@ -89,30 +89,23 @@ const removeSonarTemp = async ({ root, age }, logger = console) => {
     const now = Date.now();
     const DAY_MS = 86400000;
     let folders = [];
-    try {
-        folders = await fsPromises.readdir(_root, { withFileTypes: true })
-        const targetFolders = folders.filter(d => d.isDirectory() && (d.name.startsWith('.sonarlinttmp_') || d.name.startsWith('xodus-local-only')))
-        const foldersToDelete = targetFolders.filter(async d => {
-            const { ctimeMs } = await fsPromises.stat(join(_root, d.name)).catch(() => ({ ctimeMs: 0 }));
-            const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
-            return daysOld >= age;
-        })
+    folders = await fsPromises.readdir(_root, { withFileTypes: true });
+    const targetFolders = folders.filter(d => d.isDirectory() && (d.name.startsWith('.sonarlinttmp_') || d.name.startsWith('xodus-local-only')));
+    const foldersToDelete = targetFolders.filter(async d => {
+        const { ctimeMs } = await fsPromises.stat(join(_root, d.name)).catch(() => ({ ctimeMs: 0 }));
+        const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
+        return daysOld >= age;
+    });
 
-        const deleteFolders = await Promise.allSettled(
-            foldersToDelete.map(d => remover(join(_root, d.name), { recursive: true })
-                .then(() => `removed ${d.name}`)
-            )
-        );
+    const deleteFolders = await Promise.allSettled(
+        foldersToDelete.map(d => remover(join(_root, d.name), { recursive: true })
+            .then(() => `removed ${d.name}`)
+        )
+    );
 
-        return deleteFolders.filter(f => f.status === 'fulfilled').length;
-       
-    } catch(err){
-
-    }
-    
     logger.debug(`removing ${folders.length} folders`);
+    return deleteFolders.filter(f => f.status === 'fulfilled').length;
 
-    
 };
 
 module.exports = {
