@@ -85,7 +85,7 @@ const removeTarget = async (name, regex, root = defaultTempPath) => {
  * @param {Promise<number>}
  */
 const removeSonarTemp = async ({ root, age }, logger = console) => {
-    const _root = root || join(process.env.HOME, '.sonarlint');
+    const _root = root || realpathSync(join(process.env.HOME, '.sonarlint'));
     const now = Date.now();
     const DAY_MS = 86400000;
     const folders = await readdir(_root, { withFileTypes: true })
