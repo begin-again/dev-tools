@@ -81,30 +81,38 @@ const removeTarget = async (name, regex, root = defaultTempPath) => {
  * @param {object} options
  * @param {string} options.root - over-ride sonarlint work folder path for testing
  * @param {number} options.age
- * @param {object} logger
- * @param {Promise<number>} - number of folders removed
+ * @param {object=} logger
+ * @returns {Promise<number>} - number of folders removed
  */
 const removeSonarTemp = async ({ root, age }, logger = console) => {
     const _root = root || realpathSync(join(process.env.HOME, '.sonarlint'));
     const now = Date.now();
     const DAY_MS = 86400000;
     let folders = [];
-    folders = await fsPromises.readdir(_root, { withFileTypes: true });
-    const targetFolders = folders.filter(d => d.isDirectory() && (d.name.startsWith('.sonarlinttmp_') || d.name.startsWith('xodus-local-only')));
-    const foldersToDelete = targetFolders.filter(async d => {
-        const { ctimeMs } = await fsPromises.stat(join(_root, d.name)).catch(() => ({ ctimeMs: 0 }));
-        const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
-        return daysOld >= age;
-    });
+    try {
+        await fsPromises.access(_root, fsPromises.constants.R_OK | fsPromises.constants.W_OK);
 
-    const deleteFolders = await Promise.allSettled(
-        foldersToDelete.map(d => remover(join(_root, d.name), { recursive: true })
-            .then(() => `removed ${d.name}`)
-        )
-    );
+        folders = await fsPromises.readdir(_root, { withFileTypes: true });
+        const targetFolders = folders.filter(d => d.isDirectory() && (d.name.startsWith('.sonarlinttmp_') || d.name.startsWith('xodus-local-only')));
+        const foldersToDelete = targetFolders.filter(async d => {
+            const { ctimeMs } = await fsPromises.stat(join(_root, d.name)).catch(() => ({ ctimeMs: 0 }));
+            const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
+            return daysOld >= age;
+        });
 
-    logger.debug(`removing ${folders.length} folders`);
-    return deleteFolders.filter(f => f.status === 'fulfilled').length;
+        const deleteFolders = await Promise.allSettled(
+            foldersToDelete.map(d => remover(join(_root, d.name), { recursive: true })
+                .then(() => `removed ${d.name}`)
+            )
+        );
+
+        logger.debug(`removing ${folders.length} folders`);
+        return deleteFolders.filter(f => f.status === 'fulfilled').length;
+    }
+    catch {
+        return 0;
+    }
+
 
 };
 
