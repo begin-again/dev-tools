@@ -1,7 +1,6 @@
 /**
  * @module Git-Tools
  */
-const { execSync } = require('child_process');
 const fs = require('node:fs');
 const { join } = require('node:path');
 const randomize = require('randomatic');
@@ -19,12 +18,11 @@ const commitLength = 20;
 const createRepo = async (nameOfFileToCommit = '') => {
     const path = createTempFolder();
     if(nameOfFileToCommit) {
-        await git(path).init();
-        execSync(`git -C ${path} init`);
+        await git.simpleGit(path).init();
         await addFileToRepo(path, nameOfFileToCommit, { stage: true, commit: true });
     }
     else {
-        execSync(`git -C ${path} init --bare`);
+        await git.simpleGit(path).init();
     }
     return path;
 };
@@ -74,7 +72,7 @@ const duplicateRepo = async (repoPath) => {
  * @return {Promise}
  */
 const addRemote = (srcRepoPath, targetRepoPath, remoteName = 'origin') => {
-    return git(srcRepoPath).remote(remoteName, targetRepoPath);
+    return git.simpleGit(srcRepoPath).addRemote(remoteName, targetRepoPath);
 };
 
 /**
@@ -86,9 +84,9 @@ const addRemote = (srcRepoPath, targetRepoPath, remoteName = 'origin') => {
  * @returns {Promise<void>} options stage: boolean, commit: boolean
  */
 const addFileToRepo = async (repoPath, name, options = { stage: false, commit: false }) => {
-    const repo = git(repoPath);
+    const repo = git.simpleGit(repoPath);
     if(options.branch) {
-        await repo.checkout(options.branch, { '-q': true, 'b': true });
+        await repo.checkout(options.branch, [ '-qb' ]);
     }
     await fs.promises.writeFile(join(repoPath, name), '');
     if(options.stage) {
@@ -106,7 +104,7 @@ const addFileToRepo = async (repoPath, name, options = { stage: false, commit: f
  * @returns {Promise<Boolean>}
  */
 const isDirty = async (repoPath) => {
-    const status = await git(repoPath).status();
+    const status = await git.simpleGit(repoPath).status();
     const clean = status.isClean();
     const untracked = status.not_added.length > 0;
     return !clean || untracked;
@@ -120,7 +118,7 @@ const isDirty = async (repoPath) => {
  */
 const currentBranch = async (repoPath) => {
     try {
-        const { current } = await git(repoPath).branch();
+        const { current } = await git.simpleGit(repoPath).branch();
         return current || 'HEAD';
     }
     catch (err) {
@@ -134,14 +132,17 @@ const currentBranch = async (repoPath) => {
  * @param {string} repoPath
  * @param {string} remote
  * @param {string} branch
- * @returns {Promise<string>} branch
+ * @returns {Promise<*>} branch
  */
-const push = (repoPath, remote = 'origin', branch = 'all') => {
-    if(branch === 'all') {
-        return git(repoPath).push(remote, { '--all':true, '-q': true });
+const push = async (repoPath, remote = 'origin', branch = 'all') => {
+    try {
+        const repo = git.simpleGit(repoPath);
+        const pushed = await repo.push(remote, branch, [ '-u', '-q' ]);
+        return pushed;
     }
-
-    return git(repoPath).push(remote, branch, { '-u':true, '-q': true });
+    catch (err) {
+        return Promise.reject(err.message);
+    }
 };
 
 /**
@@ -150,10 +151,10 @@ const push = (repoPath, remote = 'origin', branch = 'all') => {
  * @param {string} repoPath
  * @param {string} remote
  * @param {string} branch
- * @returns {Promise<string>}
+ * @returns {Promise<*>}
  */
 const pull = (repoPath, remote = 'origin', branch = 'master') => {
-    return git(repoPath).pull(remote, branch, { '-q': true });
+    return git.simpleGit(repoPath).pull(remote, branch, [ '-q' ]);
 };
 
 /**
@@ -162,24 +163,24 @@ const pull = (repoPath, remote = 'origin', branch = 'master') => {
  * @param {string} repoPath
  */
 const fetchRemotes = (repoPath) => {
-    return git(repoPath).fetch({ '--quiet': true, '--all': true });
+    return git.simpleGit(repoPath).fetch([ '--quiet', '--all' ]);
 };
 
 /**
  * Create new local commit
  *
  * @param {string} repoPath
- * @param {string | null} fileName - optional file name
- * @param {string} branch - optional
+ * @param {string=} fileName - optional file name
+ * @param {string=} branch - optional
  * @returns {Promise<string>} log subject
  */
 const addCommit = async (repoPath, fileName, branch) => {
-    const repo = git(repoPath);
+    const repo = git.simpleGit(repoPath, { baseDir: repoPath });
 
     if(branch) {
         // create a new branch with simple-git
         await repo.branch([ branch, 'HEAD' ]);
-        await repo.checkout(branch, { '-q': true });
+        await repo.checkout(branch, [ '-q' ]);
     }
 
     const _name = fileName || randomize('Aa0', commitLength);
@@ -195,19 +196,20 @@ const addCommit = async (repoPath, fileName, branch) => {
  *
  * @param {string} repoPath
  * @param {string} message
- * @param {string} branch - optional
+ * @param {string=} branch - optional
  * @returns {Promise<string>} log subject
  */
 const addCommitWithMessage = async (repoPath, message, branch) => {
-    const repo = git(repoPath);
+    const repo = git.simpleGit(repoPath);
     const _name = randomize('Aa0', commitLength);
     await fs.promises.writeFile(join(repoPath, _name), '');
     if(branch) {
-        await repo.checkout(branch, { '-q': true, 'b': true });
+        await repo.checkout(branch, [ '-q', 'b' ]);
     }
 
-    return repo.add(_name).commit(`${message}`)
-        .log().latest.message;
+    const log = await repo.add(_name).commit(`${message}`)
+        .log();
+    return log.latest.message;
 };
 
 /**
@@ -215,24 +217,30 @@ const addCommitWithMessage = async (repoPath, message, branch) => {
  *
  * @param {string} repoPath
  * @param {string} name
- * @returns {Promise<string>} name
+ * @returns {Promise<*>} name
  */
-const deleteFile = (repoPath, name) => {
-    return git(repoPath).rm(name)
-        .add(name)
-        .commit(`delete ${name}`);
+const deleteFile = async (repoPath, name) => {
+    const repo = git.simpleGit(repoPath);
+    await repo.rm(name);
+    await repo.add(name);
+    return repo.commit(`delete ${name}`);
 };
 
 /**
  * Returns branch log
  *
  * @param {string} repoPath
- * @param {string} branch
- * @returns {Array}
+ * @param {string=} branch
+ * @returns {Promise<string[]>} commit messages
  */
-const log = (repoPath, branch = 'master') => {
-    git(repoPath).log();
-    return execSync(`git -C ${repoPath} log --format="%s" ${branch}`, { encoding: 'utf8' }).split('\n');
+const log = async (repoPath, branch = 'master') => {
+    try {
+        const logResult = await git.simpleGit(repoPath).log({ from: branch });
+        return logResult.all.map(commit => commit.message);
+    }
+    catch {
+        return [];
+    }
 };
 
 module.exports = {
@@ -246,6 +254,7 @@ module.exports = {
     , deleteFile
     , duplicateRepo
     , fetchRemotes
+    , git
     , isDirty
     , log
     , push
