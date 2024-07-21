@@ -13,7 +13,7 @@ const { removeTarget, folderList, removeSonarTemp } = require('../src/clean/clea
 
 
 const fake = {
-    'abc': {}
+    '.sonarlinttmp_1': {}
     , 'xyz':''
     , '123': {}
     , '456': ''
@@ -44,16 +44,25 @@ describe('Cleaner Module', () => {
             logger.debug = sinon.spy();
         });
         it('should remove 1 folder and log', async function() {
-            mockFS(fake);
+            mockFS({
+                'folder1': {}
+                , 'file1':''
+                , 'folder2': {}
+                , 'file2': ''
+            });
             let list = fs.readdirSync('.');
-            expect(list).includes('abc');
-            expect(list).includes('xyz');
+            expect(list).includes('folder1');
+            expect(list).includes('folder2');
+            expect(list).includes('file1');
+            expect(list).includes('file2');
 
-            await removeTarget('Fake', /^abc$/m, '.');
+            await removeTarget('Fake', /^folder2$/m, '.');
             list = fs.readdirSync('.');
 
-            expect(list).includes('xyz');
-            expect(list).not.includes('abc');
+            expect(list).includes('folder1');
+            expect(list).not.includes('folder2');
+            expect(list).includes('file1');
+            expect(list).includes('file2');
 
             expect(logger.warn).calledOnceWith('attempting to delete 1 folders - please be patient');
             expect(logger.info).callCount(2);
@@ -77,10 +86,12 @@ describe('Cleaner Module', () => {
 
         it('should remove no folders', async function() {
             mockFS({
-                folder1: mockFS.directory({
+                'sonarlinttmp_1': mockFS.directory({
+                    // @ts-ignore
                     ctime: now.minus({ day: 1 }).startOf('day')
                 })
-                , folder2: mockFS.directory({
+                , 'sonarlinttmp_2': mockFS.directory({
+                    // @ts-ignore
                     ctime: now.minus({ day: 2 }).startOf('day')
                 })
             });
@@ -96,10 +107,12 @@ describe('Cleaner Module', () => {
         });
         it('should remove 1 folders', async function() {
             mockFS({
-                folder1: mockFS.directory({
+                'sonarlinttmp_1': mockFS.directory({
+                    // @ts-ignore
                     ctime: now.minus({ day: 1 }).startOf('day')
                 })
-                , folder2: mockFS.directory({
+                , 'xodus-local-only': mockFS.directory({
+                    // @ts-ignore
                     ctime: now.minus({ day: 2 }).startOf('day')
                 })
             });

@@ -4,13 +4,13 @@
  * removes temporary folders matching known patterns
  */
 const { join } = require('path');
-const { realpathSync, statSync } = require('fs');
+const { realpathSync } = require('fs');
 const fsPromises = require('fs').promises;
-const { readdir } = fsPromises;
 const { tmpdir } = require('os');
 const logger = console;
 
 const defaultTempPath = realpathSync(tmpdir());
+
 /**
  * compatibility check for rm & rmdir
  * @returns {Function}
@@ -32,15 +32,19 @@ const remover = rmCompatibility();
  * @public
  */
 const folderList = async (regex, rootFolder) => {
-    const folders = await readdir(rootFolder, { withFileTypes: true });
-    return folders
-        .filter(dirent => dirent.isDirectory() && regex.test(dirent.name))
-        .map(d => join(rootFolder, d.name));
+    const folders = await fsPromises.readdir(rootFolder, { withFileTypes: true });
+    return folders.reduce((acc, dirent) => {
+        if(dirent.isDirectory() && regex.test(dirent.name)) {
+            acc.push(join(rootFolder, dirent.name));
+        }
+        return acc;
+    }, []);
 };
 
 /**
  * Deletes matching folders
  *
+ * @param {string} name
  * @param {RegExp} regex
  * @param {string} root
  * @returns {Promise}
@@ -72,39 +76,44 @@ const removeTarget = async (name, regex, root = defaultTempPath) => {
 };
 
 
-
-const DAY_MS = 86400000;
-
 /**
  *
  * @param {object} options
  * @param {string} options.root - over-ride sonarlint work folder path for testing
  * @param {number} options.age
- * @param {Function} logger
- * @param {Promise<number>}
+ * @param {object=} logger
+ * @returns {Promise<number>} - number of folders removed
  */
 const removeSonarTemp = async ({ root, age }, logger = console) => {
-    const _root = root || join(process.env.HOME, '.sonarlint', 'work');
+    const _root = root || realpathSync(join(process.env.HOME, '.sonarlint'));
     const now = Date.now();
-    const folders = await readdir(_root, { withFileTypes: true })
-        .then(dirs =>
-            dirs
-                .filter(d => d.isDirectory())
-                .filter(d => {
-                    const { ctimeMs } = statSync(join(_root, d.name));
-                    const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
-                    return daysOld >= age;
-                })
-        );
-    logger.debug(`removing ${folders.length} folders`);
+    const DAY_MS = 86400000;
+    let folders = [];
+    try {
+        await fsPromises.access(_root, fsPromises.constants.R_OK | fsPromises.constants.W_OK);
 
-    return Promise.allSettled(
-        folders.map(async d => {
-            await remover(join(_root, d.name), { recursive: true }).then(() => `removed ${d.name}`);
-        })
-    ).then(r => {
-        return r.filter(f => f.status === 'fulfilled').length;
-    });
+        folders = await fsPromises.readdir(_root, { withFileTypes: true });
+        const targetFolders = folders.filter(d => d.isDirectory() && (d.name.startsWith('.sonarlinttmp_') || d.name.startsWith('xodus-local-only')));
+        const foldersToDelete = targetFolders.filter(async d => {
+            const { ctimeMs } = await fsPromises.stat(join(_root, d.name)).catch(() => ({ ctimeMs: 0 }));
+            const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
+            return daysOld >= age;
+        });
+
+        const deleteFolders = await Promise.allSettled(
+            foldersToDelete.map(d => remover(join(_root, d.name), { recursive: true })
+                .then(() => `removed ${d.name}`)
+            )
+        );
+
+        logger.debug(`removing ${folders.length} folders`);
+        return deleteFolders.filter(f => f.status === 'fulfilled').length;
+    }
+    catch {
+        return 0;
+    }
+
+
 };
 
 module.exports = {
