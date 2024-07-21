@@ -18,9 +18,38 @@ const {
     , hasCommits
 } = require('../src/common/git');
 
+// how might I check if the the git config user.name and user.email are configured?
+async function checkGitConfig() {
+    const git = gtools.git.simpleGit();
+
+    try {
+        let userName = await git.raw([ 'config', 'user.name' ]);
+        let userEmail = await git.raw([ 'config', 'user.email' ]);
+
+        if(!userName) {
+            userName = 'Jim Dandy';
+            await git.raw([ 'config', '--global', 'user.name', userName ]);
+        }
+        if(!userEmail) {
+            userEmail = 'jim@example.com';
+            // set global config
+            await git.raw([ 'config', '--global', 'user.email', userEmail ]);
+        }
+    }
+    catch {
+        // handle error
+        console.error('Failed to check git config');
+    }
+}
+
+
 describe('git module - non-sequential', function() {
+
     this.timeout(12000);
-    before(initBase);
+    before(async() => {
+        initBase();
+        await checkGitConfig();
+    });
     after(destroy);
     describe('currentBranch()', function() {
         it('should be test branch', async function() {
