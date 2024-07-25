@@ -80,7 +80,7 @@ describe('Cleaner Module', () => {
     });
     describe('removeSonarTemp', function() {
         afterEach(mockFS.restore);
-        const logStub = { debug: sinon.stub() };
+        const logStub = { debug: sinon.stub(), info: sinon.stub(), error: sinon.stub() };
         const rootPath = '.';
         const now = DateTime.now();
 
