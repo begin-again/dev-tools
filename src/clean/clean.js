@@ -101,8 +101,6 @@ const removeSonarTemp = async ({ root, age = 2 }, logger = console) => {
             const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
             return daysOld >= age ? d : null;
         })).then(results => results.filter(Boolean));
-            return daysOld >= age;
-        });
 
         logger.info(`Removing ${foldersToDelete.length} folders which are at least ${age} days ...`);
         const deleteFolders = await Promise.allSettled(
