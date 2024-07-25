@@ -96,9 +96,11 @@ const removeSonarTemp = async ({ root, age = 2 }, logger = console) => {
         folders = await fsPromises.readdir(_root, { withFileTypes: true });
         const targetFolders = folders.filter(d => d.isDirectory() && (d.name.startsWith('.sonarlinttmp_') || d.name.startsWith('xodus-local-only')));
 
-        const foldersToDelete = targetFolders.filter(async d => {
+        const foldersToDelete = await Promise.all(targetFolders.map(async d => {
             const { ctimeMs } = await fsPromises.stat(join(_root, d.name)).catch(() => ({ ctimeMs: 0 }));
             const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
+            return daysOld >= age ? d : null;
+        })).then(results => results.filter(Boolean));
             return daysOld >= age;
         });
 
