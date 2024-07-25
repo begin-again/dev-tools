@@ -18,6 +18,12 @@ const sonar = {
             , type: 'string'
             , default: join(process.env.HOME, '.sonarlint')
         })
+        .option('age', {
+            alias: 'a'
+            , describe: 'how many days to keep. Must be an integer > 1'
+            , type: 'number'
+            , default: 2
+        })
         .option('logger', {
             type: 'object'
             , default: console
@@ -28,6 +34,13 @@ const sonar = {
                 return true;
             }
             throw new Error('root path not found');
+        })
+        .check(argv => {
+            // eslint-disable-next-line no-magic-numbers
+            if(argv.age > 1 && argv.age <= 100 && Number.isInteger(argv.age)) {
+                return true;
+            }
+            throw new Error('age must be > 1');
         })
     , handler: async (args) => {
         const { root, age, logger } = args;
@@ -61,5 +74,3 @@ yargs(hideBin(process.argv))
     .version(false)
     .strict(true)
     .parse();
-
-

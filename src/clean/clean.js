@@ -5,7 +5,7 @@
  */
 const { join } = require('path');
 const { realpathSync } = require('fs');
-const fsPromises = require('fs').promises;
+const { promises: fsPromises, constants } = require('fs');
 const { tmpdir } = require('os');
 const logger = console;
 
@@ -80,17 +80,17 @@ const removeTarget = async (name, regex, root = defaultTempPath) => {
  *
  * @param {object} options
  * @param {string} options.root - over-ride sonarlint work folder path for testing
- * @param {number} options.age
+ * @param {number=} options.age
  * @param {object=} logger
  * @returns {Promise<number>} - number of folders removed
  */
-const removeSonarTemp = async ({ root, age }, logger = console) => {
+const removeSonarTemp = async ({ root, age = 2 }, logger = console) => {
     const _root = root || realpathSync(join(process.env.HOME, '.sonarlint'));
     const now = Date.now();
     const DAY_MS = 86400000;
     let folders = [];
     try {
-        await fsPromises.access(_root, fsPromises.constants.R_OK | fsPromises.constants.W_OK);
+        await fsPromises.access(_root, constants.R_OK | constants.W_OK);
 
         folders = await fsPromises.readdir(_root, { withFileTypes: true });
         const targetFolders = folders.filter(d => d.isDirectory() && (d.name.startsWith('.sonarlinttmp_') || d.name.startsWith('xodus-local-only')));
@@ -100,16 +100,17 @@ const removeSonarTemp = async ({ root, age }, logger = console) => {
             return daysOld >= age;
         });
 
+        logger.info(`Removing ${foldersToDelete.length} folders which are at least ${age} days ...`);
         const deleteFolders = await Promise.allSettled(
             foldersToDelete.map(d => remover(join(_root, d.name), { recursive: true })
                 .then(() => `removed ${d.name}`)
             )
         );
 
-        logger.debug(`removing ${folders.length} folders`);
         return deleteFolders.filter(f => f.status === 'fulfilled').length;
     }
-    catch {
+    catch (err) {
+        logger.error(`Error during sonar cleanup: ${err.message}`);
         return 0;
     }
 
