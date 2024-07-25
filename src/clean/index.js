@@ -45,8 +45,7 @@ const sonar = {
     , handler: async (args) => {
         const { root, age, logger } = args;
         try {
-            const result = await removeSonarTemp({ root, age }, logger);
-            logger.info(`sonar cleanup completed, ${result} folders removed`);
+            await removeSonarTemp({ root, age }, logger);
         }
         catch (err) {
             logger.error(err.message);

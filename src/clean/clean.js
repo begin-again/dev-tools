@@ -77,6 +77,7 @@ const removeTarget = async (name, regex, root = defaultTempPath) => {
 
 
 /**
+ * Remove old temporary folders created by SonarLint
  *
  * @param {object} options
  * @param {string} options.root - over-ride sonarlint work folder path for testing
@@ -94,6 +95,7 @@ const removeSonarTemp = async ({ root, age = 2 }, logger = console) => {
 
         folders = await fsPromises.readdir(_root, { withFileTypes: true });
         const targetFolders = folders.filter(d => d.isDirectory() && (d.name.startsWith('.sonarlinttmp_') || d.name.startsWith('xodus-local-only')));
+
         const foldersToDelete = targetFolders.filter(async d => {
             const { ctimeMs } = await fsPromises.stat(join(_root, d.name)).catch(() => ({ ctimeMs: 0 }));
             const daysOld = Math.floor((now - ctimeMs) / DAY_MS);
@@ -107,7 +109,20 @@ const removeSonarTemp = async ({ root, age = 2 }, logger = console) => {
             )
         );
 
-        return deleteFolders.filter(f => f.status === 'fulfilled').length;
+        const busyFoldersCount = deleteFolders.filter(f => f.status === 'rejected').length;
+        const deletedFoldersCount = deleteFolders.filter(f => f.status === 'fulfilled').length;
+
+        if(busyFoldersCount > 0 && deletedFoldersCount === 0) {
+            logger.info(`All folders are still in use and could not be deleted`);
+        }
+        else if(busyFoldersCount > 0 && deletedFoldersCount > 0) {
+            logger.info(`Removed ${deletedFoldersCount} folders, ${busyFoldersCount} folders are still in use`);
+        }
+        else if(busyFoldersCount === 0 && deletedFoldersCount > 0) {
+            logger.info(`Removed ${deletedFoldersCount} folders`);
+        }
+
+        return deletedFoldersCount;
     }
     catch (err) {
         logger.error(`Error during sonar cleanup: ${err.message}`);
