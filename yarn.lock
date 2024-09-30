@@ -2537,10 +2537,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mock-fs@npm:^5.2.0":
-  version: 5.2.0
-  resolution: "mock-fs@npm:5.2.0"
-  checksum: 10/4d00b0fb285de8406a47899f63ebbd64ad3def34daa05c54f0e046b2789a91fdd95d2de0fe732370d939ab8279f863a4c033bd798e4e8be1dac620171ce1c7dd
+"mock-fs@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "mock-fs@npm:5.3.0"
+  checksum: 10/794f3c31fb667ad656e24ced7bd43fba7a284c4cb470d677897c209a05dbf927381c6a2e0ad3abb51f47148008bf92278c8c7899e240592a7c8ea2fa2791c003
   languageName: node
   linkType: hard
 
@@ -2575,7 +2575,7 @@ __metadata:
     eslint-plugin-node: "npm:^11.1.0"
     luxon: "npm:^3.5.0"
     mocha: "npm:^10.6.0"
-    mock-fs: "npm:^5.2.0"
+    mock-fs: "npm:^5.3.0"
     nyc: "npm:^17.1.0"
     proxyquire: "npm:^2.1.3"
     randomatic: "npm:^3.1.1"
