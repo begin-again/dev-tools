@@ -18,12 +18,13 @@ class Engine {
 
     /**
      *
-     * @param {object} param0
+     * @param {object} [param0]
      * @param {{NVM_HOME?:string, NVM_BIN?:string}=} param0.env
      * @param {string} param0.defaultVersion
      * @param {import('../../types/index.ts').Version[]} param0.versions
      */
-    constructor({ env, defaultVersion, versions }) {
+    // @ts-ignore
+    constructor({ env, defaultVersion, versions } = {}) {
         const { NVM_BIN, NVM_HOME } = env || process.env;
         this._allVersions = versions || Engine.allInstalledNodeVersions({ NVM_BIN, NVM_HOME });
         this._versions = this._allVersions.filter(({ error }) => !error);
@@ -159,6 +160,7 @@ class Engine {
         const repoEngines = noPackage ? version : repositoryEngines;
         const repoName = basename(path);
 
+        // If a specific version is provided
         if(version) {
             const satisfies = this.satisfyingVersions(repoEngines);
             const _version = Engine.versionStringToObject(
@@ -166,7 +168,8 @@ class Engine {
                 satisfies,
                 oldest
             );
-            // _version is undefined if version is not in satisfies
+
+            // Check if the provided version is in the satisfying versions
             const found = satisfies.filter(
                 (v) => _version && v.version === _version.version
             )[0];
@@ -179,6 +182,7 @@ class Engine {
 
         }
 
+        // If the oldest compatible version is required
         if(oldest) {
             const _min = this.minInstalledSatisfyingVersion(repoEngines);
             if(_min) {
@@ -186,11 +190,13 @@ class Engine {
             }
         }
 
+        // If no specific version is required, use the latest compatible version
         const _max = this.maxInstalledSatisfyingVersion(repoEngines);
         if(_max) {
             return _max;
         }
 
+        // If no satisfying version is found, throw an error
         throw new RangeError(
             `${repoName} requires NodeJS version(s) '${repoEngines}' but no satisfying versions installed!`
         );
@@ -246,15 +252,16 @@ class Engine {
      * @memberof Engine
      */
     static versionStringToNumber (version) {
-        const versionParts = version.replace(/^v/, '').split('.');
-        const expandedVersion = versionParts.map((part, index) => index === 0 ? part : part.padStart(NumbersPadding, '0')).join('');
+        const expandedVersion = version
+            .replace(/^v/, '').split('.')
+            .map((part, index) => index === 0 ? part : part.padStart(NumbersPadding, '0'))
+            .join('');
         return parseInt(expandedVersion, 10);
     };
 
     // end of class
 }
 
-// TODO: move to common/repos
 /**
  * Obtains node engine range
  *

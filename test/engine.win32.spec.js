@@ -4,6 +4,7 @@
 import mockFS from 'mock-fs';
 import sinon from 'sinon';
 import chai, { expect } from 'chai';
+import os from 'node:os';
 
 let sinonChai;
 
@@ -15,7 +16,6 @@ let sinonChai;
 
 import semver from 'semver';
 import { Engine } from '../src/common/engine.js';
-import os from 'os';
 
 const myWindowsVersions = {
     'c:\\test': {
