@@ -32,8 +32,7 @@ const cmdKeys = {
         alias: 'r'
         , describe: 'root folder of development environment (/c/blah/blah). Default is DEVROOT'
         , type: 'array'
-
-        , default: process.env.DEVROOT
+        , default: [process.env.DEVROOT]
     }
     , 'date': {
         alias: 'd'
@@ -109,6 +108,27 @@ const isFuture = (checkDate) => {
     return _date > endOfToday;
 };
 
+
+/**
+ *
+ * @param {string} argName
+ * @param {boolean} [checkFuture]
+ * @returns  {boolean}
+ * @throws if date is not valid
+ */
+const validateArgDate = (argName, checkFuture) => {
+    return (argv) => {
+        const dt = `${argv[argName]}` || '';
+        if(dt) {
+            validateDate(dt, `--${argName}`);
+            if(checkFuture && isFuture(dt)) {
+                throw new Error(`--${argName} cannot exceed current date`);
+            }
+        }
+        return true;
+    };
+};
+
 /**
  * Parse command line and configures options
  *
@@ -141,36 +161,10 @@ const setOptions = (test) => {
             }
             return true;
         })
-        .check((argv) => {
-            /** @type {string} */
-            const dt = `${argv.date}` || '';
-            if(dt) {
-                validateDate(dt, '--date');
-                if(isFuture(dt)) {
-                    throw new Error('--date cannot exceed current date');
-                }
-            }
-            return true;
-        })
-        .check((argv) => {
-            /** @type {string} */
-            const dt = `${argv.fromDate}` || '';
-            if(dt) {
-                validateDate(dt, '--from-date');
-                if(isFuture(dt)) {
-                    throw new Error('--from-date cannot exceed current date');
-                }
-            }
-            return true;
-        })
-        .check((argv) => {
-            /** @type {string} */
-            const dt = `${argv.toDate}` || '';
-            if(dt) {
-                validateDate(dt, '--to-date');
-            }
-            return true;
-        })
+        .check(validateArgDate('date', true))
+        .check(validateArgDate('fromDate', true))
+        .check(validateArgDate('fromDate', true))
+        .check(validateArgDate('toDate'))
         .check((argv) => {
             const folderNames = Array.isArray(argv.folderNames) ? argv.folderNames : [];
             if(folderNames && !folderNames.length) {
@@ -179,7 +173,7 @@ const setOptions = (test) => {
             return true;
         })
         .check(argv => {
-            const devRoot = `${argv.devRoot}`;
+            const devRoot = argv.devRoot;
             return validatePath(devRoot);
         })
         .argv;
