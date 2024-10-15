@@ -13,6 +13,14 @@ module.exports = {
         , mocha: true
         , es2020: true
     }
+    , overrides: [
+        {
+            files: [ '*.mjs' ]
+            , parserOptions: {
+                sourceType: 'module'
+            }
+        }
+    ]
     , rules: {
         'array-bracket-spacing': [ 'error', 'always' ]
         , 'arrow-spacing': [ 'error', { 'before': true, 'after': true } ]

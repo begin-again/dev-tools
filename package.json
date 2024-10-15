@@ -1,6 +1,6 @@
 {
     "name": "my-dev-tools",
-    "version": "4.0.0",
+    "version": "5.0.0-beta.0",
     "main": "",
     "repository": "https://github.com/begin-again/dev-tools.git",
     "license": "MIT",
@@ -27,7 +27,7 @@
         "chai": "^4.5.0",
         "eslint": "^8.57.0",
         "eslint-plugin-node": "^11.1.0",
-        "mocha": "^10.6.0",
+        "mocha": "^10.7.3",
         "mock-fs": "^5.4.0",
         "nyc": "^17.1.0",
         "proxyquire": "^2.1.3",
