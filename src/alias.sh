@@ -11,7 +11,7 @@ alias ll='ls -ltrh'
 ## tools
 alias resource='source $HOME/.bashrc'
 alias clean='node $DEVROOT/dev-tools/src/clean/index.js'
-alias grefp='node $DEVROOT/dev-tools/src/grefplus'
+alias grefp='node $DEVROOT/dev-tools/src/grefplus/index.mjs'
 alias branches='node $DEVROOT/dev-tools/src/branches'
 alias nt='node $DEVROOT/dev-tools/src/node-tools'
 alias yn='node $DEVROOT/dev-tools/src/yarn'
