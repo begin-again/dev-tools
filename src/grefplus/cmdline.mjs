@@ -1,6 +1,6 @@
-const { accessSync, constants, lstatSync } = require('fs');
-const yargs = require('yargs');
-const { DateTime } = require('luxon');
+import { accessSync, constants, lstatSync } from 'node:fs';
+import yargs from 'yargs/yargs';
+import { DateTime } from 'luxon';
 
 const options = {
     dateOptions: 'yyyy-MM-dd hh:mm:ss a'
@@ -32,8 +32,7 @@ const cmdKeys = {
         alias: 'r'
         , describe: 'root folder of development environment (/c/blah/blah). Default is DEVROOT'
         , type: 'array'
-        // eslint-disable-next-line no-process-env
-        , default: process.env.DEVROOT
+        , default: [process.env.DEVROOT]
     }
     , 'date': {
         alias: 'd'
@@ -46,13 +45,14 @@ const cmdKeys = {
 /**
  * Validates from and to dates,
  *
- * @param {String} checkDate
+ * @param {string} checkDate
+ * @param {string} msg
  * @throws if date is not valid
  * @private
  */
 const validateDate = (checkDate, msg) => {
     try {
-        const parsed = DateTime.fromFormat(checkDate, options.allowedFormat);
+        const parsed = DateTime.fromFormat(checkDate.toString(), options.allowedFormat);
         if(!parsed.isValid) {
             throw new Error('unknown format');
         }
@@ -69,11 +69,11 @@ const validateDate = (checkDate, msg) => {
 /**
  * Aborts build if dev root path does not exist
  *
- * @param {String} devRoot
+ * @param {string[]} devRoot
  * @throws if path not accessible
  * @private
  */
-const validatePath = ({ devRoot }) => {
+const validatePath = (devRoot) => {
     let problematicRoot = null;
 
     devRoot.forEach(root => {
@@ -108,13 +108,35 @@ const isFuture = (checkDate) => {
     return _date > endOfToday;
 };
 
+
+/**
+ *
+ * @param {string} argName
+ * @param {boolean} [checkFuture]
+ * @returns  {boolean}
+ * @throws if date is not valid
+ */
+const validateArgDate = (argName, checkFuture) => {
+    return (argv) => {
+        const dt = `${argv[argName]}` || '';
+        if(dt) {
+            validateDate(dt, `--${argName}`);
+            if(checkFuture && isFuture(dt)) {
+                throw new Error(`--${argName} cannot exceed current date`);
+            }
+        }
+        return true;
+    };
+};
+
 /**
  * Parse command line and configures options
  *
- * @param {Boolean} test - used for testing only
+ * @param {Boolean} [test] - used for testing only
  */
 const setOptions = (test) => {
-    const argv = test || yargs
+    const argv = test || yargs(process.argv.slice(2))
+        // @ts-ignore
         .options(cmdKeys)
         .version(false)
         .help(true)
@@ -122,10 +144,11 @@ const setOptions = (test) => {
         .check((_argv) => {
             // super secret shortcut
             if(!_argv.date && !_argv.fromDate && !_argv.toDate && Number.isInteger(_argv._[0])) {
+                const days = Number(_argv._[0]);
                 const _date = DateTime
-                    .fromFormat(_argv._[0], options.allowedFormat)
-                    .plus({ days: _argv._[0] })
-                    .format('MM/DD/YY');
+                    .fromFormat(days.toString(), options.allowedFormat)
+                    .plus({ days })
+                    .toFormat('MM/DD/YY');
                 _argv.date = _date;
             }
             else {
@@ -138,53 +161,40 @@ const setOptions = (test) => {
             }
             return true;
         })
-        .check(({ date }) => {
-            if(date) {
-                validateDate(date, '--date');
-                if(isFuture(date)) {
-                    throw new Error('--date cannot exceed current date');
-                }
-            }
-            return true;
-        })
-        .check(({ fromDate }) => {
-            if(fromDate) {
-                validateDate(fromDate, '--from-date');
-                if(isFuture(fromDate)) {
-                    throw new Error('--from-date cannot exceed current date');
-                }
-            }
-            return true;
-        })
-        .check(({ toDate }) => {
-            if(toDate) {
-                validateDate(toDate, '--to-date');
-            }
-            return true;
-        })
-        .check(({ folderNames }) => {
+        .check(validateArgDate('date', true))
+        .check(validateArgDate('fromDate', true))
+        .check(validateArgDate('fromDate', true))
+        .check(validateArgDate('toDate'))
+        .check((argv) => {
+            const folderNames = Array.isArray(argv.folderNames) ? argv.folderNames : [];
             if(folderNames && !folderNames.length) {
                 throw new Error('--folder-names requires at least one name');
             }
             return true;
         })
-        .check(validatePath)
+        .check(argv => {
+            const devRoot = argv.devRoot;
+            return validatePath(devRoot);
+        })
         .argv;
 
+    // @ts-ignore
     if(argv.date) {
+        // @ts-ignore
         const date = DateTime.fromFormat(argv.date, options.allowedFormat);
-        module.exports.options.fromDate = date.startOf('day');
-        module.exports.options.toDate = date.endOf('day');
+        options.fromDate = date.startOf('day');
+        options.toDate = date.endOf('day');
     }
     else {
-        module.exports.options.fromDate = argv.fromDate ? DateTime.fromFormat(argv.fromDate, options.allowedFormat).startOf('day') : null;
-        module.exports.options.toDate = argv.toDate ? DateTime.fromFormat(argv.toDate, options.allowedFormat).endOf('day') : null;
+        // @ts-ignore
+        options.fromDate = argv.fromDate ? DateTime.fromFormat(argv.fromDate, options.allowedFormat).startOf('day') : null;
+        // @ts-ignore
+        options.toDate = argv.toDate ? DateTime.fromFormat(argv.toDate, options.allowedFormat).endOf('day') : null;
     }
-    module.exports.options.devRoot = argv.devRoot;
-    module.exports.options.folderNames = argv.folderNames || [];
+    // @ts-ignore
+    options.devRoot = argv.devRoot;
+    // @ts-ignore
+    options.folderNames = argv.folderNames || [];
 };
 
-module.exports = {
-    options
-    , setOptions
-};
+export { options, setOptions };

@@ -1,12 +1,19 @@
 /* eslint no-console:off */
-require('./cmdline').setOptions();
-const { basename } = require('path');
-const { allRepoPaths } = require('../common/repos');
-const { promisify } = require('util');
-const _exec = promisify(require('child_process').exec);
-const { DateTime } = require('luxon');
-const { options } = require('./cmdline');
+
+import { setOptions, options } from './cmdline.mjs';
+import { basename } from 'node:path';
+import { promisify } from 'node:util';
+import { exec } from 'node:child_process';
+const _exec = promisify(exec);
+
+import { DateTime } from 'luxon';
+
+import repos from '../common/repos.js';
+const { allRepoPaths } = repos;
+
 const DateLength = 6;
+
+setOptions();
 
 /**
  * Creates command string
