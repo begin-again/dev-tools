@@ -940,6 +940,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"debug@npm:^4.4.0":
+  version: 4.4.1
+  resolution: "debug@npm:4.4.1"
+  dependencies:
+    ms: "npm:^2.1.3"
+  peerDependenciesMeta:
+    supports-color:
+      optional: true
+  checksum: 10/8e2709b2144f03c7950f8804d01ccb3786373df01e406a0f66928e47001cf2d336cbed9ee137261d4f90d68d8679468c755e3548ed83ddacdc82b194d2468afe
+  languageName: node
+  linkType: hard
+
 "decamelize@npm:^1.2.0":
   version: 1.2.0
   resolution: "decamelize@npm:1.2.0"
@@ -2431,7 +2443,7 @@ __metadata:
     randomatic: "npm:^3.1.1"
     semver: "npm:^7.7.2"
     shelljs: "npm:^0.10.0"
-    simple-git: "npm:^3.27.0"
+    simple-git: "npm:^3.28.0"
     sinon: "npm:^19.0.4"
     sinon-chai: "npm:^3.7.0"
     uuid: "npm:11.1.0"
@@ -3050,14 +3062,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"simple-git@npm:^3.27.0":
-  version: 3.27.0
-  resolution: "simple-git@npm:3.27.0"
+"simple-git@npm:^3.28.0":
+  version: 3.28.0
+  resolution: "simple-git@npm:3.28.0"
   dependencies:
     "@kwsites/file-exists": "npm:^1.1.1"
     "@kwsites/promise-deferred": "npm:^1.1.1"
-    debug: "npm:^4.3.5"
-  checksum: 10/c56c88dd1b5f6ad45c6034eb44f25ee61929a2a5832bd015b8b1b71331071e43bf631edbcc4a8529fa692f9b17576595d95c89218bc5d67be66ed0c1aedc7a76
+    debug: "npm:^4.4.0"
+  checksum: 10/2582e6c1c50db8aa0b7d07ed0f0f86eb4ea647e6b33d1596cf44e509c7b658372da9db1dcbea626e7d71e30e8d826a84410bbc73c5d1066f2526724a31836f81
   languageName: node
   linkType: hard
 
