@@ -24,7 +24,7 @@
         "yargs": "^17.7.2"
     },
     "devDependencies": {
-        "chai": "^4.5.0",
+        "chai": "^6.0.1",
         "eslint": "^8.57.0",
         "eslint-plugin-node": "^11.1.0",
         "mocha": "^10.8.2",
