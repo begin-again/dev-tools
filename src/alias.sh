@@ -31,6 +31,6 @@ alias gl='gitlog'
 
 alias gsl='git stash list --date=local'
 alias gst='git status'
-alias gtemp='gcm --no-verify -am "temp"'
+alias gtemp='git commit --no-gpg-sign --no-verify -am "temp"'
 alias pull='git pull'
 alias stash-all='git stash save --include-untracked'
