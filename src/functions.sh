@@ -67,18 +67,27 @@ gref() {
 gitlog() {
     entries=$1
     branch="$2"
-    if [ -n "$entries" ]; then
-        entries="-${entries#-}"
-        if [ -n "$branch" ]; then
-            git log  "$branch" --format="%h %cd | %an | %(describe:tags) | %s" --date=format:"%m-%d-%y %H:%M" $entries | column -ts '|' -T 4
-        else
-            git log  --format="%h %cd | %an | %(describe:tags) | %s" --date=format:"%m-%d-%y %H:%M" $entries | column -ts '|' -T 4
-        fi
+
+    # normalize entry count like: gitlog 25  or gitlog -25
+    [ -n "$entries" ] && entries="-${entries#-}"
+
+    fmt='%h | %p | %cd | %an | %(describe:tags) | %s'
+    datearg="--date=format:%m-%d-%y %H:%M"
+
+    if [ -n "$branch" ]; then
+        git log "$branch" --format="$fmt" "$datearg" $entries
     else
-        if [ -n "$branch" ]; then
-            git log  "$branch" --format="%h %cd | %an | %(describe:tags) | %s" --date=format:"%m-%d-%y %H:%M" | column -ts '|' -T 4
-        else
-            git log  --format="%h %cd | %an | %(describe:tags) | %s" --date=format:"%m-%d-%y %H:%M" | column -ts '|' -T 4
-        fi
-    fi
+        git log --format="$fmt" "$datearg" $entries
+    fi | awk -F'|' '
+        {
+          # trim whitespace
+          for (i=1;i<=NF;i++) gsub(/^[ \t]+|[ \t]+$/, "", $i)
+
+          commit=$1
+          parents=$2   # all parent hashes (blank if none)
+
+          printf "%s | %s | %s | %s | %s | %s\n", \
+                 commit, parents, $3, $4, $5, $6
+        }
+    ' | column -ts '|'
 }
