@@ -28,6 +28,7 @@ alias gcm='git commit'
 __git_complete gco _git_checkout
 alias gco='git checkout'
 alias gl='gitlog'
+alias glp='gitlogp'
 
 alias gsl='git stash list --date=local'
 alias gst='git status'
