@@ -91,3 +91,80 @@ gitlog() {
         }
     ' | column -ts '|'
 }
+
+
+gitlogp() {
+    entries=$1
+    branch="$2"
+    [ -n "$entries" ] && entries="-${entries#-}"
+
+    fmt='%h|%p|%cd|%an|%(describe:tags)|%s'
+    datearg="--date=format:%m-%d-%y %H:%M"
+
+    if [ -n "$branch" ]; then
+        git log "$branch" --format="$fmt" "$datearg" $entries
+    else
+        git log --format="$fmt" "$datearg" $entries
+    fi | awk -F'|' '
+        {
+          commit=$1
+          parents=$2
+          date=$3
+          author=$4
+          tag=$5
+          subject=$6
+
+          order[NR]=commit
+          parentsOf[commit]=parents
+          dateOf[commit]=date
+          authorOf[commit]=author
+          tagOf[commit]=tag
+          subjectOf[commit]=subject
+
+          n=split(parents, arr, " ")
+          parentCount[commit]=n
+
+          for (i=1; i<=n; i++) {
+            if (arr[i] != "") parentOf[commit]=parentOf[commit] " " arr[i]
+          }
+
+          # mark the *second parent* of merges
+          if (n > 1) {
+            markBranch[arr[2]]=1
+          }
+        }
+        END {
+          # propagate [side] marks backwards
+          changed=1
+          while (changed) {
+            changed=0
+            for (c in parentOf) {
+              split(parentOf[c], arr, " ")
+              for (i=1;i<=length(arr);i++) {
+                p=arr[i]
+                if (p in markBranch && !(c in markBranch)) {
+                  markBranch[c]=1
+                  changed=1
+                }
+              }
+            }
+          }
+
+          for (i=1; i<=NR; i++) {
+            c=order[i]
+
+            # decide marker
+            if (parentCount[c] > 1) {
+              flag="[merge]"
+            } else if (c in markBranch) {
+              flag="[side]"
+            } else {
+              flag="      "
+            }
+
+            printf "%-8s %-7s  %-20s  %-14s  %-15s  %-25s  %s\n", \
+                   c, flag, parentsOf[c], dateOf[c], authorOf[c], tagOf[c], subjectOf[c]
+          }
+        }
+    '
+}
