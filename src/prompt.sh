@@ -30,16 +30,41 @@ Time12h="\T"
 PathShort="\w"
 Date="\d"
 
+# obtain the folder name of the selected node version (from nvm symlink)
+get_symlink_basename() {
+    # Check if NVM_SYMLINK is set
+    if [ -z "$NVM_SYMLINK" ]; then
+        return
+    fi
+
+    # Get the actual target path of the symlink
+    local target
+    target=$(readlink "$NVM_SYMLINK")
+
+    # Extract the basename of the folder
+    local version="${target##*/}"  # Get the last part after the last '/'
+
+    # Echo the extracted version
+    echo "$version"
+}
+
+# Helper: get parent directory name (portable)
+get_parent_dirname() {
+    local dir
+    dir="${NVM_BIN%/*}"
+    echo "${dir##*/}"
+}
+
 # test if NVM_SYMLINK exists
 if [[ -L "$NVM_SYMLINK" ]]; then
     # prompt for use in windows
     echo "   -- windows prompt"
-    export PS1=$Cyan$Time12h$Color_Off$Purple' <$(basename $(readlink "$NVM_SYMLINK"))>'$Color_Off'$(git branch &>/dev/null;\
+    export PS1=$Cyan$Time12h$Color_Off$Purple' <$(get_symlink_basename)>'$Color_Off'$(git branch &>/dev/null;\
     if [ $? -eq 0 ]; then \
     echo "$(echo `git status` | grep "nothing to commit" > /dev/null 2>&1; \
     if [ "$?" -eq "0" ]; then \
         # Clean repository - nothing to commit
-        echo "'$Green'"$(__git_ps1 " (%s)"); \
+        echo "'$Green'"$(__git_ps1 " {%s}"); \
     else \
         # Changes to working tree
         echo "'$Red'"$(__git_ps1 " {%s}"); \
@@ -54,12 +79,12 @@ fi
 if [ -d "$NVM_DIR" ]; then
     echo "   -- linux prompt"
     # prompt for use in linux
-    export PS1=$Cyan$Time12h$Color_Off$Purple' <$(basename $(dirname "$NVM_BIN"))>'$Color_Off'$(git branch &>/dev/null;\
+    export PS1=$Cyan$Time12h$Color_Off$Purple' <$(get_parent_dirname)>'$Color_Off'$(git branch &>/dev/null;\
     if [ $? -eq 0 ]; then \
     echo "$(echo `git status` | grep "nothing to commit" > /dev/null 2>&1; \
     if [ "$?" -eq "0" ]; then \
         # Clean repository - nothing to commit
-        echo "'$Green'"$(__git_ps1 " (%s)"); \
+        echo "'$Green'"$(__git_ps1 " {%s}"); \
     else \
         # Changes to working tree
         echo "'$Red'"$(__git_ps1 " {%s}"); \

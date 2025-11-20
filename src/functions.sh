@@ -92,11 +92,34 @@ gitlog() {
     ' | column -ts '|'
 }
 
-
+# pretty one line git log of current repository with merge and side branch indicators
 gitlogp() {
-    entries=$1
-    branch="$2"
-    [ -n "$entries" ] && entries="-${entries#-}"
+    entries=""
+    branch=""
+    reverseFlag=0
+
+    # parse named args
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -n|--entries)
+                entries="-$2"
+                shift 2
+                ;;
+            -b|--branch)
+                branch="$2"
+                shift 2
+                ;;
+            -r|--reverse)
+                reverseFlag=1
+                shift
+                ;;
+            *)
+                echo "Unknown option: $1"
+                echo "Usage: gitlogp [-n N] [-b branch] [-r]"
+                return 1
+                ;;
+        esac
+    done
 
     fmt='%h|%p|%cd|%an|%(describe:tags)|%s'
     datearg="--date=format:%m-%d-%y %H:%M"
@@ -105,7 +128,7 @@ gitlogp() {
         git log "$branch" --format="$fmt" "$datearg" $entries
     else
         git log --format="$fmt" "$datearg" $entries
-    fi | awk -F'|' '
+    fi | awk -F'|' -v reverseFlag=$reverseFlag '
         {
           commit=$1
           parents=$2
@@ -124,17 +147,11 @@ gitlogp() {
           n=split(parents, arr, " ")
           parentCount[commit]=n
 
-          for (i=1; i<=n; i++) {
-            if (arr[i] != "") parentOf[commit]=parentOf[commit] " " arr[i]
-          }
 
-          # mark the *second parent* of merges
-          if (n > 1) {
-            markBranch[arr[2]]=1
-          }
+          if (n > 1) markBranch[arr[2]]=1
         }
         END {
-          # propagate [side] marks backwards
+          # propagate [side]
           changed=1
           while (changed) {
             changed=0
@@ -150,20 +167,33 @@ gitlogp() {
             }
           }
 
-          for (i=1; i<=NR; i++) {
-            c=order[i]
-
-            # decide marker
-            if (parentCount[c] > 1) {
-              flag="[merge]"
-            } else if (c in markBranch) {
-              flag="[side]"
-            } else {
-              flag="      "
+          # decide iteration order
+          if (reverseFlag) {
+            for (i=NR; i>=1; i--) {
+              c=order[i]
+              if (parentCount[c] > 1) {
+                flag="[merge]"
+              } else if (c in markBranch) {
+                flag="[side]"
+              } else {
+                flag="       "
+              }
+              printf "%-8s %-7s | %-20s | %-14s | %-15s | %-25s | %s\n", \
+                     c, flag, parentsOf[c], dateOf[c], authorOf[c], tagOf[c], subjectOf[c]
             }
-
-            printf "%-8s %-7s  %-20s  %-14s  %-15s  %-25s  %s\n", \
-                   c, flag, parentsOf[c], dateOf[c], authorOf[c], tagOf[c], subjectOf[c]
+          } else {
+            for (i=1; i<=NR; i++) {
+              c=order[i]
+              if (parentCount[c] > 1) {
+                flag="[merge]"
+              } else if (c in markBranch) {
+                flag="[side]"
+              } else {
+                flag="       "
+              }
+              printf "%-8s %-7s | %-20s | %-14s | %-15s | %-25s | %s\n", \
+                     c, flag, parentsOf[c], dateOf[c], authorOf[c], tagOf[c], subjectOf[c]
+            }
           }
         }
     '
