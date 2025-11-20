@@ -115,7 +115,7 @@ gitlogp() {
                 ;;
             *)
                 echo "Unknown option: $1"
-                echo "Usage: gitlog [-n N] [-b branch] [-r]"
+                echo "Usage: gitlogp [-n N] [-b branch] [-r]"
                 return 1
                 ;;
         esac
