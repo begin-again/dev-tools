@@ -146,7 +146,7 @@ gitlogp() {
 
           n=split(parents, arr, " ")
           parentCount[commit]=n
-          for (i=1; i<=n; i++) if (arr[i] != "") parentOf[commit]=parentOf[commit] " " arr[i]
+
 
           if (n > 1) markBranch[arr[2]]=1
         }
