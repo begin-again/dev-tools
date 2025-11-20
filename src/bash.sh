@@ -14,6 +14,8 @@ shopt -s histverify
 # Git completion support
 # shellcheck disable=SC1091
 source "$DEVROOT/dev-tools/.git-completion-support"
+# shellcheck disable=SC1091
+source "$DEVROOT/dev-tools/.git-prompt-support"
 
 # Command Prompt
 # shellcheck disable=SC1091
