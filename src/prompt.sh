@@ -34,8 +34,7 @@ Date="\d"
 get_symlink_basename() {
     # Check if NVM_SYMLINK is set
     if [ -z "$NVM_SYMLINK" ]; then
-        echo "NVM_SYMLINK is not set."
-        return 1
+        return
     fi
 
     # Get the actual target path of the symlink
