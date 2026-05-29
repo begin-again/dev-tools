@@ -59,9 +59,9 @@ const validateDate = (checkDate, msg) => {
         return true;
     }
     catch (e) {
-        const error = new Error();
-        error.message = `${msg} not recognized as a date [${checkDate}]. Valid formats are: ${options.allowedFormat}`;
-        error.cause = e.message;
+        const message = `${msg} not recognized as a date [${checkDate}]. Valid formats are: ${options.allowedFormat}`;
+        const error = new Error(message);
+        error.cause = e;
         throw error;
     }
 };

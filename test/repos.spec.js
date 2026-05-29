@@ -4,12 +4,11 @@ const { expect } = chai;
 chai.use(require('sinon-chai'));
 
 const mockFS = require('mock-fs');
-const { join } = require('path');
+const { join, sep } = require('node:path');
 const { allRepoPaths
     , getBinaryPaths
     , getPackage
 } = require('../src/common/repos');
-const { sep } = require('path');
 
 const fakePackage = {
     'name': 'faker'
@@ -49,51 +48,55 @@ const fake = {
 };
 
 // @TODO: mock out fileExists and folderExists
-describe('Repositories Modules', () => {
-    describe('allRepPaths', () => {
+describe('Repositories Modules', function () {
+    describe('allRepPaths', function () {
         before(() => {
             mockFS(fake);
         });
         after(mockFS.restore);
-        it('should find git repos', () => {
-            const result = allRepoPaths('./root');
+        it('should find git repos', async function() {
+            const result = await allRepoPaths('./root');
 
             expect(result).an('array').of.length(2);
             expect(result).contains(`root${sep}folder1`);
             expect(result).contains(`root${sep}folder2`);
         });
-        it('should find only named git repos', () => {
-            const result = allRepoPaths('./root', [ 'folder1' ]);
+        it('should find only named git repos', async function() {
+            const result = await allRepoPaths('./root', [ 'folder1' ]);
 
             expect(result).an('array').of.length(1);
             expect(result).contains(`root${sep}folder1`);
         });
-        it('should not find any git repos when named is not a git repo', () => {
-            const result = allRepoPaths('./root', [ 'folder3' ]);
+        it('should not find any git repos when named is not a git repo', async function() {
+            const result = await allRepoPaths('./root', [ 'folder3' ]);
 
             expect(result).an('array').of.length(0);
         });
-        it('should not find any git repos when root does not contain repos in immediate sub folders', () => {
-            const result = allRepoPaths('.');
+        it('should not find any git repos when root does not contain repos in immediate sub folders', async function() {
+            const result = await allRepoPaths('.');
 
             expect(result).an('array').of.length(0);
         });
     });
-    describe('getPackage()', () => {
-        it('should return empty object on failure', () => {
+    describe('getPackage()', function () {
+        it('should return empty object on failure', async function () {
             mockFS({ repo: { } });
 
-            const { name, error } = getPackage(join('repo', 'package.json'));
+            const { name, error } = await getPackage(join('repo', 'package.json'));
 
             expect(name).to.be.undefined;
             expect(error).to.be.true;
 
             mockFS.restore();
         });
-        it('should return parsed JSON on success', () => {
-            mockFS({ repo: { 'package.json': JSON.stringify({ name: 'hello' }) } });
+        it('should return parsed JSON on success', async function () {
+            const repo = {
+                'package.json': JSON.stringify({ name: 'hello' })
+            };
+            mockFS({ repo });
 
-            const { name, error } = getPackage(join('repo', 'package.json'));
+            const file = join('repo', 'package.json');
+            const { name, error } = await getPackage(file);
 
             expect(name).equals('hello');
             expect(error).to.be.undefined;
@@ -101,14 +104,14 @@ describe('Repositories Modules', () => {
             mockFS.restore();
         });
     });
-    describe('getBinaryPaths()', () => {
-        it('should be empty object on join fails', () => {
+    describe('getBinaryPaths()', function () {
+        it('should be empty object on join fails', function () {
             const { buildRoot, gulpFile } = getBinaryPaths();
 
             expect(buildRoot).to.be.undefined;
             expect(gulpFile).to.be.undefined;
         });
-        it('buildRoot should be within tooling', () => {
+        it('buildRoot should be within tooling', function () {
             const { buildRoot, gulpFile } = getBinaryPaths('myBuilder', 'myRepo', 'myRoot');
 
             expect(buildRoot).matches(/^myRoot/);
@@ -116,7 +119,7 @@ describe('Repositories Modules', () => {
             expect(gulpFile).to.match(/myBuilder/);
             expect(gulpFile).to.match(/gulp\.js$/);
         });
-        it('buildRoot should be in calling repo', () => {
+        it('buildRoot should be in calling repo', function () {
             const { buildRoot, gulpFile } = getBinaryPaths('', 'myRepo', 'myRoot');
 
             expect(buildRoot).matches(/^myRepo/);
