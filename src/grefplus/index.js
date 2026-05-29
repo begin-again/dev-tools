@@ -49,7 +49,7 @@ const filterPeriod = (item) => {
 /**
  * Obtains the git reflogs result
  * @param  {string} repo - full path to a repository
- * @param  {Array}  errors - place to store skippable errors
+ * @param  {{repo:string, error:string}[]}  errors - place to store skippable errors
  * @return {Promise<{date: DateTime, body: string, repo: string}[]>}  objects containing date, body, and the repository base name
  */
 async function processRepo(repo, errors) {
@@ -76,7 +76,7 @@ async function processRepo(repo, errors) {
         return lines;
     }
     catch (err) {
-        errors.push({ repo: basename(repo), error: err ? err.message : 'Unknown error' });
+        errors.push({ repo, error: err ? err.message : 'Unknown error' });
         // continue to next repo but be sure to return empty array
         return [];
     }
@@ -117,10 +117,16 @@ async function main() {
         const paths = await allRepoPaths(root, options.folderNames);
         repos.push(...paths);
     }
-    const promises = repos.map(repo => processRepo(repo, errors));
 
     try {
-        const result = await Promise.all(promises);
+        const result = [];
+        const concurrency = 8;
+        for(let i = 0; i < repos.length; i += concurrency) {
+            const batch = repos
+                .slice(i, i + concurrency)
+                .map(repo => processRepo(repo, errors));
+            result.push(...await Promise.all(batch));
+        }
         const sorted = result
             .flat()
             .sort((a, b) => a.date.valueOf() - b.date.valueOf());
