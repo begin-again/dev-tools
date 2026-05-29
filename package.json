@@ -19,8 +19,8 @@
         "luxon": "^3.7.2",
         "semver": "^7.7.3",
         "shelljs": "^0.10.0",
-        "simple-git": "^3.32.3",
-        "uuid": "11.1.0",
+        "simple-git": "^3.36.0",
+        "uuid": "11.1.1",
         "yargs": "^17.7.2"
     },
     "devDependencies": {

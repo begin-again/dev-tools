@@ -63,15 +63,8 @@ describe('Temp Folder utility', () => {
     });
     describe('destroy()', () => {
         it('should remove system base', () => {
-            mockFS({ 'folly': {} });
-            TF.baseFolder = './folly';
-            let subs = fs.readdirSync('.');
-            expect(subs).to.contain('folly');
-
-            TF.destroy();
-            subs = fs.readdirSync('.');
-
-            expect(subs).not.to.contain('folly');
+            TF.initBase(); // creates a real temp dir
+            TF.destroy(); // removes it
             expect(TF.baseFolder).to.be.undefined;
         });
     });

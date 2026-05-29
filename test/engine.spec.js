@@ -3,8 +3,8 @@ const { expect } = chai;
 const sinon = require('sinon');
 chai.use(require('sinon-chai'));
 const mockFS = require('mock-fs');
-const { sep } = require('path');
-const { platform } = require('os');
+const { sep } = require('node:path');
+const { platform } = require('node:os');
 const isWindows = platform() === 'win32';
 const proxyquire = require('proxyquire').noCallThru();
 
@@ -506,7 +506,7 @@ describe('Engine Module', function() {
         });
     });
     describe('versionToUseValidator()', function() {
-        let satisfyingVersions; let maxInstalledSatisfyingVersion;let versionStringToObject;
+        let satisfyingVersions; let maxInstalledSatisfyingVersion; let versionStringToObject;
         let minInstalledSatisfyingVersion;
         beforeEach(function() {
             sinon.stub(engine, 'properNodeVersions');
@@ -516,8 +516,8 @@ describe('Engine Module', function() {
                 versionStringToObject = sinon.stub(engine, 'versionStringToObject');
                 satisfyingVersions = sinon.stub(engine, 'satisfyingVersions');
             });
-            it('should throw when specified version is not compatible with target repository', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
+            it('should throw when specified version is not compatible with target repository', async function() {
+                sinon.stub(engine, 'repositoryEngines').resolves('^8.11.1 || ^10.13.0 || ^12.13.0');
 
                 const satVersions = [];
                 satisfyingVersions.callsFake(() => satVersions);
@@ -525,10 +525,18 @@ describe('Engine Module', function() {
                 const expectedMessage = 'requires NodeJS version(s) \'^8.11.1 || ^10.13.0 || ^12.13.0\' but got \'14.1.1\'';
                 const path = '';
                 const version = '14.1.1';
-                expect(() => engine.versionToUseValidator({ path, version })).to.Throw(RangeError, expectedMessage);
+
+                try {
+                    await engine.versionToUseValidator({ path, version });
+                    expect.fail('expected to throw');
+                }
+                catch (error) {
+                    expect(error).to.be.instanceOf(RangeError);
+                    expect(error.message).to.include(expectedMessage);
+                }
             });
-            it('should be v12.13.1', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
+            it('should be v12.13.1', async function() {
+                sinon.stub(engine, 'repositoryEngines').resolves('^8.11.1 || ^10.13.0 || ^12.13.0');
 
                 const satVersions = [ { version: 'v12.13.1' }, { version: 'v12.19.1' }, { version: 'v8.11.1' } ];
                 satisfyingVersions.callsFake(() => satVersions);
@@ -537,15 +545,34 @@ describe('Engine Module', function() {
                 const path = '';
                 const version = '12.13.1';
 
-                const result = engine.versionToUseValidator({ path, version });
+                const result = await engine.versionToUseValidator({ path, version });
 
                 expect(result.version).to.equal(expectedVersion);
             });
-            it('should pick 16.13.0 -- issue 116', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^12.13.0 || ^14.15.0 || ^16.13.0');
-                const satVersions = [ { version: 'v17.0.1' }, { version: 'v16.13.0' }, { version: 'v16.12.0' }, { version: 'v14.18.1' } ];
+            it('should pick 16.13.0 -- issue 116', async function() {
+                sinon.stub(engine, 'repositoryEngines').resolves('^12.13.0 || ^14.15.0 || ^16.13.0');
+                const satVersions = [ { version: 'v16.13.0' }, { version: 'v16.12.0' }, { version: 'v14.18.1' } ];
                 satisfyingVersions.callsFake(() => satVersions);
-                versionStringToObject.callsFake(() => ({ version: 'v12.13.1' }));
+                versionStringToObject.callsFake(() => ({ version: 'v16.13.0' }));
+                const path = '';
+                const version = '16.13.0';
+
+                const result = await engine.versionToUseValidator({ path, version });
+
+                expect(result.version).to.equal('v16.13.0');
+            });
+            it('should pick oldest when oldest is true', async function() {
+                sinon.stub(engine, 'repositoryEngines').resolves('^12.13.0 || ^14.15.0 || ^16.13.0');
+                const satVersions = [ { version: 'v16.13.0' }, { version: 'v16.12.0' }, { version: 'v14.18.1' } ];
+                satisfyingVersions.callsFake(() => satVersions);
+                versionStringToObject.callsFake(() => ({ version: 'v14.18.1' }));
+                const path = '';
+                const version = '14.18.1';
+                const oldest = true;
+
+                const result = await engine.versionToUseValidator({ path, version, oldest });
+
+                expect(result.version).to.equal('v14.18.1');
             });
         });
         describe('default', function() {
@@ -553,32 +580,66 @@ describe('Engine Module', function() {
                 maxInstalledSatisfyingVersion = sinon.stub(engine, 'maxInstalledSatisfyingVersion');
                 minInstalledSatisfyingVersion = sinon.stub(engine, 'minInstalledSatisfyingVersion');
             });
-            it('should throw when version not specified and not installed versions satisfy', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
+            it('should throw when version not specified and no installed versions satisfy', async function() {
+                sinon.stub(engine, 'repositoryEngines').resolves('^8.11.1 || ^10.13.0 || ^12.13.0');
                 maxInstalledSatisfyingVersion.callsFake(() => undefined);
                 const expectedMessage = 'repo requires NodeJS version(s) \'^8.11.1 || ^10.13.0 || ^12.13.0\' but no satisfying versions installed!';
                 const path = 'projects/repo';
 
-                expect(() => engine.versionToUseValidator({ path })).to.Throw(RangeError, expectedMessage);
+                try {
+                    await engine.versionToUseValidator({ path });
+                    expect.fail('expected to throw');
+                }
+                catch (error) {
+                    expect(error).to.be.instanceOf(RangeError);
+                    expect(error.message).to.equal(expectedMessage);
+                }
             });
-            it('should be 12.11.1 when oldest not specified', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
+            it('should be 12.11.1 when oldest not specified', async function() {
+                sinon.stub(engine, 'repositoryEngines').resolves('^8.11.1 || ^10.13.0 || ^12.13.0');
                 maxInstalledSatisfyingVersion.callsFake(() => ({ version: 'v12.11.1' }));
                 const path = 'projects/repo';
 
-                const result = engine.versionToUseValidator({ path });
+                const result = await engine.versionToUseValidator({ path });
 
                 expect(result.version).to.equal('v12.11.1');
             });
-            it('should be 12.11.1 when oldest is true', function() {
-                sinon.stub(engine, 'repositoryEngines').callsFake(() => '^8.11.1 || ^10.13.0 || ^12.13.0');
+            it('should be 12.11.1 when oldest is true', async function() {
+                sinon.stub(engine, 'repositoryEngines').resolves('^8.11.1 || ^10.13.0 || ^12.13.0');
                 minInstalledSatisfyingVersion.callsFake(() => ({ version: 'v12.11.1' }));
                 const path = 'projects/repo';
                 const oldest = true;
 
-                const result = engine.versionToUseValidator({ path, oldest });
+                const result = await engine.versionToUseValidator({ path, oldest });
 
                 expect(result.version).to.equal('v12.11.1');
+            });
+            it('should use max when oldest is false and min is not needed', async function() {
+                sinon.stub(engine, 'repositoryEngines').resolves('^8.11.1 || ^10.13.0 || ^12.13.0');
+                maxInstalledSatisfyingVersion.callsFake(() => ({ version: 'v12.19.1' }));
+                const path = 'projects/repo';
+                const oldest = false;
+
+                const result = await engine.versionToUseValidator({ path, oldest });
+
+                expect(result.version).to.equal('v12.19.1');
+                expect(minInstalledSatisfyingVersion).not.called;
+            });
+            it('should throw when oldest is true and no satisfying versions installed', async function() {
+                sinon.stub(engine, 'repositoryEngines').resolves('^8.11.1 || ^10.13.0 || ^12.13.0');
+                minInstalledSatisfyingVersion.callsFake(() => undefined);
+                maxInstalledSatisfyingVersion.callsFake(() => undefined);
+                const path = 'projects/repo';
+                const oldest = true;
+
+                try {
+                    await engine.versionToUseValidator({ path, oldest });
+                    expect.fail('expected to throw');
+                }
+                catch (error) {
+                    expect(error).to.be.instanceOf(RangeError);
+                    expect(error.message).to.include('but no satisfying versions installed!');
+                }
             });
         });
     });
