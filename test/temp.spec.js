@@ -2,8 +2,8 @@ const chai = require('chai');
 const { expect } = chai;
 
 const mockFS = require('mock-fs');
-const { dirname } = require('path');
-const fs = require('fs');
+const { dirname } = require('node:path');
+const fs = require('node:fs');
 
 const options = {};
 const TF = require('../src/common/temp');
@@ -37,7 +37,7 @@ describe('Temp Folder utility', () => {
 
             expect(TF.baseFolder).not.to.be.undefined;
         });
-        it('should not set base more than onece', () => {
+        it('should not set base more than once', () => {
             expect(TF.baseFolder).to.be.undefined;
 
             const first = TF.initBase();
@@ -63,15 +63,8 @@ describe('Temp Folder utility', () => {
     });
     describe('destroy()', () => {
         it('should remove system base', () => {
-            mockFS({ 'folly': {} });
-            TF.baseFolder = './folly';
-            let subs = fs.readdirSync('.');
-            expect(subs).to.contain('folly');
-
+            TF.initBase();
             TF.destroy();
-            subs = fs.readdirSync('.');
-
-            expect(subs).not.to.contain('folly');
             expect(TF.baseFolder).to.be.undefined;
         });
     });

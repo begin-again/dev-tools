@@ -1,9 +1,9 @@
 /* eslint no-console:off */
 require('./cmdline').setOptions();
-const { basename } = require('path');
+const { basename } = require('node:path');
 const { allRepoPaths } = require('../common/repos');
-const { promisify } = require('util');
-const _exec = promisify(require('child_process').exec);
+const { promisify } = require('node:util');
+const _exec = promisify(require('node:child_process').exec);
 const { DateTime } = require('luxon');
 const { options } = require('./cmdline');
 const DateLength = 6;
@@ -22,10 +22,10 @@ const gitCommand = (repo) => {
 /**
  * determines if item falls within range
  *
- * @param {Object} item
+ * @param {object} item
  * @param {DateTime | undefined} item.fromDate
  * @param {DateTime | undefined} item.toDate
- * @returns {Boolean}
+ * @returns {boolean}
  * @private
  *
  */
@@ -48,38 +48,39 @@ const filterPeriod = (item) => {
 
 /**
  * Obtains the git reflogs result
- * @param  {String} repo - full path to a repository
- * @param  {Array}  errors - place to store skippable errors
- * @return {Array}  objects containing date, body, and the repository base name
+ * @param  {string} repo - full path to a repository
+ * @param  {{repo:string, error:string}[]}  errors - place to store skippable errors
+ * @return {Promise<{date: DateTime, body: string, repo: string}[]>}  objects containing date, body, and the repository base name
  */
-const processRepo = (repo, errors) => {
-    return new Promise((resolve) => {
+async function processRepo(repo, errors) {
+    try {
         const cmd = gitCommand(repo);
-        _exec(cmd, { encoding:'utf8' })
-            .then(out => out.stdout.trim())
-            .then(stdout => {
-                const results = stdout.split(' +++')
-                    .filter(item => {
-                        return item.trim().length > 0;
-                    })
-                    .map(item => {
-                        return item.trim();
-                    })
-                    .map(item => {
-                        const date = DateTime.fromFormat(item.substring(DateLength, item.search(/[=]{2}/)), options.dateOptions);
-                        const body = item.substring(item.search(/[=]{2}/) + options.offset);
-                        return { date, body, repo: basename(repo) };
-                    })
-                    .filter(filterPeriod);
-                return resolve(results);
-            })
-            .catch(err => {
-                errors.push({ repo: repo, error: err });
-                // continue to next repo but be sure to return empty array
-                return resolve([]);
-            });
-    });
-};
+        const { stdout } = await _exec(cmd, { encoding:'utf8' });
+        const lines = [];
+        const repoName = basename(repo);
+        for(const item of stdout.trim().split(' +++')) {
+            const _item = item.trim();
+            if(_item.length === 0) {
+                continue;
+            }
+
+            const markerIndex = _item.indexOf('==');
+            const date = DateTime.fromFormat(_item.substring(DateLength, markerIndex), options.dateOptions);
+            if(!filterPeriod({ date })) {
+                continue;
+            }
+
+            const body = _item.substring(markerIndex + options.offset);
+            lines.push({ date, body, repo: repoName });
+        }
+        return lines;
+    }
+    catch (err) {
+        errors.push({ repo, error: err ? err.message : 'Unknown error' });
+        // continue to next repo but be sure to return empty array
+        return [];
+    }
+}
 
 /**
  * writes errors to console if in debug mode
@@ -102,43 +103,44 @@ const logErrors = (errors, isDebug, err) => {
 /**
  * Entry point
  */
-const main = () => {
-    if(options.devRoot.length) {
-        const errors = [];
-        let maxRepoLength = 0;
-        const repos = [];
-        options.devRoot.forEach(root => {
-            allRepoPaths(root, options.folderNames).forEach(repo => {
-                repos.push(repo);
-            });
-        });
-        const promises = repos.map(repo => processRepo(repo, errors));
-
-        return Promise
-            .all(promises)
-            .then(results => {
-                results
-                    .reduce((acc, item) => acc.concat(item), [])
-                    .sort((a, b) => a.date.valueOf() - b.date.valueOf())
-                    .map(item => {
-                        if(item.repo.length > maxRepoLength) {
-                            maxRepoLength = item.repo.length;
-                        }
-                        return item;
-                    })
-                    .map(item => {
-                        let name = item.repo;
-                        name = name.padEnd(maxRepoLength);
-                        console.log(`${item.date.toFormat(options.dateOptions)}  ${name}  ${item.body}`);
-                    });
-            })
-            .catch(err => {
-                logErrors(errors, options.debug, err);
-            });
+async function main() {
+    if(options.devRoot.length === 0) {
+        console.log(`bash variable DEVROOT is required`);
+        process.exitCode = 1;
+        return;
     }
 
-    console.log(`bash variable DEVROOT is required`);
-    process.exitCode = 1;
-};
+    const errors = [];
+    let maxRepoLength = 0;
+    const repos = [];
+    for(const root of options.devRoot) {
+        const paths = await allRepoPaths(root, options.folderNames);
+        repos.push(...paths);
+    }
+
+    try {
+        const result = [];
+        const concurrency = 8;
+        for(let i = 0; i < repos.length; i += concurrency) {
+            const batch = repos
+                .slice(i, i + concurrency)
+                .map(repo => processRepo(repo, errors));
+            result.push(...await Promise.all(batch));
+        }
+        const sorted = result
+            .flat()
+            .sort((a, b) => a.date.valueOf() - b.date.valueOf());
+        sorted.forEach(item => {
+            maxRepoLength = Math.max(maxRepoLength, item.repo.length);
+        });
+        sorted.forEach(item => {
+            console.log(`${item.date.toFormat(options.dateOptions)}  ${item.repo.padEnd(maxRepoLength)}  ${item.body}`);
+        });
+    }
+    catch (err) {
+        logErrors(errors, options.debug, err);
+    }
+
+}
 
 main().catch(console.error);

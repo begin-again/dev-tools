@@ -89,9 +89,9 @@ yargs
                     }
                     return true;
                 })
-                .check(({ version, path, oldest }) => {
+                .check(async ({ version, path, oldest }) => {
                     const hasPackage = path.endsWith('package.json') || fileExists(join(path, 'package.json'));
-                    versionToUse = versionToUseValidator({ path, version, oldest }, !hasPackage);
+                    versionToUse = await versionToUseValidator({ path, version, oldest }, !hasPackage);
                     return Boolean(versionToUse);
                 });
         },

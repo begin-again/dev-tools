@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 
-const { readFileSync, readdirSync } = require('fs');
-const { basename, join } = require('path');
+const { readFile, readdir } = require('node:fs/promises');
+const { basename, join } = require('node:path');
 const { fileExists, folderExists } = require('./files');
 require('dotenv').config();
 
@@ -11,12 +11,12 @@ const { DEVROOT } = process.env;
 /**
  * Obtains the package.json file from repo path
  *
- * @param {String} pkgFile file - path/package.json
- * @returns {Object} JSON object
+ * @param {string} pkgFile file - path/package.json
+ * @returns {Promise<object>} JSON object
  */
-const getPackage = (pkgFile) => {
+const getPackage = async (pkgFile) => {
     if(fileExists(pkgFile)) {
-        const data = readFileSync(pkgFile).toString();
+        const data = (await readFile(pkgFile)).toString();
         return JSON.parse(data);
     }
     return { error: true };
@@ -25,42 +25,46 @@ const getPackage = (pkgFile) => {
 /**
  * Determine if a folder contains a .git folder
  *  - does not check that git can process the repo so we can still get false positives
- * @param  {String}  path
- * @return {Boolean}
+ * @param  {string}  path
+ * @return {boolean}
  */
 const isGitRepo = (path) => (basename(path) === '.git') && folderExists(path);
 
 /**
  * Obtains paths of all git repositories
  *  - only search down one folder
- * @param {String} folder
- * @param {Array} foldersToInclude
- * @return {Array<string>}  path strings
+ * @param {string} folder
+ * @param {string[]} foldersToInclude - limit the folders to  return to those in this list. If empty, return all repos
+ * @return {Promise<string[]>}  path strings
  */
-const allRepoPaths = (folder = DEVROOT, foldersToInclude = []) => {
+const allRepoPaths = async (folder = DEVROOT, foldersToInclude = []) => {
     // get files in root
-    return readdirSync(folder)
-        .filter(name => {
-            if(foldersToInclude.length) {
-                return foldersToInclude.includes(name);
-            }
-            return true;
-        })
-        .map(name => join(folder, name))
-        .filter(folderExists)
-        .filter(path => {
-            // returns array of path that end a folder named .git
-            const result = readdirSync(path)
-                .reduce((accumulator, current) => {
-                    const subFolder = join(path, current);
-                    // this is not fool-proof ideally we want to skip bogus repos
-                    if(isGitRepo(subFolder)) {
-                        accumulator.push(subFolder);
-                    }
-                    return accumulator;
-                }, [])[0];
-            return result !== undefined;
+
+    const initialNames = await readdir(folder);
+    const filtered = initialNames.reduce((acc, name) => {
+        if(foldersToInclude.length && !foldersToInclude.includes(name)) {
+            return acc;
+        }
+        const path = join(folder, name);
+        if(folderExists(path)) {
+            acc.push(path);
+        }
+        return acc;
+    }, []);
+
+    const result = [];
+    for(const path of filtered) {
+        const items = await readdir(path);
+        const hasGitRepo = items.some(current => {
+            const subFolder = join(path, current);
+            return isGitRepo(subFolder);
         });
+        if(hasGitRepo) {
+            result.push(path);
+        }
+    }
+
+    return result;
 };
 
 

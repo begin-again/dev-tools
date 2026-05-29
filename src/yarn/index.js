@@ -70,8 +70,8 @@ yargs
                     }
                     return true;
                 })
-                .check(({ version, path, oldest }) => {
-                    versionToUse = versionToUseValidator({ path, version, oldest });
+                .check(async ({ version, path, oldest }) => {
+                    versionToUse = await versionToUseValidator({ path, version, oldest });
                     return Boolean(versionToUse);
                 });
         },
