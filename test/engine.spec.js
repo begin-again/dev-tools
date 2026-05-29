@@ -432,44 +432,77 @@ describe('Engine Module', function() {
     });
     describe('repositoryEngines()', function() {
         afterEach(mockFS.restore);
-        it('should throw RangeError when package not found', function() {
-            const wrapper = () => engine.repositoryEngines('missing');
-
-            expect(wrapper).to.throw(RangeError);
-        });
-        it('should not throw', function() {
-            const content = { engines:{ node: '8.11.1' } };
-            mockFS({
-                myRepo: {
-                    'package.json': JSON.stringify(content)
-                }
+        it('should reject with RangeError when package not found', async function() {
+            const getPackage = sinon.stub().resolves({ error: new Error('missing') });
+            const { repositoryEngines } = proxyquire('../src/common/engine', {
+                './repos.js': { getPackage }
             });
 
-            let result;
-            const wrapper = function() {
-                result = engine.repositoryEngines('myRepo');
-            };
+            try {
+                await repositoryEngines('missing');
+                expect.fail('expected repositoryEngines() to reject');
+            }
+            catch (error) {
+                expect(error).to.be.instanceOf(RangeError);
+                expect(error.message).to.equal('package file not found in missing');
+            }
 
-            expect(wrapper).not.to.throw();
+            expect(getPackage).to.have.been.calledOnce;
+        });
+
+        it('should return node engine when engines.node exists', async function() {
+            const getPackage = sinon.stub().resolves({
+                engines: { node: '8.11.1' }
+            });
+            const { repositoryEngines } = proxyquire('../src/common/engine', {
+                './repos.js': { getPackage }
+            });
+
+            const result = await repositoryEngines('myRepo');
+
             expect(result).to.equal('8.11.1');
+            expect(getPackage).to.have.been.calledOnce;
         });
-        it('should return default there is not a node property', function() {
-            const content = { engines:{ yarn: '^1.22.4' } };
-            mockFS({
-                myRepo: {
-                    'package.json': JSON.stringify(content)
-                }
+
+        it('should return default when there is not a node property', async function() {
+            const getPackage = sinon.stub().resolves({
+                engines: { yarn: '^1.22.4' }
             });
-            let result;
-            expect(result).to.be.undefined;
+            const { repositoryEngines } = proxyquire('../src/common/engine', {
+                './repos.js': { getPackage }
+            });
 
-            const wrapper = function() {
-                result = engine.repositoryEngines('myRepo');
-            };
+            const result = await repositoryEngines('myRepo');
 
-            expect(wrapper).not.to.throw();
-            expect(result).not.to.be.undefined;
+            expect(result).to.equal('12.13.1');
+            expect(getPackage).to.have.been.calledOnce;
+        });
 
+        it('should return default when engines is missing', async function() {
+            const getPackage = sinon.stub().resolves({});
+            const { repositoryEngines } = proxyquire('../src/common/engine', {
+                './repos.js': { getPackage }
+            });
+
+            const result = await repositoryEngines('myRepo');
+
+            expect(result).to.equal('12.13.1');
+            expect(getPackage).to.have.been.calledOnce;
+        });
+
+        it('should use package.json path as-is', async function() {
+            const getPackage = sinon.stub().resolves({
+                engines: { node: '^18.0.0' }
+            });
+            const { repositoryEngines } = proxyquire('../src/common/engine', {
+                './repos.js': { getPackage }
+            });
+            const packagePath = `myRepo${sep}package.json`;
+
+            const result = await repositoryEngines(packagePath);
+
+            expect(result).to.equal('^18.0.0');
+            expect(getPackage).to.have.been.calledOnceWithExactly(packagePath);
         });
     });
     describe('versionToUseValidator()', function() {

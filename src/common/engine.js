@@ -137,7 +137,7 @@ const versionStringToNumber = (version) => {
         // eslint-disable-next-line no-magic-numbers
         _expanded += i === 0 ? s : s.padStart(NumbersPadding, '0');
     });
-    return parseInt(_expanded, 10);
+    return Number.parseInt(_expanded, 10);
 };
 
 /**
@@ -153,7 +153,7 @@ const versionStringToObject = (v, versions, oldest = false) => {
     const matchingVersions = versions.filter(({ version }) => rx.test(version));
     // versions array is sorted in version descending order
     if(oldest) {
-        return matchingVersions[matchingVersions.length - 1];
+        return matchingVersions.at(-1);
     }
     return matchingVersions[0];
 };
@@ -248,23 +248,23 @@ const maxInstalledSatisfyingVersion = (requiredRange) =>
  */
 const minInstalledSatisfyingVersion = (requiredRange) => {
     const version = module.exports.satisfyingVersions(requiredRange);
-    return version[version.length - 1];
+    return version.at(-1);
 };
 
 /**
  * Obtains node engine range
  *
  * @param {String} repoPath - to repository
- * @returns {String} engines | default engine
+ * @returns {Promise<string>} engines | default engine
  * @throws RangeError
  */
-const repositoryEngines = (repoPath) => {
+const repositoryEngines = async (repoPath) => {
     const file = repoPath.endsWith('package.json') ? repoPath : resolve(join(repoPath, 'package.json'));
-    const { error, engines } = getPackage(file);
+    const { error, engines } = await getPackage(file);
     if(error) {
         throw new RangeError(`package file not found in ${repoPath}`);
     }
-    if(engines && engines.node) {
+    if(engines?.node) {
         return engines.node;
     }
     return defaultVersion;
@@ -277,11 +277,11 @@ const repositoryEngines = (repoPath) => {
  * @param {String=} param0.version - version number x.y.z
  * @param {Boolean=} param0.oldest - choose oldest acceptable version
  * @param {Boolean=} noPackage - path does not have package.json
- * @returns {Version}
+ * @returns {Promise<Version>} version object with path to executables
  * @throws RangeError
  */
-const versionToUseValidator = ({ path, version, oldest }, noPackage) => {
-    const repoEngines = noPackage ? version : module.exports.repositoryEngines(path);
+const versionToUseValidator = async ({ path, version, oldest }, noPackage) => {
+    const repoEngines = noPackage ? version : await module.exports.repositoryEngines(path);
     const repoName = basename(path);
 
     if(version) {
@@ -292,9 +292,9 @@ const versionToUseValidator = ({ path, version, oldest }, noPackage) => {
             oldest
         );
         // _version is undefined if version is not in satisfies
-        const found = satisfies.filter(
-            (v) => _version && v.version === _version.version
-        )[0];
+        const found = satisfies.find(
+            (v) => v.version === _version?.version
+        );
         if(!found) {
             throw new RangeError(
                 `${repoName} requires NodeJS version(s) '${repoEngines}' but got '${version}'`
