@@ -10,7 +10,7 @@ const testFolder = {
         b: {
             xx: '',
             c: {
-                x: '',ga 
+                x: '', 
                 d: {
                     found: '',
                     someFolder: {}
