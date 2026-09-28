@@ -8,8 +8,6 @@ import { options, setOptions } from './cmdline.js';
 
 const DateLength = 6;
 
-setOptions();
-
 /**
  * Determines if item falls within range
  *
@@ -119,11 +117,7 @@ const logErrors = (errors, isDebug, err) => {
  * Entry point
  */
 export async function main() {
-    if(options.devRoot.length === 0) {
-        console.log('bash variable DEVROOT is required');
-        process.exitCode = 1;
-        return;
-    }
+    setOptions();
 
     const errors = [];
     let maxRepoLength = 0;
