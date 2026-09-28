@@ -5,14 +5,14 @@
     "repository": "https://github.com/begin-again/dev-tools.git",
     "license": "MIT",
     "private": true,
+    "type": "module",
     "scripts": {
         "test": "mocha -i --fgrep slow ./test/**/*.spec.js",
         "test:slow": "mocha --fgrep slow ./test/**/*.spec.js",
         "lint:fix": "eslint . --fix"
     },
     "engines": {
-        "node": "^20.11.0",
-        "yarn": "^1.22.4"
+        "node": "^22.22.0"
     },
     "dependencies": {
         "dotenv": "^17.3.1",
@@ -25,8 +25,10 @@
     },
     "devDependencies": {
         "chai": "^4.5.0",
-        "eslint": "^8.57.0",
+        "eslint": "^8.57.1",
+        "eslint-plugin-n": "^18.4.0",
         "eslint-plugin-node": "^11.1.0",
+        "globals": "^17.12.0",
         "mocha": "^10.8.2",
         "mock-fs": "^5.5.0",
         "nyc": "^17.1.0",
@@ -35,5 +37,5 @@
         "sinon": "^19.0.4",
         "sinon-chai": "^3.7.0"
     },
-    "packageManager": "yarn@4.7.0"
+    "packageManager": "npm@10.9.9"
 }
