@@ -1,74 +1,123 @@
-const { copyFileSync, readdirSync, symlinkSync } = require('node:fs');
-const { resolve, join } = require('node:path');
-const osType = require('node:os').type();
-const targetName = osType === 'Windows_NT' ? 'node.exe' : 'node';
+import {
+    copyFileSync,
+    readdirSync,
+    symlinkSync
+} from 'node:fs';
+import { join } from 'node:path';
+
+const isWindows = process.platform === 'win32';
 
 /**
- * Obtains the executable file found in path
+ * Obtains a potential Node.js executable from an installation.
  *
- * @param {String} path - to the node version folder
+ * On Windows, nvm installations may contain a versioned executable that
+ * can be copied or linked to node.exe.
+ *
+ * @param {string} path - Node.js installation root.
+ * @returns {string|undefined} Executable filename.
  */
 const execFileFound = (path) => {
-    const files = readdirSync(path)
-        .filter(file => file.endsWith('.exe'))
-        .sort((a, b) => b.localeCompare(a));
-    return files[0];
+    if(!isWindows) {
+        return undefined;
+    }
+
+    return readdirSync(path)
+        .filter(file =>
+            file.endsWith('.exe') &&
+            file.toLowerCase() !== 'node.exe'
+        )
+        .toSorted((a, b) => b.localeCompare(a))[0];
 };
 
 /**
- * Attempts to correct unusable version installations
+ * Attempts to correct unusable Node.js version installations.
  *
- * @param {Object} param0
- * @param {Array<Version>} param0.installed - installed versions
- * @param {Boolean} param0.dryRun - show action only
- * @param {String} param0.mode - create symbolic link or copy
- * @param {Object} [log] logger
+ * @param {object} options
+ * @param {import('../common/Version.js').default[]} options.installed
+ * @param {boolean} options.execute - Apply changes when true.
+ * @param {'copy'|'link'} options.mode - Repair method.
+ * @param {object} [log] - Logger.
+ * @returns {number} Exit code.
  */
-const fix = ({ installed, execute, mode }, log = console) => {
+const fix = (
+    { installed, execute, mode },
+    log = console
+) => {
     let exitCode = 0;
-    const errors = installed
-        .filter(({ error }) => error);
 
-    if(errors.length) {
-        errors.forEach(({ version, path }) => {
-            const execFile = execFileFound(path);
-            if(!execute) {
-                if(mode === 'copy') {
-                    log.debug(`${version}: will copy '${execFile}' to '${targetName}'`);
-                }
-                else if(mode === 'link') {
-                    log.debug(`${version}: will create symbolic link from '${targetName}' to '${execFile}'`);
-                }
+    const errors = installed.filter(({ error }) => error);
+
+    if(!errors.length) {
+        log.debug('No Errors to fix');
+
+        return exitCode;
+    }
+
+    for(const { version, path } of errors) {
+        const execFile = execFileFound(path);
+
+        if(!execFile) {
+            log.error(
+                `${version}: unable to find an executable to repair`
+            );
+
+            exitCode = 1;
+
+            continue;
+        }
+
+        const targetName = 'node.exe';
+
+        if(!execute) {
+            if(mode === 'copy') {
+                log.debug(
+                    `${version}: will copy '${execFile}' ` +
+                    `to '${targetName}'`
+                );
             }
             else if(mode === 'link') {
-                try {
-                    const src = resolve(path, execFile);
-                    const target = resolve(path, targetName);
-                    symlinkSync(src, target);
-                    log.debug(`${version}: created symbolic link from '${targetName}' to '${execFile}'`);
-                }
-                catch (e) {
-                    log.error(`${version}: was unable to link ''${targetName}' to '${execFile}'. Error code is ${e.code}`);
-                    exitCode = 1;
-                }
+                log.debug(
+                    `${version}: will create symbolic link from ` +
+                    `'${targetName}' to '${execFile}'`
+                );
+            }
+
+            continue;
+        }
+
+        const src = join(path, execFile);
+        const target = join(path, targetName);
+
+        try {
+            if(mode === 'link') {
+                symlinkSync(src, target);
+
+                log.debug(
+                    `${version}: created symbolic link from ` +
+                    `'${targetName}' to '${execFile}'`
+                );
             }
             else if(mode === 'copy') {
-                try {
-                    copyFileSync(join(path, execFile), join(path, targetName));
-                    log.debug(`${version}: copied '${execFile}' to '${targetName}'`);
-                }
-                catch (e) {
-                    log.error(`${version}: was unable to copy '${execFile}' to '${targetName}'. Error code is ${e.code}`);
-                    exitCode = 1;
-                }
+                copyFileSync(src, target);
+
+                log.debug(
+                    `${version}: copied '${execFile}' ` +
+                    `to '${targetName}'`
+                );
             }
-        });
+        }
+        catch(error) {
+            log.error(
+                `${version}: was unable to ${mode} ` +
+                `'${execFile}' to '${targetName}'. ` +
+                `Error code is ${error.code}`
+            );
+
+            exitCode = 1;
+        }
     }
-    else {
-        log.debug('No Errors to fix');
-    }
+
     return exitCode;
 };
 
-
-module.exports = fix;
+export default fix;

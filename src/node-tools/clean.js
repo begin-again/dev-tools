@@ -1,49 +1,63 @@
 /**
- * remove-links.js
- * scans node versions locating node.exe files which are symbolic links and removes them
- *  will print removed links to stdout
-*/
+ * Removes symbolic links used as Node.js executables.
+ *
+ * @module clean
+ */
 
-const { basename } = require('path');
-const { unlinkSync } = require('fs');
+import { unlinkSync } from 'node:fs';
+import { basename } from 'node:path';
 
-const maxWidth = 9;
+const MAX_WIDTH = 9;
 
 /**
- * Remove node.exe symbolic links
+ * Removes Node.js executables that are symbolic links.
  *
- * @param {Object} param0
- * @param {Array<Version>} param0.installed
- * @param {Boolean} param0.dryRun
- * @param {Object} [log] logger
+ * When execute is false, reports the links that would be removed without
+ * modifying the filesystem.
+ *
+ * @param {object} options - Clean options.
+ * @param {import('../common/version.js').default[]} options.installed -
+ * Installed Node.js versions.
+ * @param {boolean} options.execute - Remove links when true.
+ * @param {object} [log=console] - Logger.
+ * @returns {number} Exit code. Zero indicates success.
  */
-const clean = ({ installed, dryRun }, log = console) => {
+const clean = (
+    { installed, execute },
+    log = console
+) => {
     let exitCode = 0;
 
-    installed
-        .filter(({ isLink }) => isLink)
-        .forEach(({ version, bin }) => {
-            const linkName = basename(bin);
-            let msg = ` - ${version.padEnd(maxWidth, ' ')} - `;
-            if(dryRun) {
-                msg += `will delete ${linkName}`;
-                log.debug(msg);
-            }
-            else {
-                try {
-                    unlinkSync(bin);
-                    msg += `deleted symbolic link ${bin}`;
-                    log.debug(msg);
-                }
-                // eslint-disable-next-line no-unused-vars
-                catch (e) {
-                    msg += `Unable to delete ${bin}, due to ${e.message}`;
-                    log.error(msg);
-                    exitCode = 1;
-                }
-            }
-        });
+    const links = installed.filter(({ isLink }) => isLink);
+
+    for(const { version, bin } of links) {
+        const linkName = basename(bin);
+
+        let msg = ` - ${version.padEnd(MAX_WIDTH, ' ')} - `;
+
+        if(!execute) {
+            msg += `will delete ${linkName}`;
+            log.debug(msg);
+
+            continue;
+        }
+
+        try {
+            unlinkSync(bin);
+
+            msg += `deleted symbolic link ${bin}`;
+            log.debug(msg);
+        }
+        catch(error) {
+            msg +=
+                `Unable to delete ${bin}, due to ${error.message}`;
+
+            log.error(msg);
+            exitCode = 1;
+        }
+    }
+
     return exitCode;
 };
 
-module.exports = clean;
+export default clean;

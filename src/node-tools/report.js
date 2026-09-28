@@ -1,47 +1,39 @@
+const MAX_WIDTH = 9;
 
 /**
- * report.js
- * Locates node versions and reports the node binary files present, including symbolic links
-*/
-
-const osType = require('os').type();
-const binName = osType === 'Windows_NT' ? 'node.exe' : 'node';
-// eslint-disable-next-line no-process-env
-const { NVM_HOME } = process.env;
-
-/**
- * Scans versions and reports status
+ * Reports the status of installed Node.js versions.
  *
- * @param {Object} param0
- * @param {Array<Version>} param0.installed
- * @param {Object} [log] logger
+ * @param {object} options
+ * @param {import('../common/Version.js').default[]} options.installed -
+ * Installed Node.js versions.
+ * @param {object} [log=console] - Logger.
+ * @returns {number} Exit code. Zero indicates no installation errors.
  */
-const report = ({ installed }, log = console) => {
-    let errorCount = 0;
+const report = (
+    { installed },
+    log = console
+) => {
+    let exitCode = 0;
 
-    installed.forEach(({ version, error, isLink }) => {
-        const maxWidth = 9;
-        let msg = ` - ${version.padEnd(maxWidth, ' ')} - `;
+    for(const { version, error, isLink } of installed) {
+        let msg = ` - ${version.padEnd(MAX_WIDTH, ' ')} - `;
+
         if(error) {
-            errorCount += 1;
-            msg += `Problem: '${binName}' not found or executable`;
+            msg += `Problem: ${error}`;
+            exitCode = 1;
         }
         else {
-            msg += `OK ${isLink ? '(link)' : ''}`;
+            msg += isLink
+                ? 'OK (link)'
+                : 'OK ';
         }
-        log.debug(`${msg}`);
-    });
 
-    if(errorCount) {
-        const checkPath = NVM_HOME ? 'll $NVM_HOME/<version>' : 'll $NVM_BIN/../../<version>';
-        log.debug(`
-    ${errorCount} errors
-    take a look at running '${checkPath}' for each problem version
-        might be as simple as running 'nt fix'.
-    `);
-
+        log.debug(msg);
     }
 
+    log.debug('');
+
+    return exitCode;
 };
 
-module.exports = report;
+export default report;
