@@ -1,35 +1,22 @@
-/* eslint no-console:off */
-require('./cmdline').setOptions();
-const { basename } = require('node:path');
-const { allRepoPaths } = require('../common/repos');
-const { promisify } = require('node:util');
-const _exec = promisify(require('node:child_process').exec);
-const { DateTime } = require('luxon');
-const { options } = require('./cmdline');
+import { basename } from 'node:path';
+
+import { DateTime } from 'luxon';
+import { simpleGit } from 'simple-git';
+
+import { allRepoPaths } from '../common/repos.js';
+import { options, setOptions } from './cmdline.js';
+
 const DateLength = 6;
 
 /**
- * Creates command string
- * @param  {String} repo - repository base name
- * @return {String}
- * @NOTE git will walk up the parents looking for a repository
- * @private
- */
-const gitCommand = (repo) => {
-    return `git --no-pager -C ${repo} log --walk-reflogs --format="%gd %h %d %gs +++" --date=format:"%Y-%m-%d %H:%M:%S %p=="`;
-};
-
-/**
- * determines if item falls within range
+ * Determines if item falls within range
  *
  * @param {object} item
- * @param {DateTime | undefined} item.fromDate
- * @param {DateTime | undefined} item.toDate
+ * @param {DateTime | undefined} item.date
  * @returns {boolean}
  * @private
- *
  */
-const filterPeriod = (item) => {
+export function filterPeriod(item) {
     let result;
     if(!options.fromDate && !options.toDate) {
         result = true;
@@ -48,45 +35,70 @@ const filterPeriod = (item) => {
 
 /**
  * Obtains the git reflogs result
- * @param  {string} repo - full path to a repository
- * @param  {{repo:string, error:string}[]}  errors - place to store skippable errors
- * @return {Promise<{date: DateTime, body: string, repo: string}[]>}  objects containing date, body, and the repository base name
+ *
+ * @param {string} repo - full path to a repository
+ * @param {{repo:string, error:string}[]} errors - place to store skippable errors
+ * @returns {Promise<{date: DateTime, body: string, repo: string}[]>}
  */
-async function processRepo(repo, errors) {
+export async function processRepo(repo, errors, gitFactory = simpleGit) {
     try {
-        const cmd = gitCommand(repo);
-        const { stdout } = await _exec(cmd, { encoding:'utf8' });
+        const git = gitFactory({
+            baseDir: repo
+        });
+
+        const stdout = await git.raw([
+            'log',
+            '--walk-reflogs',
+            '--format=%gd %h %d %gs +++',
+            '--date=format:%Y-%m-%d %H:%M:%S %p=='
+        ]);
+
         const lines = [];
         const repoName = basename(repo);
+
         for(const item of stdout.trim().split(' +++')) {
-            const _item = item.trim();
-            if(_item.length === 0) {
+            const current = item.trim();
+            if(current.length === 0) {
                 continue;
             }
 
-            const markerIndex = _item.indexOf('==');
-            const date = DateTime.fromFormat(_item.substring(DateLength, markerIndex), options.dateOptions);
+            const markerIndex = current.indexOf('==');
+            const date = DateTime.fromFormat(
+                current.substring(DateLength, markerIndex),
+                options.dateOptions
+            );
+
             if(!filterPeriod({ date })) {
                 continue;
             }
 
-            const body = _item.substring(markerIndex + options.offset);
-            lines.push({ date, body, repo: repoName });
+            const body = current.substring(markerIndex + options.offset);
+
+            lines.push({
+                date,
+                body,
+                repo: repoName
+            });
         }
+
         return lines;
     }
     catch (err) {
-        errors.push({ repo, error: err ? err.message : 'Unknown error' });
-        // continue to next repo but be sure to return empty array
+        errors.push({
+            repo,
+            error: err ? err.message : 'Unknown error'
+        });
+
         return [];
     }
 }
 
 /**
- * writes errors to console if in debug mode
- * @param  {Array}   errors - collection of error objects
- * @param  {Boolean} isDebug - command line flag
- * @param  {*}       err - catch all error not otherwise specified
+ * Writes errors to console if in debug mode
+ *
+ * @param {Array} errors - collection of error objects
+ * @param {Boolean} isDebug - command line flag
+ * @param {*} err - catch all error not otherwise specified
  */
 const logErrors = (errors, isDebug, err) => {
     if(isDebug > 0 && errors.length > 0) {
@@ -95,6 +107,7 @@ const logErrors = (errors, isDebug, err) => {
             console.error(`${i + 1}. ${item.repo}: ${item.error.trim()}`);
         });
     }
+
     if(err) {
         console.error(`Misc error: ${err}`);
     }
@@ -103,16 +116,13 @@ const logErrors = (errors, isDebug, err) => {
 /**
  * Entry point
  */
-async function main() {
-    if(options.devRoot.length === 0) {
-        console.log(`bash variable DEVROOT is required`);
-        process.exitCode = 1;
-        return;
-    }
+export async function main() {
+    setOptions();
 
     const errors = [];
     let maxRepoLength = 0;
     const repos = [];
+
     for(const root of options.devRoot) {
         const paths = await allRepoPaths(root, options.folderNames);
         repos.push(...paths);
@@ -121,18 +131,23 @@ async function main() {
     try {
         const result = [];
         const concurrency = 8;
+
         for(let i = 0; i < repos.length; i += concurrency) {
             const batch = repos
                 .slice(i, i + concurrency)
                 .map(repo => processRepo(repo, errors));
+
             result.push(...await Promise.all(batch));
         }
+
         const sorted = result
             .flat()
             .sort((a, b) => a.date.valueOf() - b.date.valueOf());
+
         sorted.forEach(item => {
             maxRepoLength = Math.max(maxRepoLength, item.repo.length);
         });
+
         sorted.forEach(item => {
             console.log(`${item.date.toFormat(options.dateOptions)}  ${item.repo.padEnd(maxRepoLength)}  ${item.body}`);
         });
@@ -140,7 +155,4 @@ async function main() {
     catch (err) {
         logErrors(errors, options.debug, err);
     }
-
 }
-
-main().catch(console.error);

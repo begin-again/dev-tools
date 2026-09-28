@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
+import { readFile, readdir } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 
-const { readFile, readdir } = require('node:fs/promises');
-const { basename, join } = require('node:path');
-const { fileExists, folderExists } = require('./files');
-require('dotenv').config();
+import 'dotenv/config';
+
+import { fileExists, folderExists } from './files.js';
 
 // eslint-disable-next-line no-process-env
 const { DEVROOT } = process.env;
@@ -92,8 +93,8 @@ const getBinaryPaths = (builderName, repoPath, devRoot = DEVROOT) => {
     }
 };
 
-module.exports = {
-    allRepoPaths
-    , getBinaryPaths
-    , getPackage
+export {
+    allRepoPaths,
+    getBinaryPaths,
+    getPackage
 };

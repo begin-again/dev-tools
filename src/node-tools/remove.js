@@ -1,61 +1,68 @@
+// @ts-check
 
 /**
  * remove.js
- * Removes node versions
-*/
-
-const fsPromises = require('fs').promises;
-const semver = require('semver');
-/**
- * compatibility check for rm & rmdir
- * @returns {Function}
+ * Removes installed Node.js versions.
  */
-const rmCompatibility = () => {
-    if(fsPromises.rm) {
-        return fsPromises.rm;
-    }
-    return fsPromises.rmdir;
-};
-const remover = rmCompatibility();
 
+import { rm } from 'node:fs/promises';
+
+import semver from 'semver';
 
 /**
- * Removes node versions matching specified range
+ * Removes Node.js versions matching the specified range.
  *
- * @param {Object} param0
- * @param {array<Version>} param0.installed
- * @param {string} param0.version - version number or range
- * @param {boolean} param0.execute - true to remove files
+ * @param {object} options
+ * @param {import('../common/Version.js').default[]} options.installed
+ * @param {string} options.version - Version number or semver range
+ * @param {boolean} options.execute - True to remove files
  * @param {object} [log] logger
  * @returns {Promise<number>} exit code
  */
-const remove = async ({ installed, version, execute }, log = console) => {
-    const messagePrefix = execute ? 'Removed' : 'Would remove';
-    const validRange = semver.validRange(version);
-    let exitCode = 0;
-    const versionsToRemove = installed.filter(v => semver.satisfies(v.version.slice(1), validRange));
+const remove = async (
+    { installed, version, execute },
+    log = console
+) => {
+    const messagePrefix = execute
+        ? 'Removed'
+        : 'Would remove';
 
-    if(versionsToRemove.length > 0) {
+    const validRange = semver.validRange(version);
+
+    if(!validRange) {
+        log.debug(`Invalid version range: ${version}`);
+
+        return 1;
+    }
+
+    const versionsToRemove = installed.filter(
+        installedVersion =>
+            semver.satisfies(installedVersion.version, validRange)
+    );
+
+    if(!versionsToRemove.length) {
+        log.debug(
+            `No matches found for ${version} in range ${validRange}`
+        );
+
+        return 1;
+    }
+
+    for(const installedVersion of versionsToRemove) {
         if(execute) {
-            await Promise.all(
-                versionsToRemove.map(async v => {
-                    await remover(v.path, { recursive: true });
-                    log.debug(`${messagePrefix} ${v.version} at ${v.path}`);
-                })
-            );
-        }
-        else {
-            versionsToRemove.forEach(v => {
-                log.debug(`${messagePrefix} ${v.version} at ${v.path}`);
+            await rm(installedVersion.path, {
+                recursive: true,
+                force: true
             });
         }
-    }
-    else {
-        log.debug(`No matches found for ${version} in range ${validRange}`);
-        exitCode = 1;
+
+        log.debug(
+            `${messagePrefix} ${installedVersion.version} ` +
+            `at ${installedVersion.path}`
+        );
     }
 
-    return exitCode;
+    return 0;
 };
 
-module.exports = remove;
+export default remove;

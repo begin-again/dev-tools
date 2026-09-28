@@ -1,12 +1,15 @@
-const { statSync, lstatSync, writeFile } = require('fs');
-const { readFile } = require('fs').promises;
-const { join, resolve, parse } = require('path');
+import { statSync, lstatSync, writeFile } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { join, resolve, parse, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Checks that folder exists and is in fact a folder
  *
- * @param {String} folder
- * @returns {Boolean}
+ * @param {string} folder
+ * @returns {boolean}
  */
 const folderExists = (folder) => {
     try {
@@ -23,9 +26,9 @@ const folderExists = (folder) => {
 /**
  * Checks that file exists and is in fact a file
  *
- * @param {String} file
- * @param {Boolean} [isLink] true if symbolicLink
- * @returns {Boolean}
+ * @param {string} file
+ * @param {boolean} [isLink] true if symbolicLink
+ * @returns {boolean}
  */
 const fileExists = (file, isLink = false) => {
     try {
@@ -42,8 +45,8 @@ const fileExists = (file, isLink = false) => {
 /**
  * Convert base64 to utf8
  *
- * @param {String} encoded
- * @returns {String}
+ * @param {string} encoded
+ * @returns {string}
  */
 const decodeBase64 = (encoded) => Buffer.from(encoded, 'base64').toString('utf-8');
 
@@ -52,10 +55,10 @@ const decodeBase64 = (encoded) => Buffer.from(encoded, 'base64').toString('utf-8
  * - path must exist
  * - file will be created if does not exist
  *
- * @param {String|Buffer} content
- * @param {String} dest
- * @param {String} [encoding]
- * @param {Boolean} [append]
+ * @param {string|Buffer} content
+ * @param {string} dest
+ * @param {string} [encoding]
+ * @param {boolean} [append]
  * @returns {Promise}
  */
 const writeToFile = (content, dest, encoding = 'utf8', append = false) => {
@@ -74,9 +77,9 @@ const writeToFile = (content, dest, encoding = 'utf8', append = false) => {
  * Searches from specified path upwards for a file
  *  stops at root
  *
- * @param {String} fileName - name of file
- * @param {String} [startPath] - path to start from
- * @returns {String|null} null if not found
+ * @param {string} fileName - name of file
+ * @param {string} [startPath] - path to start from
+ * @returns {string|null} null if not found
  */
 const findFirstFile = (fileName, startPath = __dirname) => {
 
@@ -115,11 +118,11 @@ const fileAsJSON = async (file) => {
     }
 };
 
-module.exports = {
-    decodeBase64
-    , fileAsJSON
-    , fileExists
-    , folderExists
-    , writeToFile
-    , findFirstFile
+export {
+    decodeBase64,
+    fileAsJSON,
+    fileExists,
+    findFirstFile,
+    folderExists,
+    writeToFile
 };

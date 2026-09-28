@@ -1,352 +1,399 @@
 /* eslint-disable no-process-env */
 /* eslint-disable no-console */
+
 // @ts-check
-/**
- * Engine Check
- * @module engines
- */
-
-const semver = require('semver');
-const defaultVersion = '12.13.1';
-const detectedVersion = semver.clean(process.version);
-const { join, resolve, basename } = require('node:path');
-const {
-    readdirSync,
-    accessSync,
-    lstatSync,
-    constants: FSC,
-} = require('node:fs');
-const { getPackage } = require('./repos.js');
-const { folderExists } = require('./files');
-
-const NumbersPadding = 2;
-
-class Version {
-    /**
-   * @param {String} version - version name
-   * @param {String} path - path to executables folder
-   * @param {Object} [log] - logger
-   * @param {Object} [env] - environment variables
-   */
-    constructor(version, path, log, env) {
-        const { NVM_HOME } = (env || process.env);
-        this._path = path;
-        this._version = version;
-
-        const binName = NVM_HOME ? 'node.exe' : 'node';
-        const binPath = join(this._path, binName);
-        let logMsg = `engine/version: <${this._version}> `;
-        try {
-            // executable check doesn't work on windows
-            accessSync(binPath, FSC.X_OK);
-            this._bin = binPath;
-            this._link = lstatSync(this._bin).isSymbolicLink();
-            logMsg += `is OK`;
-        }
-        catch (e) {
-            logMsg += `is rejected`;
-            if(e.code === 'ENOENT') {
-                this._error = `unable to find executable ${binName} for version ${this._version} in ${this._path}`;
-            }
-            else {
-                this._error = `${e.code} : ${e.message}`.trim();
-            }
-        }
-        if(log) {
-            log.debug(logMsg);
-        }
-    }
-
-    /**
-   * @readonly
-   * @memberof Version
-   * @returns {String}
-   */
-    get error() {
-        return this._error;
-    }
-
-    /**
-   * @readonly
-   * @memberof Version
-   * @returns {String}
-   */
-    get path() {
-        return this._path;
-    }
-
-    /**
-   * @readonly
-   * @memberof Version
-   * @returns {String}
-   */
-    get version() {
-        return this._version;
-    }
-
-    /**
-   * @readonly
-   * @memberof Version
-   * @returns {String}
-   */
-    get bin() {
-        return this._bin;
-    }
-
-    /**
-   * @readonly
-   * @memberof Version
-   * @returns {Boolean}
-   */
-    get isLink() {
-        return this._link;
-    }
-}
 
 /**
- * Throws if detected version not within require range
+ * Utilities for discovering installed Node.js versions and selecting a
+ * version compatible with a repository's configured Node.js engine.
  *
- * @param {String} [requiredVersionRange]
- * @param {Object} [log] - logger.level
- * @param {String} [addMsg] - included in log and error message
- * @throws Error
- * @example engineCheck('>=12.13.1', console.error, 'ERROR: ');
+ * Supports nvm-windows through NVM_HOME and nvm on Linux/macOS through
+ * NVM_DIR.
+ *
+ * @module engine
  */
-const engineCheck = (requiredVersionRange = null, log = null, addMsg = '') => {
-    const _requiredVersion = requiredVersionRange || defaultVersion;
-    if(!semver.satisfies(detectedVersion, _requiredVersion)) {
-        const _msg = addMsg ? `( ${addMsg} ) ` : '';
-        const msg = `${_msg}detected version ${detectedVersion} but required ${_requiredVersion}`;
-        if(log) {
-            log(msg);
-        }
-        throw new Error(`Incompatible NodeJS version: ${msg}`);
+
+import { readdirSync } from 'node:fs';
+import { basename, join, resolve } from 'node:path';
+
+import semver from 'semver';
+
+import { folderExists } from './files.js';
+import { getPackage } from './repos.js';
+import Version from './Version.js';
+
+const DEFAULT_VERSION = '12.13.1';
+const NUMBERS_PADDING = 2;
+
+const detectedVersion = semver.clean(process.version);
+
+/** @type {Version[]|null} */
+let versions = null;
+
+/**
+ * Throws when the current Node.js version does not satisfy the required
+ * version range.
+ *
+ * @param {string} [requiredVersionRange] - Required Node.js semver range.
+ * @param {Function} [log] - Optional logging function.
+ * @param {string} [addMsg] - Additional text included in the error message.
+ * @returns {void}
+ * @throws {Error} When the current Node.js version is incompatible.
+ * @example
+ * engineCheck('>=22.0.0', console.error, 'ERROR:');
+ */
+const engineCheck = (
+    requiredVersionRange = DEFAULT_VERSION,
+    log = null,
+    addMsg = ''
+) => {
+    if(semver.satisfies(detectedVersion, requiredVersionRange)) {
+        return;
     }
+
+    const prefix = addMsg
+        ? `( ${addMsg} ) `
+        : '';
+
+    const msg =
+        `${prefix}detected version ${detectedVersion} ` +
+        `but required ${requiredVersionRange}`;
+
+    if(log) {
+        log(msg);
+    }
+
+    throw new Error(`Incompatible NodeJS version: ${msg}`);
 };
 
 /**
- * converts a version string to number
+ * Converts a semantic version string into a number suitable for sorting.
  *
- * @param {String} version
- * @returns {Number}
+ * @param {string} version - Node.js version.
+ * @returns {number} Numeric representation of the version.
+ * @example
+ * versionStringToNumber('v22.22.0');
+ * // 222200
  */
 const versionStringToNumber = (version) => {
-    const _version = version.startsWith('v') ? version.substring(1) : version;
-    let _expanded = '';
-    _version.split('.').forEach((s, i) => {
-        // eslint-disable-next-line no-magic-numbers
-        _expanded += i === 0 ? s : s.padStart(NumbersPadding, '0');
-    });
-    return Number.parseInt(_expanded, 10);
-};
+    const normalized = version.startsWith('v')
+        ? version.substring(1)
+        : version;
 
-/**
- * Locates first or last version string in versions
- *
- * @param {String} v - version number (1.1.1)
- * @param {Version[]} versions - objects
- * @param {Boolean} oldest - select oldest version
- * @returns {Version}
- */
-const versionStringToObject = (v, versions, oldest = false) => {
-    const rx = new RegExp(`^v${v}.*?`);
-    const matchingVersions = versions.filter(({ version }) => rx.test(version));
-    // versions array is sorted in version descending order
-    if(oldest) {
-        return matchingVersions.at(-1);
-    }
-    return matchingVersions[0];
-};
-
-/**
- * Determines which installed versions are compatible with specified range
- *
- * @param {String} requiredVersionRange
- * @returns {Version[]} satisfying versions sorted descending
- */
-const satisfyingVersions = (requiredVersionRange) => {
-    const _installed =
-    module.exports.versions || module.exports.properNodeVersions();
-    return _installed
-        .filter(
-            ({ version, error }) =>
-                !error && semver.satisfies(version, requiredVersionRange)
+    const expanded = normalized
+        .split('.')
+        .map((part, index) =>
+            index === 0
+                ? part
+                : part.padStart(NUMBERS_PADDING, '0')
         )
-        .sort(
-            (a, b) =>
-                module.exports.versionStringToNumber(b.version) -
-        module.exports.versionStringToNumber(a.version)
-        );
+        .join('');
+
+    return Number.parseInt(expanded, 10);
 };
 
 /**
- * Obtains names of installed versions, sorted descending
- * populating engines.versions to Version[]
- *  - NVM_HOME is folder to the version folders
- *  - NVM_BIN is folder of the node executable, The version name is part of the path.
- * @param {Object} [log] - standard logger or console
- * @param {{NVM_HOME?:string, NVM_BIN?:string}} [env] - defaults to process.env
- * @returns {Version[]}
+ * Finds an installed Node.js version matching a full or partial version
+ * string.
+ *
+ * The supplied versions are expected to be sorted newest to oldest.
+ *
+ * @param {string} version - Full or partial Node.js version.
+ * @param {Version[]} installedVersions - Installed Node.js versions.
+ * @param {boolean} [oldest=false] - Select the oldest matching version.
+ * @returns {Version|undefined} Matching installed version.
  */
-// @ts-ignore
-const allInstalledNodeVersions = (log, env) => {
-    const _env = env || process.env;
-    const { NVM_BIN, NVM_HOME } = _env;
-    if(NVM_BIN || NVM_HOME) {
-        const nodeHome = resolve(NVM_BIN ? join(NVM_BIN, '..', '..') : NVM_HOME);
-        if(folderExists(nodeHome)) {
-            //  creates an array of Version
-            return readdirSync(nodeHome, { withFileTypes:true })
-                .filter(dirent => dirent.isDirectory())
-                .map(dirent => dirent.name)
-                .sort((a, b) => module.exports.versionStringToNumber(b) - module.exports.versionStringToNumber(a))
-                .map(version => {
-                    let path = join(nodeHome, version);
-                    if(NVM_BIN) {
-                        path = join(path, 'bin');
-                    }
+const versionStringToObject = (
+    version,
+    installedVersions,
+    oldest = false
+) => {
+    const normalized = version.startsWith('v')
+        ? version.substring(1)
+        : version;
 
-                    return new Version(version, path, log);
-                });
+    const matchingVersions = installedVersions.filter(
+        installed => {
+            const installedVersion = installed.version.startsWith('v')
+                ? installed.version.substring(1)
+                : installed.version;
+
+            return installedVersion === normalized ||
+                installedVersion.startsWith(`${normalized}.`);
         }
+    );
+
+    return oldest
+        ? matchingVersions.at(-1)
+        : matchingVersions[0];
+};
+
+/**
+ * Returns installed Node.js versions satisfying a semantic version range.
+ *
+ * Versions containing validation errors are excluded. Results are sorted
+ * newest to oldest.
+ *
+ * @param {string} requiredVersionRange - Required semantic version range.
+ * @param {Version[]} [installedVersions] - Installed Node.js versions.
+ * @returns {Version[]} Matching versions sorted newest to oldest.
+ */
+const satisfyingVersions = (
+    requiredVersionRange,
+    installedVersions = versions || properNodeVersions()
+) =>
+    installedVersions
+        .filter(({ version, error }) =>
+            !error && semver.satisfies(version, requiredVersionRange)
+        )
+        .toSorted(
+            (a, b) =>
+                versionStringToNumber(b.version) -
+                versionStringToNumber(a.version)
+        );
+
+/**
+ * Determines the directory containing installed Node.js versions.
+ *
+ * nvm-windows stores versions directly beneath NVM_HOME:
+ *
+ *     NVM_HOME/v22.22.0
+ *
+ * nvm on Linux/macOS stores versions beneath NVM_DIR/versions/node:
+ *
+ *     NVM_DIR/versions/node/v22.22.0
+ *
+ * @param {NodeJS.ProcessEnv} env - Environment variables.
+ * @returns {string|null} Node.js version root, or null when nvm is unavailable.
+ */
+const getNvmRoot = (env) => {
+    if(process.platform === 'win32') {
+        return env.NVM_HOME
+            ? resolve(env.NVM_HOME)
+            : null;
+    }
+
+    return env.NVM_DIR
+        ? resolve(env.NVM_DIR, 'versions', 'node')
+        : null;
+};
+
+/**
+ * Obtains all installed Node.js versions known to nvm.
+ *
+ * Versions are returned even when their Node.js executable is missing or
+ * invalid. Those installations contain an error on the resulting Version
+ * object and may be filtered with properNodeVersions().
+ *
+ * Results are sorted newest to oldest.
+ *
+ * @param {object} [log] - Optional logger.
+ * @param {NodeJS.ProcessEnv} [env=process.env] - Environment variables.
+ * @returns {Version[]} Installed Node.js versions.
+ */
+const allInstalledNodeVersions = (
+    log,
+    env = process.env
+) => {
+    const root = getNvmRoot(env);
+
+    if(!root || !folderExists(root)) {
         return [];
     }
-    return [];
+
+    return readdirSync(root, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name)
+        .filter(version => semver.valid(version))
+        .sort(
+            (a, b) =>
+                versionStringToNumber(b) -
+                versionStringToNumber(a)
+        )
+        .map(version =>
+            new Version(
+                version,
+                join(root, version),
+                log
+            )
+        );
 };
 
 /**
- * Filters errors from allInstalledNodeVersions
- *   - sets module versions property
+ * Obtains installed Node.js versions having valid executables.
  *
- * @param {Object} [log] - standard logger or console
- * @param {object=} fakeNvmHome
- * @param {string=} fakeNvmHome.NVM_HOME
- * @param {string=} fakeNvmHome.NVM_BIN
- * @returns {Version[]}
+ * The discovered versions are retained for subsequent version-selection
+ * operations.
+ *
+ * @param {object} [log] - Optional logger.
+ * @param {NodeJS.ProcessEnv} [env=process.env] - Environment variables.
+ * @returns {Version[]} Valid installed Node.js versions.
  */
-const properNodeVersions = (log, fakeNvmHome = null) => {
-    module.exports.versions = module.exports
-        .allInstalledNodeVersions(log, fakeNvmHome)
+const properNodeVersions = (
+    log,
+    env = process.env
+) => {
+    versions = allInstalledNodeVersions(log, env)
         .filter(({ error }) => !error);
-    return module.exports.versions;
+
+    return versions;
 };
 
 /**
- * Obtains the latest installed node version which is compatible within a given range
+ * Obtains the newest installed Node.js version satisfying a semantic
+ * version range.
  *
- * @param {String} requiredRange
- * @returns {Version|undefined} version, path, bin
+ * @param {string} requiredRange - Required semantic version range.
+ * @param {Version[]} [installedVersions] - Installed Node.js versions.
+ * @returns {Version|undefined} Newest matching version.
  */
-const maxInstalledSatisfyingVersion = (requiredRange) =>
-    module.exports.satisfyingVersions(requiredRange)[0];
+const maxInstalledSatisfyingVersion = (
+    requiredRange,
+    installedVersions = versions || properNodeVersions()
+) =>
+    satisfyingVersions(
+        requiredRange,
+        installedVersions
+    )[0];
 
 /**
- * Obtains the oldest installed node version which is compatible within a given range
+ * Obtains the oldest installed Node.js version satisfying a semantic
+ * version range.
  *
- * @param {String} requiredRange
- * @returns {Version|undefined} version, path, bin
+ * @param {string} requiredRange - Required semantic version range.
+ * @param {Version[]} [installedVersions] - Installed Node.js versions.
+ * @returns {Version|undefined} Oldest matching version.
  */
-const minInstalledSatisfyingVersion = (requiredRange) => {
-    const version = module.exports.satisfyingVersions(requiredRange);
-    return version.at(-1);
-};
+const minInstalledSatisfyingVersion = (
+    requiredRange,
+    installedVersions = versions || properNodeVersions()
+) =>
+    satisfyingVersions(
+        requiredRange,
+        installedVersions
+    ).at(-1);
 
 /**
- * Obtains node engine range
+ * Obtains the required Node.js engine range for a repository.
  *
- * @param {String} repoPath - to repository
- * @returns {Promise<string>} engines | default engine
- * @throws RangeError
+ * DEFAULT_VERSION is returned when package.json does not specify
+ * engines.node.
+ *
+ * @param {string} repoPath - Repository directory or package.json path.
+ * @returns {Promise<string>} Required Node.js version range.
+ * @throws {RangeError} When package.json cannot be found.
  */
 const repositoryEngines = async (repoPath) => {
-    const file = repoPath.endsWith('package.json') ? repoPath : resolve(join(repoPath, 'package.json'));
+    const file = repoPath.endsWith('package.json')
+        ? repoPath
+        : resolve(repoPath, 'package.json');
+
     const { error, engines } = await getPackage(file);
+
     if(error) {
-        throw new RangeError(`package file not found in ${repoPath}`);
+        throw new RangeError(
+            `package file not found in ${repoPath}`
+        );
     }
-    if(engines?.node) {
-        return engines.node;
-    }
-    return defaultVersion;
+
+    return engines?.node || DEFAULT_VERSION;
 };
 
 /**
+ * Determines which installed Node.js version should be used.
  *
- * @param {Object} param0
- * @param {String} param0.path - to repository
- * @param {String=} param0.version - version number x.y.z
- * @param {Boolean=} param0.oldest - choose oldest acceptable version
- * @param {Boolean=} noPackage - path does not have package.json
- * @returns {Promise<Version>} version object with path to executables
- * @throws RangeError
+ * When a version is explicitly supplied, that version must satisfy the
+ * repository's configured Node.js engine range.
+ *
+ * Otherwise, the newest satisfying version is selected unless oldest is
+ * true.
+ *
+ * @param {object} options - Version selection options.
+ * @param {string} options.path - Repository path.
+ * @param {string} [options.version] - Requested Node.js version.
+ * @param {boolean} [options.oldest=false] - Select the oldest match.
+ * @param {boolean} [noPackage=false] - Treat version as the required range.
+ * @returns {Promise<Version>} Selected installed Node.js version.
+ * @throws {RangeError} When no compatible installed version exists.
  */
-const versionToUseValidator = async ({ path, version, oldest }, noPackage) => {
-    const repoEngines = noPackage ? version : await module.exports.repositoryEngines(path);
+const versionToUseValidator = async (
+    { path, version, oldest },
+    noPackage = false
+) => {
+    const requiredRange = noPackage
+        ? version
+        : await repositoryEngines(path);
+
     const repoName = basename(path);
+    const installedVersions = versions || properNodeVersions();
+
+    const matchingVersions = satisfyingVersions(
+        requiredRange,
+        installedVersions
+    );
 
     if(version) {
-        const satisfies = module.exports.satisfyingVersions(repoEngines);
-        const _version = module.exports.versionStringToObject(
+        const requested = versionStringToObject(
             version,
-            satisfies,
+            matchingVersions,
             oldest
         );
-        // _version is undefined if version is not in satisfies
-        const found = satisfies.find(
-            (v) => v.version === _version?.version
-        );
-        if(!found) {
+
+        if(!requested) {
             throw new RangeError(
-                `${repoName} requires NodeJS version(s) '${repoEngines}' but got '${version}'`
+                `${repoName} requires NodeJS version(s) ` +
+                `'${requiredRange}' but got '${version}'`
             );
         }
-        return found;
 
+        return requested;
     }
 
-    if(oldest) {
-        const _min = module.exports.minInstalledSatisfyingVersion(repoEngines);
-        if(_min) {
-            return _min;
-        }
-    }
+    const selected = oldest
+        ? matchingVersions.at(-1)
+        : matchingVersions[0];
 
-    const _max = module.exports.maxInstalledSatisfyingVersion(repoEngines);
-    if(_max) {
-        return _max;
+    if(selected) {
+        return selected;
     }
 
     throw new RangeError(
-        `${repoName} requires NodeJS version(s) '${repoEngines}' but no satisfying versions installed!`
+        `${repoName} requires NodeJS version(s) ` +
+        `'${requiredRange}' but no satisfying versions installed!`
     );
 };
 
+/**
+ * Shared yargs options for commands accepting a Node.js version.
+ *
+ * @type {object}
+ */
 const versionKeys = {
     version: {
         describe:
-      'specify an already installed NodeJS version. Check \'nvm ls\' to see availability'
-        , type: 'string'
-        , alias: 'v',
-    }
-    , oldest: {
-        describe: 'choose oldest satisfying NodeJS version'
-        , type: 'boolean'
-        , default: false
-        , alias: 'o',
+            'specify an already installed NodeJS version. ' +
+            'Check \'nvm ls\' to see availability',
+        type: 'string',
+        alias: 'v'
     },
+    oldest: {
+        describe: 'choose oldest satisfying NodeJS version',
+        type: 'boolean',
+        default: false,
+        alias: 'o'
+    }
 };
 
-module.exports = {
-    allInstalledNodeVersions
-    , engineCheck
-    , properNodeVersions
-    , maxInstalledSatisfyingVersion
-    , minInstalledSatisfyingVersion
-    , repositoryEngines
-    , satisfyingVersions
-    , versionKeys
-    , versionStringToObject
-    , versionStringToNumber
-    , versionToUseValidator
-    , Version
+export {
+    allInstalledNodeVersions,
+    engineCheck,
+    maxInstalledSatisfyingVersion,
+    minInstalledSatisfyingVersion,
+    properNodeVersions,
+    repositoryEngines,
+    satisfyingVersions,
+    versionKeys,
+    versionStringToNumber,
+    versionStringToObject,
+    versionToUseValidator
 };

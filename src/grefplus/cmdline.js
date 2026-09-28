@@ -1,52 +1,60 @@
-const { accessSync, constants, lstatSync } = require('fs');
-const yargs = require('yargs');
-const { DateTime } = require('luxon');
+import {
+    accessSync,
+    constants,
+    lstatSync
+} from 'node:fs';
+
+import { DateTime } from 'luxon';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 const options = {
-    dateOptions: 'yyyy-MM-dd hh:mm:ss a'
-    , allowedFormat: 'M/d/yy'
-    , offset: 3
-    , timePad: 12
+    dateOptions: 'yyyy-MM-dd hh:mm:ss a',
+    allowedFormat: 'M/d/yy',
+    offset: 3,
+    timePad: 12
 };
 
 const cmdKeys = {
     'folder-names': {
-        alias: 'n'
-        , describe: 'space separated names of repository folders'
-        , type: 'string'
-        , array: true
-    }
-    , 'from-date': {
-        alias: 'f'
-        , describe: `Show refs later than and include this date, '${options.allowedFormat}'`
-        , type: 'string'
-        , requiresArg: true
-    }
-    , 'to-date': {
-        alias: 't'
-        , describe: `Show refs earlier than and including this date, , '${options.allowedFormat}'`
-        , type: 'string'
-        , requiresArg: true
-    }
-    , 'dev-root': {
-        alias: 'r'
-        , describe: 'root folder of development environment (/c/blah/blah). Default is DEVROOT'
-        , type: 'array'
+        alias: 'n',
+        describe: 'space separated names of repository folders',
+        type: 'string',
+        array: true
+    },
+    'from-date': {
+        alias: 'f',
+        describe: `Show refs later than and include this date, '${options.allowedFormat}'`,
+        type: 'string',
+        requiresArg: true
+    },
+    'to-date': {
+        alias: 't',
+        describe: `Show refs earlier than and including this date, '${options.allowedFormat}'`,
+        type: 'string',
+        requiresArg: true
+    },
+    'dev-root': {
+        alias: 'r',
+        describe: 'root folder of development environment (/c/blah/blah). Default is DEVROOT',
+        type: 'array',
         // eslint-disable-next-line no-process-env
-        , default: process.env.DEVROOT
-    }
-    , 'date': {
-        alias: 'd'
-        , describe: `shortcut to specify a single date, , '${options.allowedFormat}'. Default is today`
-        , type: 'string'
-        , requiresArgs: true
+        default: process.env.DEVROOT
+    },
+    date: {
+        alias: 'd',
+        describe: `shortcut to specify a single date, '${options.allowedFormat}'. Default is today`,
+        type: 'string',
+        requiresArg: true
     }
 };
 
 /**
- * Validates from and to dates,
+ * Validates from and to dates
  *
  * @param {String} checkDate
+ * @param {String} msg
+ * @returns {Boolean}
  * @throws if date is not valid
  * @private
  */
@@ -69,52 +77,53 @@ const validateDate = (checkDate, msg) => {
 /**
  * Aborts build if dev root path does not exist
  *
- * @param {String} devRoot
+ * @param {object} params
+ * @param {String[]} params.devRoot
+ * @returns {Boolean}
  * @throws if path not accessible
  * @private
  */
 const validatePath = ({ devRoot }) => {
-    let problematicRoot = null;
-
-    devRoot.forEach(root => {
-        try {
-            accessSync(root, constants.R_OK);
-            if(!lstatSync(root).isDirectory()) {
-                problematicRoot = root;
-            }
-        }
-        catch (error) {
-            problematicRoot = { root, error };
-        }
-    });
-
-    if(problematicRoot) {
-        throw new Error(`Unable to access specified dev root folder of '${problematicRoot.root}'. Due to ${problematicRoot.error.message}`);
+    if(!devRoot) {
+        throw new Error(
+            'Development root is required. Use --dev-root or set DEVROOT.'
+        );
     }
-    return true;
 
+    try {
+        accessSync(devRoot);
+    }
+    catch(error) {
+        throw new Error(
+            `Unable to access specified dev root folder of '${devRoot}'. ` +
+            `Due to ${error.message}`
+        );
+    }
+
+    return true;
 };
 
 /**
  * Determines if a date is in the future
+ *
  * @param {String} checkDate
  * @returns {Boolean}
  * @throws if checkDate is not valid date
  * @private
  */
 const isFuture = (checkDate) => {
-    const _date = DateTime.fromFormat(checkDate, options.allowedFormat);
+    const date = DateTime.fromFormat(checkDate, options.allowedFormat);
     const endOfToday = DateTime.now().endOf('day');
-    return _date > endOfToday;
+    return date > endOfToday;
 };
 
 /**
  * Parse command line and configures options
  *
- * @param {Boolean} test - used for testing only
+ * @param {object|Boolean} test - used for testing only
  */
 const setOptions = (test) => {
-    const argv = test || yargs
+    const argv = test || yargs(hideBin(process.argv))
         .options(cmdKeys)
         .version(false)
         .help(true)
@@ -122,18 +131,18 @@ const setOptions = (test) => {
         .check((_argv) => {
             // super secret shortcut
             if(!_argv.date && !_argv.fromDate && !_argv.toDate && Number.isInteger(_argv._[0])) {
-                const _date = DateTime
+                const date = DateTime
                     .fromFormat(_argv._[0], options.allowedFormat)
                     .plus({ days: _argv._[0] })
-                    .format('MM/DD/YY');
-                _argv.date = _date;
+                    .toFormat('MM/dd/yy');
+                _argv.date = date;
             }
             else {
-                if(Object.keys(_argv).includes('date') && !_argv.date) {
-                    _argv.date = DateTime.now().toFormat('MM/DD/YY');
+                if(Object.hasOwn(_argv, 'date') && !_argv.date) {
+                    _argv.date = DateTime.now().toFormat('MM/dd/yy');
                 }
                 if(_argv.date && (_argv.fromDate || _argv.toDate)) {
-                    throw new Error('--date cannot be used with "--from-date" or "--to_date"');
+                    throw new Error('--date cannot be used with "--from-date" or "--to-date"');
                 }
             }
             return true;
@@ -169,22 +178,27 @@ const setOptions = (test) => {
             return true;
         })
         .check(validatePath)
-        .argv;
+        .parse();
 
     if(argv.date) {
         const date = DateTime.fromFormat(argv.date, options.allowedFormat);
-        module.exports.options.fromDate = date.startOf('day');
-        module.exports.options.toDate = date.endOf('day');
+        options.fromDate = date.startOf('day');
+        options.toDate = date.endOf('day');
     }
     else {
-        module.exports.options.fromDate = argv.fromDate ? DateTime.fromFormat(argv.fromDate, options.allowedFormat).startOf('day') : null;
-        module.exports.options.toDate = argv.toDate ? DateTime.fromFormat(argv.toDate, options.allowedFormat).endOf('day') : null;
+        options.fromDate = argv.fromDate
+            ? DateTime.fromFormat(argv.fromDate, options.allowedFormat).startOf('day')
+            : null;
+        options.toDate = argv.toDate
+            ? DateTime.fromFormat(argv.toDate, options.allowedFormat).endOf('day')
+            : null;
     }
-    module.exports.options.devRoot = argv.devRoot;
-    module.exports.options.folderNames = argv.folderNames || [];
+
+    options.devRoot = argv.devRoot;
+    options.folderNames = argv.folderNames || [];
 };
 
-module.exports = {
-    options
-    , setOptions
+export {
+    options,
+    setOptions
 };
