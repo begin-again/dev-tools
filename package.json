@@ -6,6 +6,9 @@
     "license": "MIT",
     "private": true,
     "type": "module",
+    "bin": {
+        "grefplus": "./src/grefplus/cli.js"
+    },
     "scripts": {
         "test": "mocha -i --fgrep slow ./test/**/*.spec.js",
         "test:slow": "mocha --fgrep slow ./test/**/*.spec.js",
@@ -19,7 +22,7 @@
         "luxon": "^3.7.2",
         "semver": "^7.7.3",
         "shelljs": "^0.10.0",
-        "simple-git": "^3.36.0",
+        "simple-git": "^4.0.2",
         "uuid": "11.1.1",
         "yargs": "^17.7.2"
     },
