@@ -10,8 +10,7 @@
         "grefplus": "./src/grefplus/cli.js"
     },
     "scripts": {
-        "test": "mocha -i --fgrep slow ./test/**/*.spec.js",
-        "test:slow": "mocha --fgrep slow ./test/**/*.spec.js",
+        "test": "node --test",
         "lint:fix": "eslint . --fix"
     },
     "engines": {
