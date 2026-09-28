@@ -84,23 +84,22 @@ const validateDate = (checkDate, msg) => {
  * @private
  */
 const validatePath = ({ devRoot }) => {
-    let problematicRoot = null;
-
-    devRoot.forEach(root => {
-        try {
-            accessSync(root, constants.R_OK);
-            if(!lstatSync(root).isDirectory()) {
-                problematicRoot = root;
-            }
-        }
-        catch (error) {
-            problematicRoot = { root, error };
-        }
-    });
-
-    if(problematicRoot) {
-        throw new Error(`Unable to access specified dev root folder of '${problematicRoot.root}'. Due to ${problematicRoot.error.message}`);
+    if(!devRoot) {
+        throw new Error(
+            'Development root is required. Use --dev-root or set DEVROOT.'
+        );
     }
+
+    try {
+        accessSync(devRoot);
+    }
+    catch(error) {
+        throw new Error(
+            `Unable to access specified dev root folder of '${devRoot}'. ` +
+            `Due to ${error.message}`
+        );
+    }
+
     return true;
 };
 
