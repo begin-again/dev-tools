@@ -18,7 +18,7 @@ const options = {
 const cmdKeys = {
     'folder-names': {
         alias: 'n',
-        describe: 'space separated names of repository folders',
+        describe: 'names of repository folders. Can be specified multiple times or use multiple names',
         type: 'string',
         array: true
     },
@@ -36,10 +36,10 @@ const cmdKeys = {
     },
     'dev-root': {
         alias: 'r',
-        describe: 'root folder of development environment (/c/blah/blah). Default is DEVROOT',
+        describe: 'root folder of development environment (/c/blah/blah). Can use multiple paths. Default is DEVROOT',
         type: 'array',
         // eslint-disable-next-line no-process-env
-        default: process.env.DEVROOT
+        default: process.env.DEVROOT || []
     },
     date: {
         alias: 'd',
@@ -83,24 +83,27 @@ const validateDate = (checkDate, msg) => {
  * @throws if path not accessible
  * @private
  */
-const validatePath = ({ devRoot }) => {
+const validatePath = ({ devRoot = [] }) => {
     if(!devRoot) {
         throw new Error(
             'Development root is required. Use --dev-root or set DEVROOT.'
         );
     }
 
-    try {
-        accessSync(devRoot);
-    }
-    catch(error) {
-        throw new Error(
-            `Unable to access specified dev root folder of '${devRoot}'. ` +
-            `Due to ${error.message}`
-        );
+    for(const root of devRoot) {
+        try {
+            accessSync(root);
+        }
+        catch(error) {
+            throw new Error(
+                `Unable to access specified dev root folder of '${root}'. ` +
+                `Due to ${error.message}`
+            );
+        }
     }
 
     return true;
+
 };
 
 /**
@@ -173,7 +176,7 @@ const setOptions = (test) => {
         })
         .check(({ folderNames }) => {
             if(folderNames && !folderNames.length) {
-                throw new Error('--folder-names requires at least one name');
+                throw new Error('--folder-names, -n requires at least one name');
             }
             return true;
         })
