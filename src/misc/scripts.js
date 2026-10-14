@@ -1,13 +1,16 @@
 /* eslint-disable no-console */
-const yargs = require('yargs');
-const { findFirstFile, fileAsJSON } = require('../common/files');
+console.log('Starting script...');
+console.log(process.env.$DEVROOT)
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import { findFirstFile, fileAsJSON } from '../common/files.js';
 
 /**
  * Writes scripts block to console from first package file found in specified path
  */
 const main = async () => {
 
-    const { argv } = yargs
+    const { argv } = yargs(hideBin(process.argv))
         .option('path', {
             alias: 'p'
             , describe: 'path to start looking for the package file'
@@ -33,4 +36,8 @@ const main = async () => {
 
 };
 
-main().catch(console.error);
+try {
+    await main();
+} catch (error) {
+    console.error(error);
+}
