@@ -1,8 +1,10 @@
 /* eslint-disable no-console */
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
-const { repositoryEngines } = require('../common/engine');
-const { findFirstFile } = require('../common/files');
-const yargs = require('yargs');
+import { repositoryEngines } from '../common/engine.js';
+import { findFirstFile } from '../common/files.js';
+
 const pwd = process.cwd();
 const options = {
     'path': {
@@ -13,7 +15,7 @@ const options = {
     }
 };
 
-const { argv } = yargs
+const { argv } = yargs(hideBin(process.argv))
     .option(options)
     .version(false);
 
@@ -21,13 +23,18 @@ const { argv } = yargs
  * @param {object} param0
  * @param {string} param0.path
  */
-const main = ({ path }) => {
+async function main({ path }) {
     const file = findFirstFile('package.json', path);
     if(!file) {
         throw new Error(`unable to find package.json file in '${path}'`);
     }
 
-    process.stdout.write(`${repositoryEngines(file)}\n`);
+    const engines = await repositoryEngines(file);
+    process.stdout.write(`${engines}\n`);
 };
 
-main(argv);
+try {
+    await main(argv);
+} catch (error) {
+    console.error(error);
+}
