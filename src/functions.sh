@@ -198,3 +198,13 @@ gitlogp() {
         }
     '
 }
+
+# remove branches via pattern
+deleteBranches() {
+    local pattern="${1:?Branch pattern required}"
+
+    git branch --list "$pattern" --format='%(refname:short)' |
+        while IFS= read -r branch; do
+            git branch -D -- "$branch"
+        done
+}
