@@ -122,10 +122,10 @@ export default [
             'spaced-comment': [ 'error', 'always' ],
             yoda: 'error',
 
-            'node/callback-return': 'warn',
-            'node/global-require': 'warn',
-            'node/no-deprecated-api': 'warn',
-            'node/no-unpublished-import': 'off'
+            'n/callback-return': 'warn',
+            'n/global-require': 'warn',
+            'n/no-deprecated-api': 'warn',
+            'n/no-unpublished-import': 'off'
         }
     }
 ];
