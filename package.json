@@ -1,6 +1,6 @@
 {
     "name": "my-dev-tools",
-    "version": "4.0.0",
+    "version": "4.1.0",
     "main": "",
     "repository": "https://github.com/begin-again/dev-tools.git",
     "license": "MIT",
@@ -19,17 +19,17 @@
     "dependencies": {
         "dotenv": "^17.4.2",
         "luxon": "^3.7.2",
-        "semver": "^7.8.5",
+        "semver": "^7.8.6",
         "shelljs": "^0.10.0",
         "simple-git": "^4.0.2",
-        "uuid": "11.1.1",
-        "yargs": "^17.7.3"
+        "uuid": "14.0.3",
+        "yargs": "^18.2.0"
     },
     "devDependencies": {
         "@microsoft/eslint-formatter-sarif": "^3.1.0",
-        "eslint": "^10.11.0",
-        "eslint-plugin-n": "^18.4.0",
-        "globals": "^17.12.0",
+        "eslint": "^10.14.0",
+        "eslint-plugin-n": "^18.5.0",
+        "globals": "^17.14.0",
         "mock-fs": "^5.5.0",
         "randomatic": "^3.1.1"
     },
