@@ -36,7 +36,7 @@ jobs:
       - name: Run ESLint
         run: >
           npx eslint .
-          --config .eslint.config.js
+          --config eslint.config.js
           --quiet
           --format @microsoft/eslint-formatter-sarif
           --output-file eslint-results.sarif
