@@ -9,43 +9,43 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 const options = {
-    dateOptions: 'yyyy-MM-dd hh:mm:ss a',
-    allowedFormat: 'M/d/yy',
-    offset: 3,
-    timePad: 12
+    dateOptions: 'yyyy-MM-dd hh:mm:ss a'
+    , allowedFormat: 'M/d/yy'
+    , offset: 3
+    , timePad: 12
 };
 
 const cmdKeys = {
     'folder-names': {
-        alias: 'n',
-        describe: 'names of repository folders. Can be specified multiple times or use multiple names',
-        type: 'string',
-        array: true
-    },
-    'from-date': {
-        alias: 'f',
-        describe: `Show refs later than and include this date, '${options.allowedFormat}'`,
-        type: 'string',
-        requiresArg: true
-    },
-    'to-date': {
-        alias: 't',
-        describe: `Show refs earlier than and including this date, '${options.allowedFormat}'`,
-        type: 'string',
-        requiresArg: true
-    },
-    'dev-root': {
-        alias: 'r',
-        describe: 'root folder of development environment (/c/blah/blah). Can use multiple paths. Default is DEVROOT',
-        type: 'array',
-        // eslint-disable-next-line no-process-env
-        default: process.env.DEVROOT || []
-    },
-    date: {
-        alias: 'd',
-        describe: `shortcut to specify a single date, '${options.allowedFormat}'. Default is today`,
-        type: 'string',
-        requiresArg: true
+        alias: 'n'
+        , describe: 'names of repository folders. Can be specified multiple times or use multiple names'
+        , type: 'string'
+        , array: true
+    }
+    , 'from-date': {
+        alias: 'f'
+        , describe: `Show refs later than and include this date, '${options.allowedFormat}'`
+        , type: 'string'
+        , requiresArg: true
+    }
+    , 'to-date': {
+        alias: 't'
+        , describe: `Show refs earlier than and including this date, '${options.allowedFormat}'`
+        , type: 'string'
+        , requiresArg: true
+    }
+    , 'dev-root': {
+        alias: 'r'
+        , describe: 'root folder of development environment (/c/blah/blah). Can use multiple paths. Default is DEVROOT'
+        , type: 'array'
+
+        , default: process.env.DEVROOT || []
+    }
+    , date: {
+        alias: 'd'
+        , describe: `shortcut to specify a single date, '${options.allowedFormat}'. Default is today`
+        , type: 'string'
+        , requiresArg: true
     }
 };
 
@@ -94,7 +94,7 @@ const validatePath = ({ devRoot = [] }) => {
         try {
             accessSync(root);
         }
-        catch(error) {
+        catch (error) {
             throw new Error(
                 `Unable to access specified dev root folder of '${root}'. ` +
                 `Due to ${error.message}`

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 console.log('Starting script...');
-console.log(process.env.$DEVROOT)
+console.log(process.env.$DEVROOT);
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { findFirstFile, fileAsJSON } from '../common/files.js';
@@ -38,6 +38,7 @@ const main = async () => {
 
 try {
     await main();
-} catch (error) {
+}
+catch (error) {
     console.error(error);
 }

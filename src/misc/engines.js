@@ -31,10 +31,11 @@ async function main({ path }) {
 
     const engines = await repositoryEngines(file);
     process.stdout.write(`${engines}\n`);
-};
+}
 
 try {
     await main(argv);
-} catch (error) {
+}
+catch (error) {
     console.error(error);
 }
