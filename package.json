@@ -27,7 +27,7 @@
     },
     "devDependencies": {
         "@microsoft/eslint-formatter-sarif": "^3.1.0",
-        "eslint": "^10.14.0",
+        "eslint": "^10.15.0",
         "eslint-plugin-n": "^18.5.0",
         "globals": "^17.14.0",
         "mock-fs": "^5.5.0",
